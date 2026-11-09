@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { Suspense } from "react";
 import { AuthCard, Notice } from "@/components/auth/fields";
-import { verifyEmailToken } from "@/lib/auth/flows/email-verification";
 import { firstParam, type SearchParams } from "@/lib/auth/flows/params";
 import { MESSAGES } from "@/lib/auth/flows/messages";
-import { getClientIp } from "@/lib/security/client-ip";
+import { confirmEmailAction } from "./actions";
 
+/**
+ * GET never consumes the token. It shows a confirm button; the POST action consumes it.
+ * Result is shown via ?status=ok|invalid after the redirect, so the token leaves the URL.
+ */
 export default function VerifyEmailPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <Suspense fallback={null}>
@@ -16,11 +18,11 @@ export default function VerifyEmailPage({ searchParams }: { searchParams: Promis
 }
 
 async function VerifyEmailResult({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const token = firstParam((await searchParams).token);
-  const ip = getClientIp(await headers());
-  const verified = token ? await verifyEmailToken(token, ip) : false;
+  const params = await searchParams;
+  const status = firstParam(params.status);
+  const token = firstParam(params.token);
 
-  if (verified) {
+  if (status === "ok") {
     return (
       <AuthCard title="Email verified">
         <Notice tone="success">Your email address is verified. You can now log in.</Notice>
@@ -32,6 +34,23 @@ async function VerifyEmailResult({ searchParams }: { searchParams: Promise<Searc
             Go to log in
           </Link>
         </p>
+      </AuthCard>
+    );
+  }
+
+  if (token && status !== "invalid") {
+    return (
+      <AuthCard title="Confirm your email">
+        <p className="text-sm text-ink-soft">Press the button below to confirm your email address.</p>
+        <form action={confirmEmailAction} className="space-y-4">
+          <input type="hidden" name="token" value={token} />
+          <button
+            type="submit"
+            className="inline-flex w-full items-center justify-center rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
+          >
+            Confirm email
+          </button>
+        </form>
       </AuthCard>
     );
   }

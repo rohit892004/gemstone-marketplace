@@ -107,16 +107,20 @@ export async function verifyCode(userId: string, purpose: CodePurpose, code: str
     where: { userId, purpose, usedAt: null, expiresAt: { gt: now } },
     orderBy: { createdAt: "desc" },
   });
-  if (!active || active.attempts >= MAX_CODE_ATTEMPTS) return false;
+  if (!active) return false;
+
+  // Reserve one attempt atomically BEFORE comparing. Parallel guesses cannot all pass the
+  // limit check: each one either gets a reserved attempt or is refused.
+  const reserved = await prisma.authToken.updateMany({
+    where: { id: active.id, usedAt: null, attempts: { lt: MAX_CODE_ATTEMPTS } },
+    data: { attempts: { increment: 1 } },
+  });
+  if (reserved.count !== 1) return false;
 
   const expected = Buffer.from(active.tokenHash, "hex");
   const actual = Buffer.from(codeHash(userId, purpose, code), "hex");
   const matches = expected.length === actual.length && timingSafeEqual(expected, actual);
-
-  if (!matches) {
-    await prisma.authToken.update({ where: { id: active.id }, data: { attempts: { increment: 1 } } });
-    return false;
-  }
+  if (!matches) return false;
 
   const claimed = await prisma.authToken.updateMany({
     where: { id: active.id, usedAt: null },
