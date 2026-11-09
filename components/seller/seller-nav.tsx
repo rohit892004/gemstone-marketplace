@@ -5,8 +5,10 @@ export const sellerNavItems = [
   { href: "/seller/portfolio", label: "Portfolio" },
   { href: "/seller/listings", label: "Listings" },
   { href: "/seller/inventory", label: "Inventory" },
-  { href: "/seller/enquiries", label: "Enquiries" },
+  { href: "/seller/inbox", label: "Inbox" },
+  { href: "/seller/requirements", label: "Requirements" },
   { href: "/seller/quotations", label: "Quotations" },
+  { href: "/seller/offers", label: "Offers" },
 ] as const;
 
 export function SellerNav() {
