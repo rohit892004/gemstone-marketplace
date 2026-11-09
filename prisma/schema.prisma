@@ -710,6 +710,7 @@ model Requirement {
   category  Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   responses RequirementResponse[]
   threads   Conversation[]
+  flags     ModerationFlag[]
 
   @@index([status, categoryId, createdAt])
   @@index([buyerId, createdAt])
@@ -765,7 +766,8 @@ model Report {
 /// Created when contact-detail moderation flags text. Holds masked text only.
 model ModerationFlag {
   id             String           @id @default(cuid())
-  conversationId String
+  /// Null for requirement notes, which have no conversation.
+  conversationId String?
   messageId      String?
   requirementId  String?
   senderId       String
@@ -778,10 +780,11 @@ model ModerationFlag {
   resolvedAt     DateTime?
   createdAt      DateTime         @default(now())
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  message      Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  sender       User         @relation("FlagSender", fields: [senderId], references: [id], onDelete: Cascade)
-  resolvedBy   User?        @relation("FlagResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  requirement  Requirement?  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  message      Message?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  sender       User          @relation("FlagSender", fields: [senderId], references: [id], onDelete: Cascade)
+  resolvedBy   User?         @relation("FlagResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([senderId, createdAt])

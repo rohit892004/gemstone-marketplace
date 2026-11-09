@@ -1,5 +1,5 @@
 import type { Prisma } from "@/app/generated/prisma/client";
-import type { AuditActionName } from "@/lib/audit/actions";
+import { AuditAction, type AuditActionName } from "@/lib/audit/actions";
 
 /**
  * Audit helpers for M3 admin writes.
@@ -15,7 +15,7 @@ import type { AuditActionName } from "@/lib/audit/actions";
  * lib/audit/actions.ts, then point this constant at AuditAction. Defined here until then so the
  * admin write can still be audited without editing a file this milestone does not own.
  */
-export const SELLER_CATEGORIES_CHANGED = "seller.categories_changed" as const;
+export const SELLER_CATEGORIES_CHANGED = AuditAction.SELLER_CATEGORIES_CHANGED;
 
 export type ModerationAuditName = AuditActionName | typeof SELLER_CATEGORIES_CHANGED;
 

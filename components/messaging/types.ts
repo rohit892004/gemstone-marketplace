@@ -35,6 +35,8 @@ export interface ThreadContext {
   kind: "ENQUIRY" | "GENERAL" | "REQUIREMENT";
   viewerId: string;
   viewerRole: ViewerRole;
+  /** True only when the viewer is the seller side of this thread (quotations are sent by the seller side). Computed on the server with quotationSides(). */
+  canQuote: boolean;
   counterpartId: string | null;
   isDemo: boolean;
   gemstone: { id: string; title: string; slug: string } | null;

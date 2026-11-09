@@ -88,7 +88,7 @@ async function FlagQueue() {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">{flagSourceLabel(flag.source)}</span>
                   <span className="text-stone-600">Sent {formatDate(flag.message?.createdAt ?? flag.createdAt)}</span>
-                  {flag.conversation.isDemo ? <DemoBadge /> : null}
+                  {flag.conversation?.isDemo ? <DemoBadge /> : null}
                 </div>
 
                 <dl className="grid gap-3 text-sm md:grid-cols-3">
@@ -120,13 +120,17 @@ async function FlagQueue() {
                     {text ?? "(no text stored)"}
                   </p>
                   {/* prefetch={false}: each render of the viewer writes an audit row, so nothing may load it early. */}
-                  <Link
-                    href={`/admin/conversations/${flag.conversationId}`}
-                    prefetch={false}
-                    className="inline-block text-sm underline"
-                  >
-                    Open the conversation (logged with a reason)
-                  </Link>
+                  {flag.conversationId ? (
+                    <Link
+                      href={`/admin/conversations/${flag.conversationId}`}
+                      prefetch={false}
+                      className="inline-block text-sm underline"
+                    >
+                      Open the conversation (logged with a reason)
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-stone-600">Requirement note: no conversation to open.</p>
+                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">

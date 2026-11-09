@@ -10,7 +10,7 @@ export function ComposerExtras({ context }: { context: ThreadContext }) {
   if (context.viewerRole === "BUYER" && context.kind === "ENQUIRY" && !context.requirement) {
     return <OfferComposer conversationId={context.conversationId} />;
   }
-  if (context.viewerRole === "SELLER") {
+  if (context.viewerRole === "SELLER" && context.canQuote) {
     return <QuotationComposer context={context} />;
   }
   return null;

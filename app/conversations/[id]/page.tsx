@@ -7,6 +7,7 @@ import { listMessagesSince } from "@/lib/messaging/service";
 import { ChatThread, type ThreadMessage } from "@/components/messaging/chat-thread";
 import { SafetyActions } from "@/components/messaging/safety-actions";
 import type { ThreadContext } from "@/components/messaging/types";
+import { quotationSides } from "@/lib/quotations/validate";
 
 export default function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -52,6 +53,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
     kind: conversation.kind,
     viewerId: user.id,
     viewerRole: user.role === "SELLER" ? "SELLER" : "BUYER",
+    canQuote: quotationSides(conversation, user.id)?.viewerIsSeller === true,
     counterpartId: counterpartId ?? null,
     isDemo: conversation.isDemo,
     gemstone: conversation.gemstone ? { id: conversation.gemstone.id, title: conversation.gemstone.title, slug: conversation.gemstone.slug } : null,

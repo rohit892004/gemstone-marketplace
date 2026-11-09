@@ -52,6 +52,7 @@ export const AuditAction = {
   REPORT_RESOLVED: "report.resolved",
   FLAG_RESOLVED: "message.flag_resolved",
   CONVERSATION_ADMIN_VIEWED: "conversation.admin_viewed",
+  SELLER_CATEGORIES_CHANGED: "seller.categories_changed",
 } as const;
 
 export type AuditActionName = (typeof AuditAction)[keyof typeof AuditAction];

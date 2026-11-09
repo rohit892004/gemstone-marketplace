@@ -25,6 +25,14 @@ export interface ThreadMessage {
   quotation: QuotationPayload | null;
 }
 
+/** New rows are appended; rows already on screen are replaced, so status changes (offer or quotation) show up. */
+function mergeMessages(prev: ThreadMessage[], incoming: ThreadMessage[]): ThreadMessage[] {
+  const byId = new Map(incoming.map((m) => [m.id, m] as const));
+  const merged = prev.map((m) => byId.get(m.id) ?? m);
+  const known = new Set(prev.map((m) => m.id));
+  return [...merged, ...incoming.filter((m) => !known.has(m.id))];
+}
+
 export interface ChatThreadProps {
   conversationId: string;
   initialMessages: ThreadMessage[];
@@ -66,8 +74,7 @@ export function ChatThread(props: ChatThreadProps) {
         if (data.messages.length > 0) {
           lastCreatedAt.current = data.messages.at(-1)!.createdAt;
           setMessages((prev) => {
-            const seen = new Set(prev.map((m) => m.id));
-            return [...prev, ...data.messages.filter((m) => !seen.has(m.id))];
+            return mergeMessages(prev, data.messages);
           });
         }
         setCounterpartRead(data.counterpartLastReadAt);
@@ -124,8 +131,7 @@ export function ChatThread(props: ChatThreadProps) {
         if (data.messages.length > 0) {
           lastCreatedAt.current = data.messages.at(-1)!.createdAt;
           setMessages((prev) => {
-            const seen = new Set(prev.map((m) => m.id));
-            return [...prev, ...data.messages.filter((m) => !seen.has(m.id))];
+            return mergeMessages(prev, data.messages);
           });
         }
         setCounterpartRead(data.counterpartLastReadAt);
