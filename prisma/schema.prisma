@@ -23,6 +23,8 @@ enum Role {
   BUYER
   SELLER
   ADMIN
+  /// Expert reviewer for valuations. Created by an admin only. No public signup.
+  VALUATOR
 }
 
 /**
@@ -97,14 +99,6 @@ enum MediaStatus {
   FAILED
 }
 
-enum ValuationStatus {
-  SUBMITTED
-  ANALYSING
-  ESTIMATED
-  IN_EXPERT_REVIEW
-  COMPLETED
-}
-
 enum ArticleType {
   EDUCATION
   RESEARCH
@@ -148,8 +142,6 @@ model User {
   notifications              Notification[]
   sentMessages               Message[]                 @relation("MessageSender")
   auditLogs                  AuditLog[]                @relation("AuditActor")
-  valuations                 Valuation[]
-  expertValuations           Valuation[]               @relation("ValuationExpert")
   wishlist                   WishlistItem[]
   startedConversations       Conversation[]            @relation("ConversationStarter")
   conversationParticipations ConversationParticipant[]
@@ -163,6 +155,9 @@ model User {
   reportsFiled               Report[]                  @relation("ReportsFiled")
   reportsResolved            Report[]                  @relation("ReportResolver")
   flagsAsSender              ModerationFlag[]          @relation("FlagSender")
+  valuationsRequested        Valuation[]               @relation("ValuationRequester")
+  valuationsAssigned         Valuation[]               @relation("ValuationAssignee")
+  valuationNotes             ValuationNote[]
   flagsResolved              ModerationFlag[]          @relation("FlagResolver")
   notificationPreference     NotificationPreference?
   reviewedDocuments          SellerDocument[]          @relation("DocumentReviewer")
@@ -289,6 +284,7 @@ model SellerDocument {
  */
 model CertificateLab {
   id        String   @id @default(cuid())
+  valuations Valuation[]
   code      String   @unique
   name      String
   isOther   Boolean  @default(false)
@@ -320,6 +316,7 @@ model Category {
 model Gemstone {
   id               String                   @id @default(cuid())
   moderationFlags  ModerationFlag[]
+  valuations       Valuation[]
   sellerId         String
   categoryId       String?
   title            String
@@ -825,27 +822,6 @@ model Notification {
 
 // ---------- Valuation ----------
 
-model Valuation {
-  id                String          @id @default(cuid())
-  userId            String?
-  status            ValuationStatus @default(SUBMITTED)
-  inputs            Json
-  mediaKeys         String[]
-  /// Minor units. See schema header.
-  estimateLowMinor  BigInt?
-  estimateHighMinor BigInt?
-  currency          String?
-  confidence        Decimal?        @db.Decimal(4, 3)
-  reportKey         String?
-  expertId          String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  expert User? @relation("ValuationExpert", fields: [expertId], references: [id], onDelete: SetNull)
-
-  @@index([status])
-}
 
 // ---------- Content and newsletter ----------
 
@@ -910,4 +886,157 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
   @@index([action, createdAt])
+}
+
+enum ValuationStatus {
+  DRAFT
+  SUBMITTED
+  AUTO_VALUED
+  IN_EXPERT_REVIEW
+  NEEDS_INFO
+  COMPLETED
+  REJECTED
+}
+
+/// Where a valuation request came from. A listing request is prefilled from the product page.
+enum ValuationSource {
+  LISTING
+  STANDALONE
+}
+
+enum ValuationMediaKind {
+  IMAGE
+  VIDEO
+}
+
+/// Who gave the current result. AUTO is the rule engine; EXPERT is a valuator sign-off.
+enum ValuationValuedBy {
+  AUTO
+  EXPERT
+}
+
+/// An indicative valuation request. Private to the requester, assigned valuators and admins.
+model Valuation {
+  id          String           @id @default(cuid())
+  /// Public reference shown on the PDF and the verification page, e.g. GSV-26-K7Q2M9.
+  reference   String           @unique
+  requesterId String
+  source      ValuationSource
+  gemstoneId  String?
+  status      ValuationStatus  @default(DRAFT)
+  isDemo      Boolean          @default(false)
+
+  // Stone details, as entered by the requester.
+  gemstoneType     String
+  categoryId       String?
+  shape            String?
+  /// Carat in thousandths (2.5 ct = 2500). Integer, so no floating point reaches the price.
+  caratMilli       Int?
+  dimensions       String?
+  colour           String?
+  clarity          String?
+  /// Overall quality grade: PREMIUM, FINE, STANDARD or COMMERCIAL. Null when the requester does not know.
+  qualityGrade     String?
+  origin           String?
+  treatment        String?
+  labId            String?
+  certificateNumber String?
+  notes            String?
+  currency         String           @default("INR")
+  requestExpert    Boolean          @default(false)
+
+  // Automatic result. Set when the engine runs. Indicative only.
+  autoEstimateMinor BigInt?
+  autoLowMinor      BigInt?
+  autoHighMinor     BigInt?
+  autoConfidence    String?
+  autoFactors       Json?
+  expertReasons     String[]
+
+  // Expert result. Set on valuator sign-off. The final result replaces the automatic one for display.
+  valuedBy          ValuationValuedBy?
+  finalEstimateMinor BigInt?
+  finalLowMinor      BigInt?
+  finalHighMinor     BigInt?
+  finalConfidence    String?
+
+  assignedValuatorId String?
+  rejectionReason    String?
+  /// Set when an admin withdraws the report. The verification page then shows "withdrawn".
+  withdrawnAt        DateTime?
+  withdrawnReason    String?
+  /// The seller who owns the listing chose to show this completed report on the listing.
+  publishedOnListing Boolean          @default(false)
+  submittedAt        DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  requester      User             @relation("ValuationRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  assignedValuator User?          @relation("ValuationAssignee", fields: [assignedValuatorId], references: [id], onDelete: SetNull)
+  gemstone       Gemstone?        @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
+  certificateLab CertificateLab?  @relation(fields: [labId], references: [id], onDelete: SetNull)
+  media          ValuationMedia[]
+  notes_         ValuationNote[]
+
+  @@index([requesterId, createdAt])
+  @@index([status, createdAt])
+  @@index([assignedValuatorId, status])
+  @@index([gemstoneId])
+}
+
+model ValuationMedia {
+  id           String             @id @default(cuid())
+  valuationId  String
+  kind         ValuationMediaKind
+  storageKey   String
+  mimeType     String
+  sizeBytes    Int
+  sortOrder    Int                @default(0)
+  createdAt    DateTime           @default(now())
+  valuation    Valuation          @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+
+  @@index([valuationId, sortOrder])
+}
+
+/// Thread between requester and valuator: requests for more information, answers, and sign-off notes.
+model ValuationNote {
+  id          String    @id @default(cuid())
+  valuationId String
+  authorId    String
+  /// NOTE, INFO_REQUEST, INFO_RESPONSE, SIGNOFF, ADMIN.
+  kind        String
+  body        String
+  createdAt   DateTime  @default(now())
+  valuation   Valuation @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([valuationId, createdAt])
+}
+
+/// Reference price per carat, by category, quality grade and carat band. Minor units.
+model ReferencePrice {
+  id                 String   @id @default(cuid())
+  gemstoneType       String
+  qualityGrade       String
+  band               String
+  currency           String
+  pricePerCaratMinor BigInt
+  isDemo             Boolean  @default(false)
+  updatedById        String?
+  updatedAt          DateTime @updatedAt
+
+  @@unique([gemstoneType, qualityGrade, band, currency])
+}
+
+/// Multiplier in basis points (10000 = x1) for origin, treatment or lab. Keys are lower case.
+model ValuationMultiplier {
+  id      String  @id @default(cuid())
+  kind    String
+  key     String
+  label   String
+  bps     Int
+  isDemo  Boolean @default(false)
+
+  @@unique([kind, key])
 }

@@ -211,3 +211,7 @@ npm run test:e2e              # Playwright; starts the server on port 3200
 - **Audit writes are best-effort**, and catalogue audit runs after the decision.
 - **Duplicate mobile numbers** on a new email trigger the "account already exists" email to that new address (carried over from M1).
 - **Caching:** public media and documents are cached for 60 seconds. A rejection or unpublish can take up to a minute to reach shared caches.
+
+## M4 status (Valuation)
+
+- In progress on branch `m4-valuation`. Done: schema and migration, the rule-based valuation engine with tests, access rules, reference numbers, and the demo reference defaults. Not done: PDF and QR report, media upload and submission, the requester pages, the valuator and admin pages, the demo seed, the parallel build phases, and the browser journey. See `docs/milestones/m4-status.md`.
