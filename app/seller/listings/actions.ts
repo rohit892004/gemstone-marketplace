@@ -83,18 +83,6 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values: parsed.values, formError: "Please correct the highlighted fields." };
   const { input, priceMinor, priceOnRequest, intent, values } = parsed.value;
 
-  // Listing titles and descriptions are public. Contact details are refused, not masked.
-  const scan = scanPublicText([
-    { field: "title", label: "Title", value: input.title },
-    { field: "description", label: "Description", value: input.description },
-  ]);
-  if (scan.flagged) {
-    await recordBlockedPublicText({ senderId: user.id, source: "PUBLIC_LISTING", kinds: scan.kinds });
-    const fieldErrors: Partial<Record<ListingFormField, string>> = {};
-    for (const field of scan.flaggedFields) fieldErrors[field as ListingFormField] = "Contact details are not allowed here.";
-    return { fieldErrors, values, formError: publicTextBlockedMessage(scan.flaggedLabels) };
-  }
-
   const listingIdRaw = text(formData, "listingId");
   const listingId = listingIdRaw ? idSchema.safeParse(listingIdRaw) : null;
   if (listingId && !listingId.success) return { formError: "Listing not found." };
@@ -116,6 +104,18 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
 
   const current = listingId?.success ? await findOwnedListing(listingId.data, user.id) : null;
   if (listingId?.success && !current) return { formError: "Listing not found." };
+
+  // Listing titles and descriptions are public. Contact details are refused, not masked.
+  const scan = scanPublicText([
+    { field: "title", label: "Title", value: input.title },
+    { field: "description", label: "Description", value: input.description },
+  ]);
+  if (scan.flagged) {
+    await recordBlockedPublicText({ senderId: user.id, source: "PUBLIC_LISTING", kinds: scan.kinds, gemstoneId: current?.id ?? null });
+    const fieldErrors: Partial<Record<ListingFormField, string>> = {};
+    for (const field of scan.flaggedFields) fieldErrors[field as ListingFormField] = "Contact details are not allowed here.";
+    return { fieldErrors, values, formError: publicTextBlockedMessage(scan.flaggedLabels) };
+  }
 
   const autoPublish = await getBooleanSetting("autoPublishApprovedSellers");
   const resolved = resolveSaveStatus({

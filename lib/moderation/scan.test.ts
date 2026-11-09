@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MASK } from "@/lib/messaging/moderation";
-import { publicTextBlockedMessage, scanPublicText } from "./scan";
+import { PUBLIC_TEXT_ALERT_THRESHOLD, publicTextBlockedMessage, scanPublicText, shouldAlertAdmins } from "./scan";
 
 describe("scanPublicText", () => {
   it("passes ordinary public text", () => {
@@ -79,5 +79,22 @@ describe("publicTextBlockedMessage", () => {
 
   it("falls back to a generic phrase when no label is given", () => {
     expect(publicTextBlockedMessage([])).toContain("this text");
+  });
+});
+
+describe("shouldAlertAdmins (refused public-text saves in 24 hours)", () => {
+  it("uses a threshold of three refusals", () => {
+    expect(PUBLIC_TEXT_ALERT_THRESHOLD).toBe(3);
+  });
+
+  it("does not alert below the threshold", () => {
+    expect(shouldAlertAdmins(0)).toBe(false);
+    expect(shouldAlertAdmins(1)).toBe(false);
+    expect(shouldAlertAdmins(2)).toBe(false);
+  });
+
+  it("alerts at the threshold and above", () => {
+    expect(shouldAlertAdmins(3)).toBe(true);
+    expect(shouldAlertAdmins(7)).toBe(true);
   });
 });

@@ -39,6 +39,10 @@ describe("shouldEmail", () => {
     }
   });
 
+  it("always emails admin alerts, even with email switched off", () => {
+    expect(shouldEmail(off({ emailEnabled: false }), NOTIFICATION_TYPES.ADMIN_ALERT)).toBe(true);
+  });
+
   it("turns off all email when emailEnabled is false", () => {
     expect(shouldEmail(off({ emailEnabled: false }), NOTIFICATION_TYPES.ENQUIRY_RECEIVED)).toBe(false);
   });

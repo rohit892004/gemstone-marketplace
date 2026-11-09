@@ -14,6 +14,7 @@ export const NOTIFICATION_TYPES = {
   QUOTATION_RESPONDED: "quotation.responded",
   REQUIREMENT_MATCH: "requirement.match",
   REQUIREMENT_RESPONSE: "requirement.response",
+  ADMIN_ALERT: "admin.alert",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -53,6 +54,9 @@ export function categoryFor(type: string): PrefCategory | null {
 
 /** True when the recipient's preferences allow an email for this type. */
 export function shouldEmail(prefs: NotificationPrefs, type: string): boolean {
+  // Admin alerts are operational (for example, a seller hitting the public-text refusal threshold).
+  // They are emailed regardless of preferences.
+  if (type.startsWith("admin.")) return true;
   const category = categoryFor(type);
   if (category === null) return false;
   return prefs.emailEnabled && prefs[category];

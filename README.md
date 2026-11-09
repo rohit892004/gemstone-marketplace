@@ -184,22 +184,21 @@ npm run test:e2e              # Playwright; starts the server on port 3200
 
 - Built: enquiries, general conversations, offers (send, accept, decline, counter), quotations (create, withdraw, accept, decline, PDF), requirements (post, edit, close, board, respond), seller inbox, notifications and preferences, contact moderation, admin moderation queues, reports, requirement list, audited conversation viewer, seller categories.
 - Sellers as buyers: approved sellers can post requirements, make offers and enquire on other sellers' listings. Own listings and own requirements are refused on the server (`lib/messaging/guards.ts`) and never appear on the board to the poster. The seller inbox has Buying and Selling filters (`lib/messaging/side.ts`). Seller pages: `/seller/requirements/new` and `/seller/requirements/mine`.
-- Public seller text is moderated on save. Business name (registration), portfolio tagline, about and specialties, listing title and description, and quotation terms are refused when they contain contact details. Each refusal is logged to the flagged queue, except registration (no account yet).
+- Public seller text is moderated on save. Business name (registration), portfolio tagline, about and specialties, listing title and description, and quotation titles and terms are refused when they contain contact details. Refusals are never masked and never stored. Each refusal is logged to the flagged queue, with the listing when there is one. A refused save does not count toward the messaging restriction. When one seller has 3 or more refusals in 24 hours, every admin gets an alert (in-app and email, once per seller per 24 hours). Registration refusals are not logged, because no account exists yet.
+- Sellers can edit the requirements they post (`/seller/requirements/mine/[id]/edit`), with the same validation and moderation as buyers.
 - Verified: 624 unit tests, typecheck, lint, production build, and the Playwright suite (`e2e/journey.spec.ts` 9 steps and `e2e/m3-journey.spec.ts` 8 steps, 17 of 17). The M3 journey covers enquiry, quote and accept; requirement posted and answered; seller-to-seller requirement and enquiry, with own-item refusals; masked phone in the flagged queue; and a refused portfolio save. Screenshots at 390px and 1440px are in `screenshots/` and were reviewed. Fixes made from them: admin shell stacks on phones, header logo does not wrap.
 - Not verified: live Resend and MSG91 sending, and a real device.
 
 ### Running the browser journey
 
-- Run `npm run db:start`, `npm run build`, then `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before every run. The journey's refused portfolio save adds a contact strike to a demo seller; two strikes restrict messaging for 24 hours. Reseeding clears it.
+- Run `npm run db:start`, `npm run build`, then `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before every run. Reseeding gives a clean flagged queue and a clean alert count for the demo sellers. Refused public-text saves no longer restrict messaging, so repeated runs do not block the demo sellers.
 - `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run test:e2e` runs both journeys.
 
 ### Accepted M3 gaps
 
 - Phone number split across messages is not joined. Letters used as digit separators are not treated as separators.
-- Quotation terms with contact details are refused instead of masked. Quotation titles are still masked.
 - Registration business name refusals are not written to the flagged queue, because no account exists yet.
-- Flags on public text record the seller and the source, not the listing ID. The schema has no column for it.
-- Sellers cannot edit their own requirements (they can post and close them). Buyers keep edit.
+- Flags from the M3 migration `20261110140000_m3_flag_listing` store the listing ID only from the listing save and later. Older rows have none.
 - `moderateContactDetails` returns text exactly as typed when nothing is masked. Masked text is still normalised, so a flagged message can change letter-digit codes near a masked item.
 
 ## Known limitations (M2)

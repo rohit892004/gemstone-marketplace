@@ -49,6 +49,7 @@ async function FlagQueue() {
         },
       },
       conversation: { select: { isDemo: true } },
+      gemstone: { select: { id: true, title: true } },
       message: { select: { body: true, createdAt: true } },
     },
   });
@@ -120,6 +121,14 @@ async function FlagQueue() {
                     {text ?? "(no text stored)"}
                   </p>
                   {/* prefetch={false}: each render of the viewer writes an audit row, so nothing may load it early. */}
+                  {flag.gemstone && (
+                    <p className="text-sm">
+                      Listing:{" "}
+                      <Link href={`/admin/listings/${flag.gemstone.id}`} prefetch={false} className="underline">
+                        {flag.gemstone.title}
+                      </Link>
+                    </p>
+                  )}
                   {flag.conversationId ? (
                     <Link
                       href={`/admin/conversations/${flag.conversationId}`}

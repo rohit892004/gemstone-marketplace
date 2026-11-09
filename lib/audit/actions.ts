@@ -37,6 +37,7 @@ export const AuditAction = {
   MESSAGE_SENT: "message.sent",
   MESSAGE_FLAGGED: "message.flagged",
   MESSAGING_RESTRICTED: "messaging.restricted",
+  PUBLIC_TEXT_ALERT: "public_text.alert",
   OFFER_SENT: "offer.sent",
   OFFER_RESPONDED: "offer.responded",
   QUOTATION_SENT: "quotation.sent",

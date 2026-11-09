@@ -2,10 +2,10 @@ import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
 import { prisma } from "@/lib/db/client";
 import { isBlockedEitherWay, getConversationForParticipant } from "@/lib/messaging/access";
-import { assertCanMessage, CONTACT_WARNING, MessagingError } from "@/lib/messaging/service";
+import { assertCanMessage, MessagingError } from "@/lib/messaging/service";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 import { CommerceError } from "@/lib/commerce/errors";
-import { consumeCommerceLimit, recordContactFlag } from "@/lib/commerce/strikes";
+import { consumeCommerceLimit } from "@/lib/commerce/strikes";
 import { recordBlockedPublicText } from "@/lib/moderation/public-text";
 import { publicTextBlockedMessage } from "@/lib/moderation/scan";
 import {
@@ -51,16 +51,18 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
   if (!check.ok) throw new CommerceError("INVALID", check.error);
   const value = check.value;
 
-  // Terms are sent to the buyer as written, so terms with contact details are refused. The attempt is logged.
-  if (value.termsKinds.length > 0) {
+  // The item title and terms are sent to the buyer as written, so contact details are refused, not masked.
+  // The attempt is logged as public text and does not count toward the messaging restriction.
+  if (value.flagged) {
+    const labels = [...(value.titleKinds.length > 0 ? ["Item title"] : []), ...(value.termsKinds.length > 0 ? ["Terms"] : [])];
     await recordBlockedPublicText({
       senderId: input.sellerId,
-      source: "QUOTATION",
-      kinds: value.termsKinds,
+      source: "PUBLIC_QUOTATION",
+      kinds: value.kinds,
       conversationId: input.conversationId,
       now,
     });
-    throw new CommerceError("INVALID", publicTextBlockedMessage(["Terms"]));
+    throw new CommerceError("INVALID", publicTextBlockedMessage(labels));
   }
 
   await assertCanMessage(input.sellerId, [sides.buyerId], now);
@@ -82,7 +84,7 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
         senderId: input.sellerId,
         kind: "QUOTATION",
         body,
-        flagged: value.flagged,
+        flagged: false,
         createdAt: now,
       },
       select: { id: true },
@@ -109,21 +111,7 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
       where: { conversationId_userId: { conversationId: input.conversationId, userId: input.sellerId } },
       data: { lastReadAt: now },
     });
-    let restrictedUntil: Date | null = null;
-    let strikes = 0;
-    if (value.flagged) {
-      const result = await recordContactFlag(tx, {
-        conversationId: input.conversationId,
-        messageId: message.id,
-        senderId: input.sellerId,
-        source: "QUOTATION",
-        kinds: value.kinds,
-        now,
-      });
-      restrictedUntil = result.restrictedUntil;
-      strikes = result.strikes;
-    }
-    return { quotationId: quotation.id, messageId: message.id, restrictedUntil, strikes };
+    return { quotationId: quotation.id, messageId: message.id };
   });
 
   await recordAudit({
@@ -131,26 +119,8 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
     actorId: input.sellerId,
     entityType: "Quotation",
     entityId: created.quotationId,
-    meta: { conversationId: input.conversationId, currency: value.currency, flagged: value.flagged },
+    meta: { conversationId: input.conversationId, currency: value.currency, flagged: false },
   });
-  if (value.flagged) {
-    await recordAudit({
-      action: AuditAction.MESSAGE_FLAGGED,
-      actorId: input.sellerId,
-      entityType: "Message",
-      entityId: created.messageId,
-      meta: { kinds: value.kinds.join(","), strikes: created.strikes, source: "QUOTATION" },
-    });
-  }
-  if (created.restrictedUntil) {
-    await recordAudit({
-      action: AuditAction.MESSAGING_RESTRICTED,
-      actorId: input.sellerId,
-      entityType: "User",
-      entityId: input.sellerId,
-      meta: { until: created.restrictedUntil.toISOString(), strikes: created.strikes },
-    });
-  }
 
   await notify({
     userId: sides.buyerId,
@@ -160,7 +130,7 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
     href: `/conversations/${input.conversationId}`,
   });
 
-  return { quotationId: created.quotationId, warning: value.flagged ? CONTACT_WARNING : null };
+  return { quotationId: created.quotationId, warning: null };
 }
 
 /** Loads a quotation only for participants of its conversation. Null otherwise. */

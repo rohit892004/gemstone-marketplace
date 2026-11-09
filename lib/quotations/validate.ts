@@ -39,6 +39,8 @@ export interface ValidQuotation {
   /** True when contact details were masked in the item name or terms. */
   flagged: boolean;
   kinds: ContactKind[];
+  /** Kinds found in the item title alone. Titles with contact details are refused, not masked. */
+  titleKinds: ContactKind[];
   /** Kinds found in the terms alone. Terms with contact details are refused, not masked. */
   termsKinds: ContactKind[];
 }
@@ -102,22 +104,24 @@ export function validateQuotation(draft: QuotationDraft, now: Date): QuotationVa
   const terms = draft.terms.trim();
   if (terms.length > TERMS_MAX) return { ok: false, error: `Terms can be ${TERMS_MAX} characters or fewer.` };
 
-  const maskedTitle = moderateContactDetails(title);
-  const maskedTerms = terms.length > 0 ? moderateContactDetails(terms) : null;
-  const kinds = [...new Set([...maskedTitle.kinds, ...(maskedTerms?.kinds ?? [])])];
+  // Titles and terms with contact details are refused by the service, never masked and sent.
+  const titleKinds = moderateContactDetails(title).kinds;
+  const termsKinds = terms.length > 0 ? moderateContactDetails(terms).kinds : [];
+  const kinds = [...new Set([...titleKinds, ...termsKinds])];
 
   return {
     ok: true,
     value: {
-      itemTitle: maskedTitle.text,
+      itemTitle: title,
       quantity,
       amountMinor,
       currency: currency as QuotationCurrency,
       validUntil,
-      terms: maskedTerms ? maskedTerms.text : null,
+      terms: terms.length > 0 ? terms : null,
       flagged: kinds.length > 0,
       kinds,
-      termsKinds: maskedTerms?.kinds ?? [],
+      titleKinds,
+      termsKinds,
     },
   };
 }

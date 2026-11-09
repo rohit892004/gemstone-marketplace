@@ -93,7 +93,7 @@ describe("validateQuotation", () => {
     if (result.ok) expect(result.value.termsKinds).toEqual([]);
   });
 
-  it("masks contact details in the item name and terms, and reports them as flagged", () => {
+  it("reports contact details in the item name and terms without masking them, so the save can be refused", () => {
     const result = validateQuotation(
       draft({ terms: "Call me on 98765 43210 or mail dealer at gmail dot com", itemTitle: "Ruby, WhatsApp 9876543210" }),
       NOW,
@@ -101,9 +101,9 @@ describe("validateQuotation", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.flagged).toBe(true);
-    expect(result.value.terms).not.toMatch(/98765|gmail/);
-    expect(result.value.itemTitle).not.toMatch(/9876543210/);
-    expect(result.value.kinds).toEqual(expect.arrayContaining(["PHONE", "EMAIL"]));
+    expect(result.value.titleKinds).toContain("PLATFORM");
+    expect(result.value.termsKinds).toEqual(expect.arrayContaining(["PHONE", "EMAIL"]));
+    expect(result.value.kinds).toEqual(expect.arrayContaining(["PHONE", "EMAIL", "PLATFORM"]));
   });
 });
 

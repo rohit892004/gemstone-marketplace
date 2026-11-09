@@ -68,6 +68,11 @@ async function OwnRequirements() {
                   <span>
                     {row._count.responses} {row._count.responses === 1 ? "response" : "responses"}
                   </span>
+                  {row.status === "OPEN" && (
+                    <Link href={`/seller/requirements/mine/${row.id}/edit`} className="text-sm font-medium text-brand underline">
+                      Edit
+                    </Link>
+                  )}
                   {row.status === "OPEN" && <CloseRequirementButton requirementId={row.id} />}
                 </div>
               </li>

@@ -36,7 +36,7 @@ export async function recordContactFlag(
     messageId: string | null;
     requirementId?: string | null;
     senderId: string;
-    source: "OFFER" | "QUOTATION" | "REQUIREMENT" | "PUBLIC_PROFILE" | "PUBLIC_LISTING";
+    source: "OFFER" | "QUOTATION" | "REQUIREMENT";
     kinds: ContactKind[];
     now: Date;
   },

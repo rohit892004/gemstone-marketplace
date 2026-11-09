@@ -48,3 +48,12 @@ export function publicTextBlockedMessage(labels: readonly string[]): string {
   const list = labels.length > 0 ? labels.join(", ") : "this text";
   return `Remove the contact details from ${list}. Phone numbers, email addresses, website links and messaging handles can't appear in public text. Then save again.`;
 }
+
+/** Refused public-text saves that trigger an admin alert: this many within the window. */
+export const PUBLIC_TEXT_ALERT_THRESHOLD = 3;
+export const PUBLIC_TEXT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** True when a seller's refusal count in the window reaches the alert threshold. Pure. */
+export function shouldAlertAdmins(refusalsInWindow: number): boolean {
+  return refusalsInWindow >= PUBLIC_TEXT_ALERT_THRESHOLD;
+}

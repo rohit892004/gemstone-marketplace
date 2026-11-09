@@ -58,6 +58,12 @@ export function RequirementForm(props: RequirementFormProps) {
     });
   }
 
+  const cancelHref = props.sellerPoster
+    ? "/seller/requirements/mine"
+    : props.mode === "create"
+      ? "/buyer/requirements"
+      : `/buyer/requirements/${props.requirementId}`;
+
   const err = (name: RequirementField) => fieldErrors[name];
   const id = (name: string) => `${ids}-${name}`;
 
@@ -179,7 +185,7 @@ export function RequirementForm(props: RequirementFormProps) {
         >
           {pending ? "Saving..." : props.mode === "create" ? "Post requirement" : "Save changes"}
         </button>
-        <Link href={props.mode === "create" ? (props.sellerPoster ? "/seller/requirements/mine" : "/buyer/requirements") : `/buyer/requirements/${props.requirementId}`} className="text-sm text-ink-soft hover:text-ink">
+        <Link href={cancelHref} className="text-sm text-ink-soft hover:text-ink">
           Cancel
         </Link>
       </div>

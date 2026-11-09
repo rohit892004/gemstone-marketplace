@@ -319,6 +319,7 @@ model Category {
 /// and the seller is APPROVED (see lib/listings/visibility.ts).
 model Gemstone {
   id               String                   @id @default(cuid())
+  moderationFlags  ModerationFlag[]
   sellerId         String
   categoryId       String?
   title            String
@@ -770,8 +771,10 @@ model ModerationFlag {
   conversationId String?
   messageId      String?
   requirementId  String?
+  /// The listing a public-text refusal was about. Null for messages and requirement notes.
+  gemstoneId     String?
   senderId       String
-  /// MESSAGE, OFFER, QUOTATION or REQUIREMENT.
+  /// MESSAGE, OFFER, QUOTATION, REQUIREMENT, PUBLIC_PROFILE or PUBLIC_LISTING.
   source         String
   /// Detected kinds, e.g. PHONE, EMAIL, URL, HANDLE. Never the detected value.
   kinds          String[]
@@ -782,12 +785,14 @@ model ModerationFlag {
 
   conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   requirement  Requirement?  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  gemstone     Gemstone?     @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
   message      Message?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
   sender       User          @relation("FlagSender", fields: [senderId], references: [id], onDelete: Cascade)
   resolvedBy   User?         @relation("FlagResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([senderId, createdAt])
+  @@index([gemstoneId])
 }
 
 model NotificationPreference {
