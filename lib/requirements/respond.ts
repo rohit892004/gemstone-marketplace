@@ -64,7 +64,7 @@ export async function respondToRequirement(input: {
     where: { id: input.requirementId },
     select: { id: true, buyerId: true, status: true, deadline: true, categoryId: true, isDemo: true },
   });
-  if (!requirement) throw new CommerceError("NOT_FOUND", "This requirement is not available.");
+  if (!requirement) throw new CommerceError("NOT_ALLOWED", "This requirement is not available to respond to.");
 
   const existing = await prisma.requirementResponse.findUnique({
     where: { requirementId_sellerId: { requirementId: requirement.id, sellerId: input.sellerId } },
@@ -83,7 +83,9 @@ export async function respondToRequirement(input: {
     { sellerId: input.sellerId, categoryIds: profile.categories.map((c) => c.id) },
     now,
   );
-  if (problem) throw problem;
+  // One message for every reason (missing, closed, out of category, past deadline), so a seller
+  // cannot tell which requirement IDs exist.
+  if (problem) throw new CommerceError("NOT_ALLOWED", "This requirement is not available to respond to.");
 
   const body = input.body.trim();
   if (body.length === 0) throw new CommerceError("INVALID", "Write your response before sending.");
@@ -120,7 +122,14 @@ export async function respondToRequirement(input: {
     throw error;
   }
 
-  const sent = await sendMessage({ conversationId, senderId: input.sellerId, body, now });
+  let sent;
+  try {
+    sent = await sendMessage({ conversationId, senderId: input.sellerId, body, now });
+  } catch (error) {
+    // The response slot is only kept when the first message went out. Otherwise the seller can retry.
+    await prisma.requirementResponse.deleteMany({ where: { requirementId: requirement.id, sellerId: input.sellerId } });
+    throw error;
+  }
 
   await recordAudit({
     action: AuditAction.REQUIREMENT_RESPONDED,

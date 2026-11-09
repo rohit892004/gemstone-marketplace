@@ -2,7 +2,7 @@ import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
 import { prisma } from "@/lib/db/client";
 import { CONTACT_WARNING } from "@/lib/messaging/service";
-import { recordContactStrike } from "@/lib/messaging/strikes";
+import { recordContactFlag } from "@/lib/commerce/strikes";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 import {
@@ -32,7 +32,7 @@ const NOTIFY_CHUNK = 20;
 
 export class RequirementError extends Error {
   constructor(
-    readonly code: "NOT_FOUND" | "NOT_OPEN" | "NOT_AVAILABLE" | "INVALID" | "RATE_LIMITED",
+    readonly code: "NOT_FOUND" | "NOT_OPEN" | "NOT_AVAILABLE" | "INVALID" | "RATE_LIMITED" | "RESTRICTED",
     message: string,
     readonly fieldErrors?: Partial<Record<RequirementField, string>>,
     readonly retryAfterSeconds?: number,
@@ -50,6 +50,17 @@ function requireValid(check: RequirementCheck): Extract<RequirementCheck, { ok: 
 async function assertBuyer(buyerId: string): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: buyerId }, select: { role: true } });
   if (user?.role !== "BUYER") throw new RequirementError("NOT_AVAILABLE", "Only buyers can post requirements.");
+}
+
+/** Contact-detail restrictions also stop requirement posts and edits, not only chat. */
+async function assertNotRestricted(buyerId: string, now: Date): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: buyerId }, select: { messagingRestrictedUntil: true } });
+  if (user?.messagingRestrictedUntil && user.messagingRestrictedUntil > now) {
+    throw new RequirementError(
+      "RESTRICTED",
+      "Your account is temporarily restricted, so you can't post or edit requirements right now.",
+    );
+  }
 }
 
 async function assertCategory(categoryId: string | null): Promise<void> {
@@ -132,6 +143,7 @@ export async function postRequirement(input: {
 }): Promise<PostRequirementResult> {
   const now = input.now ?? new Date();
   await assertBuyer(input.buyerId);
+  await assertNotRestricted(input.buyerId, now);
   const check = requireValid(validateRequirementInput(input.raw, now));
   await assertCategory(check.values.categoryId);
 
@@ -150,7 +162,17 @@ export async function postRequirement(input: {
       data: { buyerId: input.buyerId, status: "OPEN", ...toDbData(check.values) },
       select: { id: true },
     });
-    const strike = check.flagged ? await recordContactStrike(tx, input.buyerId, now) : null;
+    const strike = check.flagged
+      ? await recordContactFlag(tx, {
+          conversationId: null,
+          messageId: null,
+          requirementId: row.id,
+          senderId: input.buyerId,
+          source: "REQUIREMENT",
+          kinds: check.kinds,
+          now,
+        })
+      : null;
     return { requirementId: row.id, strike };
   });
 
@@ -203,6 +225,7 @@ export async function updateRequirement(input: {
   now?: Date;
 }): Promise<{ warning: string | null }> {
   const now = input.now ?? new Date();
+  await assertNotRestricted(input.buyerId, now);
   const existing = await prisma.requirement.findFirst({
     where: { id: input.requirementId, buyerId: input.buyerId },
     select: { id: true, status: true },
@@ -222,7 +245,17 @@ export async function updateRequirement(input: {
       data: toDbData(check.values),
     });
     if (updated.count === 0) throw new RequirementError("NOT_OPEN", "Closed requirements can't be edited. Post a new requirement instead.");
-    return check.flagged ? await recordContactStrike(tx, input.buyerId, now) : null;
+    return check.flagged
+      ? await recordContactFlag(tx, {
+          conversationId: null,
+          messageId: null,
+          requirementId: input.requirementId,
+          senderId: input.buyerId,
+          source: "REQUIREMENT",
+          kinds: check.kinds,
+          now,
+        })
+      : null;
   });
 
   await recordAudit({

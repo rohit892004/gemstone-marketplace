@@ -14,7 +14,7 @@ export function ListingCard({ listing, priority = false }: { listing: ListingCar
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition hover:border-ink-soft/50">
       <Link href={`/gemstones/${listing.slug}`} className="block focus-visible:outline-none">
-        <div className="relative aspect-[4/3] bg-accent-soft">
+        <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-accent-soft">
           {listing.coverUrl ? (
             <Image
               src={listing.coverUrl}

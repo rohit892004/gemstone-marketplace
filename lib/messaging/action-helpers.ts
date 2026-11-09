@@ -1,6 +1,6 @@
 import { getEnv } from "@/lib/config/env";
 import { AuthzError } from "@/lib/auth/require-role";
-import { MessagingError, type UploadedFile } from "./service";
+import { MAX_ATTACHMENTS_PER_MESSAGE, MessagingError, type UploadedFile } from "./service";
 
 /**
  * Helpers shared by the buyer-side server actions (enquiries, contact, offers, requirements).
@@ -26,7 +26,8 @@ export function messageForActionError(error: unknown): string {
 export async function readUploads(formData: FormData, field = "files"): Promise<UploadedFile[]> {
   const out: UploadedFile[] = [];
   const limit = getEnv().UPLOAD_MAX_MB * 1024 * 1024;
-  for (const value of formData.getAll(field)) {
+  // Only the first allowed number of files is read. The rest would be rejected by sendMessage anyway.
+  for (const value of formData.getAll(field).slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
     if (typeof value === "string" || value.size === 0) continue;
     if (value.size > limit) {
       out.push({ fileName: value.name, bytes: Buffer.alloc(limit + 1) });

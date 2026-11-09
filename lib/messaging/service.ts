@@ -174,9 +174,13 @@ export async function sendMessage(input: {
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: input.conversationId, participants: { some: { userId: input.senderId } } },
-    select: { id: true, participants: { select: participantSelect } },
+    select: { id: true, participants: { select: participantSelect }, requirement: { select: { status: true } } },
   });
   if (!conversation) throw new MessagingError("NOT_FOUND", "Conversation not found.");
+  // A closed requirement is read only, on the server as well as in the UI.
+  if (conversation.requirement?.status === "CLOSED") {
+    throw new MessagingError("NOT_AVAILABLE", "This requirement is closed, so the conversation is read only.");
+  }
 
   const others = conversation.participants.map((p) => p.userId).filter((id) => id !== input.senderId);
   await assertCanMessage(input.senderId, others, now);

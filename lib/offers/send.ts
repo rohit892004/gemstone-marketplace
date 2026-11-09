@@ -218,7 +218,7 @@ export async function sendOffer(input: {
     userId: sellerId,
     type: NOTIFICATION_TYPES.OFFER_RECEIVED,
     title: "New offer",
-    body: `A buyer made an offer of ${amountText} on ${listing.title}.`,
+    body: `A buyer made an offer of ${amountText} on one of your listings.`,
     href: `/conversations/${input.conversationId}`,
   });
 

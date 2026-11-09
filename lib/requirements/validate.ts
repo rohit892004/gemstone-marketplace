@@ -130,6 +130,8 @@ export function validateRequirementInput(raw: RequirementRaw, now: Date): Requir
   }
 
   const categoryId = clean(raw.categoryId);
+  // Every requirement needs a category: sellers only see requirements in their own categories.
+  if (!categoryId) errors.categoryId = "Choose the gemstone category this requirement is for.";
 
   // Carat range.
   let caratMin: string | null = null;

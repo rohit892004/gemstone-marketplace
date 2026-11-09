@@ -6,7 +6,7 @@ const NOW = new Date("2026-11-09T10:00:00.000Z");
 
 const valid: RequirementRaw = {
   gemstoneType: "Sapphire",
-  categoryId: "",
+  categoryId: "cat_sapphire",
   shape: "",
   caratMin: "",
   caratMax: "",
@@ -31,7 +31,7 @@ describe("validateRequirementInput basics", () => {
     if (!result.ok) return;
     expect(result.values).toMatchObject({
       gemstoneType: "Sapphire",
-      categoryId: null,
+      categoryId: "cat_sapphire",
       budgetMinMinor: null,
       budgetMaxMinor: null,
       currency: "INR",
@@ -183,5 +183,12 @@ describe("contact-detail masking in free text", () => {
     const result = validateRequirementInput(withRaw({ notes: "x".repeat(2001) }), NOW);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.notes).toBeDefined();
+  });
+});
+
+describe("category is required", () => {
+  it("refuses a requirement with no category", () => {
+    const result = validateRequirementInput(withRaw({ categoryId: "" }), NOW);
+    expect(result).toMatchObject({ ok: false, fieldErrors: { categoryId: expect.any(String) } });
   });
 });

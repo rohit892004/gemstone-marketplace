@@ -8,7 +8,7 @@ import { AuthzError } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { getEnv } from "@/lib/config/env";
 import { getConversationForParticipant, otherParticipantIds, requireMessagingUser } from "@/lib/messaging/access";
-import { MessagingError, markConversationRead, sendMessage, type UploadedFile } from "@/lib/messaging/service";
+import { MAX_ATTACHMENTS_PER_MESSAGE, MessagingError, markConversationRead, sendMessage, type UploadedFile } from "@/lib/messaging/service";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 
 /**
@@ -37,7 +37,8 @@ function messageFor(error: unknown): string {
 async function readFiles(formData: FormData): Promise<UploadedFile[]> {
   const out: UploadedFile[] = [];
   const limit = getEnv().UPLOAD_MAX_MB * 1024 * 1024;
-  for (const value of formData.getAll("files")) {
+  // Only the first allowed number of files is read; sendMessage would reject more anyway.
+  for (const value of formData.getAll("files").slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
     if (typeof value === "string" || value.size === 0) continue;
     if (value.size > limit) {
       out.push({ fileName: value.name, bytes: Buffer.alloc(limit + 1) });

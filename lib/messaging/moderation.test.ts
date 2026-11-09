@@ -137,3 +137,56 @@ describe("contact-detail moderation: clean text and behaviour", () => {
     expect(normaliseForModeration("ＡＢＣ １２３")).toBe("ABC 123");
   });
 });
+
+describe("contact-detail moderation: bypasses found in review", () => {
+  it.each([
+    "98765    43210",
+    "98765,43210",
+    "98765_43210",
+    "98765｜43210",
+    "98765 and 43210",
+    "๙๘๗๖๕๔๓๒๑๐", // Thai digits
+    "98765\u{E0031}43210", // tag characters inside a number
+    "9876-54-3210",
+    "9876.54.3210",
+    "5551234", // seven digits
+  ])("masks phone form %j", (input) => {
+    const result = moderateContactDetails(input);
+    expect(result.flagged, input).toBe(true);
+    expect(result.kinds).toContain("PHONE");
+  });
+
+  it("masks spelled digits separated by slashes and underscores", () => {
+    expect(moderateContactDetails("nine/eight/seven/six/five/four/three/two").flagged).toBe(true);
+    expect(moderateContactDetails("nine_eight_seven_six_five_four_three").flagged).toBe(true);
+  });
+
+  it.each([
+    "john [at] gmail [.] com",
+    "john(at)gmail(.)com",
+    "john@gmail[.]com",
+    "john at mydomain dot ng",
+  ])("masks email form %j", (input) => {
+    expect(moderateContactDetails(input).kinds).toContain("EMAIL");
+  });
+
+  it.each(["johnsgems.ng", "shop: johnsgems.jp"])("masks domain with an uncommon TLD %j", (input) => {
+    expect(moderateContactDetails(input).flagged).toBe(true);
+  });
+
+  it.each([
+    ["my insta is johnny_gems", "johnny_gems"],
+    ["Skype me: john.gems", "john.gems"],
+    ["snap me at johnny", "johnny"],
+  ])("masks the handle after an app keyword: %j", (input, leaked) => {
+    const result = moderateContactDetails(input);
+    expect(result.flagged).toBe(true);
+    expect(result.text).not.toContain(leaked);
+  });
+
+  it("still does not flag dates in either order or a short price", () => {
+    for (const text of ["Available 2026-11-09", "Deadline 09-11-2026", "Price 450 000 INR"]) {
+      expect(moderateContactDetails(text).flagged, text).toBe(false);
+    }
+  });
+});

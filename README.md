@@ -20,6 +20,21 @@ npm run dev                 # http://localhost:3000
 
 `npm run build` imports route modules, so `DATABASE_URL` must be set at build time too.
 
+### Local database (development)
+
+The dev database is a PostgreSQL server started from the binaries in the `embedded-postgres` package. No Docker or system install is needed.
+
+```bash
+npm run db:start     # create the data directory on first use, start the server, create database "gemstone"
+npm run db:status    # is it running?
+npm run db:stop      # stop the server; data is kept in .data/pg
+```
+
+- Port 54330 on 127.0.0.1, user `postgres`, password `postgres` (set `DB_PORT` to change the port). Match this in `DATABASE_URL`.
+- Data lives in `.data/pg` (git-ignored). Server log: `.data/pg.log`.
+- Refuses to run with `NODE_ENV=production`. It is a development tool only; production uses managed Postgres.
+- Stop it before you shut down for the day, or when a test run is finished. Check with `npm run db:status` if a command cannot connect.
+
 ### Environment
 
 | Variable | Required | Notes |

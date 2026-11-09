@@ -31,7 +31,8 @@ export async function consumeRequirementResponseLimit(userId: string): Promise<v
 export async function recordContactFlag(
   tx: Prisma.TransactionClient,
   input: {
-    conversationId: string;
+    /** Null for requirement notes, which have no conversation. */
+    conversationId: string | null;
     messageId: string | null;
     requirementId?: string | null;
     senderId: string;
