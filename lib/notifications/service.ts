@@ -142,17 +142,26 @@ async function sendMessageDigest(userId: string, now = new Date()): Promise<numb
   });
   if (pending.length === 0) return 0;
 
-  const to = await recipientEmail(userId);
-  if (to) {
-    const total = await prisma.notification.count({ where: pendingWhere });
-    const copy = digestCopy(total, absoluteUrl("/conversations"));
-    await getEmailProvider().send({ to, subject: copy.subject, text: copy.text });
-  }
-  await prisma.notification.updateMany({
-    where: { id: { in: pending.map((p) => p.id) } },
+  // Claim the rows first. A row that another run already claimed is not picked up again, so two
+  // runs cannot send the same digest. If the send fails, the claim is released and the next run retries.
+  const ids = pending.map((p) => p.id);
+  const claimed = await prisma.notification.updateMany({
+    where: { id: { in: ids }, emailedAt: null },
     data: { emailedAt: now },
   });
-  return pending.length;
+  if (claimed.count === 0) return 0;
+
+  const to = await recipientEmail(userId);
+  if (to) {
+    const copy = digestCopy(claimed.count, absoluteUrl("/conversations"));
+    try {
+      await getEmailProvider().send({ to, subject: copy.subject, text: copy.text });
+    } catch (error) {
+      await prisma.notification.updateMany({ where: { id: { in: ids }, emailedAt: now }, data: { emailedAt: null } });
+      throw error;
+    }
+  }
+  return claimed.count;
 }
 
 /**
@@ -160,24 +169,34 @@ async function sendMessageDigest(userId: string, now = new Date()): Promise<numb
  * Run from a scheduler (npm run notify:flush). Returns the number of digests sent.
  */
 export async function flushMessageDigests(now = new Date()): Promise<number> {
-  const users = await prisma.notification.findMany({
-    where: { type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: null },
-    distinct: ["userId"],
-    select: { userId: true },
-    take: 500,
-  });
-  let sent = 0;
-  for (const { userId } of users) {
-    const prefs = await getNotificationPrefs(userId);
-    if (!shouldEmail(prefs, NOTIFICATION_TYPES.MESSAGE_RECEIVED)) continue;
-    if (!digestDue(await lastMessageEmailedAt(userId), now)) continue;
-    try {
-      sent += (await sendMessageDigest(userId, now)) > 0 ? 1 : 0;
-    } catch (error) {
-      console.error("[notify] digest failed", userId, error);
-    }
-  }
-  return sent;
+  // A transaction-scoped advisory lock: only one flush runs at a time across all processes.
+  // A second run that finds the lock taken returns 0 straight away.
+  return prisma.$transaction(
+    async (tx) => {
+      const [lock] = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(hashtext('notify:message-digest')) AS locked`;
+      if (!lock?.locked) return 0;
+
+      const users = await prisma.notification.findMany({
+        where: { type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: null },
+        distinct: ["userId"],
+        select: { userId: true },
+        take: 500,
+      });
+      let sent = 0;
+      for (const { userId } of users) {
+        const prefs = await getNotificationPrefs(userId);
+        if (!shouldEmail(prefs, NOTIFICATION_TYPES.MESSAGE_RECEIVED)) continue;
+        if (!digestDue(await lastMessageEmailedAt(userId), now)) continue;
+        try {
+          sent += (await sendMessageDigest(userId, now)) > 0 ? 1 : 0;
+        } catch (error) {
+          console.error("[notify] digest failed", userId, error);
+        }
+      }
+      return sent;
+    },
+    { timeout: 10 * 60 * 1000, maxWait: 5000 },
+  );
 }
 
 /**

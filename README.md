@@ -63,6 +63,11 @@ Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and
 | `npm run db:migrate` | Create and apply a dev migration |
 | `npm run db:deploy` | Apply committed migrations (CI, production) |
 | `npm run db:seed` | Reference data and admin seed |
+| `npm run notify:flush` | Sends pending message digests. Run every 5 minutes from a scheduler (see below) |
+
+## Scheduled jobs
+
+- **Message digests:** `npm run notify:flush` every 5 minutes (cron, Task Scheduler or your host's scheduler). Message emails are batched: the first message in a 10 minute window is emailed at once, and later ones wait for the next flush. Without the schedule, digests after the first message never send. The flush takes a Postgres advisory lock, so overlapping runs are safe.
 
 ## Roles and access
 
@@ -167,7 +172,21 @@ npm run test:e2e              # Playwright; starts the server on port 3200
 
 `playwright.config.ts` sets `ALLOW_NON_DELIVERING_PROVIDERS=true` for the server, so the console email provider can print verification links to `e2e/.server.log`. Without that flag, console providers are refused in production. `e2e/global-setup.ts` clears the database rate-limit counters before each run; it refuses to run in production. Screenshots are written to `screenshots/` (git-ignored).
 
-### Known limitations (M2)
+### Known limitations (M3)
+
+- **Contact moderation is a filter, not a guarantee.** It masks phone numbers, emails, URLs, handles and app names, including spelled-out digits, Unicode digit scripts and bracketed forms. It does not catch these, and they are accepted gaps:
+  - **A phone number split across messages.** Each message is checked on its own, so "98765" in one message and "43210" in the next is not joined.
+  - **Letters used as digit separators.** "98765a43210" is not treated as one number.
+- **Live Resend and MSG91 sending is untested.** Both are implemented behind the email and SMS interfaces and refuse to send without their keys. The MSG91 request body follows its public docs, not a live call.
+- **Digest and email delivery is best effort.** A failed send releases its claim and is retried on the next flush.
+
+## M3 status (Communication)
+
+- Built: enquiries, general conversations, offers (send, accept, decline, counter), quotations (create, withdraw, accept, decline, PDF), requirements (post, edit, close, board, respond), seller inbox, notifications and preferences, contact moderation, admin moderation queues, reports, requirement list, audited conversation viewer, seller categories.
+- Verified: unit tests, typecheck, lint, production build, and the existing M1 and M2 Playwright journey (9 of 9).
+- Not yet verified: the M3 browser journey and the 390px and 1440px M3 screenshots. See `docs/milestones/m3-status.md` for what is left.
+
+## Known limitations (M2)
 
 - **Video metadata is not stripped.** Videos are stored as uploaded, so GPS tags in a video container survive. Images are fine. Needs an ffmpeg step.
 - **Logo and banner** are served through an authorised route, but the seller editor's upload and preview controls are minimal.
