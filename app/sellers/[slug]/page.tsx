@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { DemoBadge } from "@/components/catalogue/badges";
 import { ListingCard } from "@/components/catalogue/listing-card";
 import { Rating } from "@/components/catalogue/rating";
 import { VerifiedSellerBadge } from "@/components/catalogue/verified-seller-badge";
+import { ContactSellerForm } from "@/components/seller/contact-seller-form";
+import { checkRole } from "@/lib/auth/require-role";
+import { prisma } from "@/lib/db/client";
+import { MESSAGING_ROLES } from "@/lib/messaging/access";
 import { getApprovedReviews, getPublicSellerBySlug, listSellerGemstones } from "@/lib/seller-public/queries";
 
 /**
@@ -152,6 +156,8 @@ async function SellerPortfolio({ params, searchParams }: Props) {
           </div>
 
           <aside className="space-y-6">
+            <ContactSection slug={seller.slug} businessName={seller.businessName} sellerId={seller.id} />
+
             <section aria-labelledby="specialties-heading" className="rounded-lg border border-line bg-surface-raised p-5">
               <h2 id="specialties-heading" className="text-base font-semibold text-ink">
                 Specialties
@@ -200,3 +206,46 @@ async function SellerPortfolio({ params, searchParams }: Props) {
     </>
   );
 }
+
+/**
+ * Contact the seller inside the platform. Approved buyers and sellers can start a general conversation.
+ * The seller is resolved by slug on the server, and the seller's own account sees a note instead.
+ */
+async function ContactSection({ slug, businessName, sellerId }: { slug: string; businessName: string; sellerId: string }) {
+  const viewer = await checkRole(MESSAGING_ROLES, { sellerApproved: true });
+  let content: ReactNode;
+  if (!viewer.ok) {
+    content =
+      viewer.code === "UNAUTHENTICATED" ? (
+        <div className="space-y-2">
+          <Link
+            href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`}
+            className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
+          >
+            Sign in to contact
+          </Link>
+          <p className="text-xs text-ink-soft">Sign in as a buyer to message this seller on the platform.</p>
+        </div>
+      ) : (
+        <p className="text-sm text-ink-soft">Messaging is available to approved buyer and seller accounts.</p>
+      );
+  } else {
+    const owner = await prisma.sellerProfile.findUnique({ where: { id: sellerId }, select: { userId: true } });
+    content =
+      owner?.userId === viewer.user.id ? (
+        <p className="text-sm text-ink-soft">This is your business profile.</p>
+      ) : (
+        <ContactSellerForm sellerSlug={slug} businessName={businessName} />
+      );
+  }
+
+  return (
+    <section aria-labelledby="contact-heading" className="rounded-lg border border-line bg-surface-raised p-5">
+      <h2 id="contact-heading" className="text-base font-semibold text-ink">
+        Contact seller
+      </h2>
+      <div className="mt-3">{content}</div>
+    </section>
+  );
+}
+
