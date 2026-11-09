@@ -318,7 +318,7 @@ export async function startEnquiry(input: {
       userId: listing.seller.userId,
       type: NOTIFICATION_TYPES.ENQUIRY_RECEIVED,
       title: "New enquiry",
-      body: `A buyer enquired about ${listing.title}.`,
+      body: "A buyer enquired about one of your listings.",
       href: `/conversations/${conversationId}`,
     });
   }
