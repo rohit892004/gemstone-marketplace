@@ -8,6 +8,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { assertDemoAllowed } from "@/lib/demo/guard";
 import { processMedia } from "@/lib/media/pipeline";
 import { getStorageProvider, type StorageProvider } from "@/lib/storage/storage";
+import { seedM3Demo } from "@/prisma/seed-m3-demo";
 
 /**
  * Demo catalogue for local development and demos. NEVER runs in production:
@@ -294,6 +295,8 @@ async function main(): Promise<void> {
   });
   try {
     await seedDemo(prisma);
+    // M3 demo data (conversations, offers, quotations, requirements) attaches to the sellers above.
+    await seedM3Demo(prisma);
   } finally {
     await prisma.$disconnect();
   }

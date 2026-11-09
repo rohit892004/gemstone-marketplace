@@ -5,6 +5,9 @@ import { z } from "zod";
  * Validation runs on first use (not on import), so tests and tooling can load
  * modules without a full environment. Throws if required variables are invalid.
  */
+/** Optional string where an empty value (e.g. copied from .env.example) counts as unset. */
+const optionalText = z.preprocess((value) => (value === "" ? undefined : value), z.string().min(1).optional());
+
 const schema = z
   .object({
     DATABASE_URL: z.string().url({ message: "DATABASE_URL must be a valid URL" }),
@@ -19,8 +22,18 @@ const schema = z
     ADMIN_PASSWORD: z.string().min(10).optional(),
 
     // Providers. "console" logs to stdout and is only allowed outside production.
-    EMAIL_PROVIDER: z.enum(["console"]).default("console"),
-    SMS_PROVIDER: z.enum(["console"]).default("console"),
+    // "resend" (email) and "msg91" (SMS) need their keys below; the factories refuse to send without them.
+    EMAIL_PROVIDER: z.enum(["console", "resend"]).default("console"),
+    SMS_PROVIDER: z.enum(["console", "msg91"]).default("console"),
+
+    // Resend (email). EMAIL_FROM is the verified sender, e.g. "Gemstone Selections <no-reply@your-domain>".
+    RESEND_API_KEY: optionalText,
+    EMAIL_FROM: optionalText,
+
+    // MSG91 (SMS). Sender ID is the 6-character DLT sender; TEMPLATE_ID is the DLT-approved Flow id.
+    MSG91_AUTH_KEY: optionalText,
+    MSG91_SENDER_ID: optionalText,
+    MSG91_TEMPLATE_ID: optionalText,
     /**
      * Test-only opt-in. Console providers never deliver mail, so they are refused in production
      * unless this is "true". Only the end-to-end run sets it (playwright.config.ts). Never set it on a real host.

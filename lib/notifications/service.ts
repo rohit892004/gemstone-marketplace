@@ -1,6 +1,21 @@
 import { getEmailProvider } from "@/lib/notify/email";
 import { getEnv } from "@/lib/config/env";
 import { prisma } from "@/lib/db/client";
+import {
+  DEFAULT_PREFS,
+  DIGEST_WINDOW_MS,
+  NOTIFICATION_TYPES,
+  digestCopy,
+  digestDue,
+  isSafeHref,
+  safeNotificationText,
+  shouldEmail,
+  type NotificationPrefs,
+  type NotificationType,
+} from "./rules";
+
+export { DEFAULT_PREFS, DIGEST_WINDOW_MS, NOTIFICATION_TYPES };
+export type { NotificationPrefs, NotificationType };
 
 /**
  * In-app notifications (bell and centre) plus email.
@@ -8,56 +23,21 @@ import { prisma } from "@/lib/db/client";
  * Rules:
  *  - Notification text is written from fixed templates. It never includes message, offer, quotation or
  *    requirement text written by users, and never includes a contact detail. Email follows the same rule.
+ *    safeNotificationText() is a last check: text that looks like a contact detail is replaced.
  *  - In-app notifications are always stored. Email follows the recipient's preferences.
  *  - Message emails are batched. At most one message email per user per DIGEST_WINDOW. Messages that
- *    arrive inside the window wait, and flushMessageDigests() sends them as one digest.
+ *    arrive inside the window wait, and flushMessageDigests() sends them as one digest
+ *    (npm run notify:flush, run from a scheduler).
  *  - Notification failures are logged and never break the action that caused them.
  */
 
-export const NOTIFICATION_TYPES = {
-  ENQUIRY_RECEIVED: "enquiry.received",
-  MESSAGE_RECEIVED: "message.received",
-  OFFER_RECEIVED: "offer.received",
-  OFFER_RESPONDED: "offer.responded",
-  QUOTATION_RECEIVED: "quotation.received",
-  QUOTATION_RESPONDED: "quotation.responded",
-  REQUIREMENT_MATCH: "requirement.match",
-  REQUIREMENT_RESPONSE: "requirement.response",
-} as const;
-
-export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
-
-export const DIGEST_WINDOW_MS = 10 * 60 * 1000;
-
-export interface NotificationPrefs {
-  emailEnabled: boolean;
-  enquiries: boolean;
-  messages: boolean;
-  offersAndQuotes: boolean;
-  requirements: boolean;
-}
-
-export const DEFAULT_PREFS: NotificationPrefs = {
-  emailEnabled: true,
-  enquiries: true,
-  messages: true,
-  offersAndQuotes: true,
-  requirements: true,
-};
-
-type PrefCategory = Exclude<keyof NotificationPrefs, "emailEnabled">;
-
-function categoryFor(type: string): PrefCategory {
-  if (type.startsWith("enquiry.")) return "enquiries";
-  if (type.startsWith("message.")) return "messages";
-  if (type.startsWith("offer.") || type.startsWith("quotation.")) return "offersAndQuotes";
-  return "requirements";
-}
+/** Requirement matches go to at most this many sellers per requirement post. */
+export const MAX_REQUIREMENT_MATCH_RECIPIENTS = 200;
 
 export interface NotifyInput {
   userId: string;
   type: NotificationType;
-  /** Short fixed text, e.g. "New enquiry on Blue Sapphire 5.2 ct". No user-written text. */
+  /** Short fixed text, e.g. "New enquiry". No user-written text. */
   title: string;
   /** Fixed text for the email body. No user-written text and no contact details. */
   body: string;
@@ -88,24 +68,29 @@ export async function saveNotificationPrefs(userId: string, prefs: NotificationP
 /** Stores the in-app notification and sends email when the preferences allow it. Never throws. */
 export async function notify(input: NotifyInput): Promise<void> {
   try {
+    const text = safeNotificationText({ title: input.title, body: input.body });
+    if (text.replaced) {
+      console.warn("[notify] text looked like a contact detail and was replaced", input.type);
+    }
+    const href = isSafeHref(input.href) ? input.href : "/notifications";
+
     const row = await prisma.notification.create({
       data: {
         userId: input.userId,
         type: input.type,
-        payload: { title: input.title, body: input.body, href: input.href },
+        payload: { title: text.title, body: text.body, href },
       },
       select: { id: true },
     });
 
     const prefs = await getNotificationPrefs(input.userId);
-    const category = categoryFor(input.type);
-    if (!prefs.emailEnabled || !prefs[category]) return;
+    if (!shouldEmail(prefs, input.type)) return;
 
     if (input.type === NOTIFICATION_TYPES.MESSAGE_RECEIVED) {
       await sendDigestIfDue(input.userId);
       return;
     }
-    await sendSingleEmail(input.userId, input.title, input.body, input.href, [row.id]);
+    await sendSingleEmail(input.userId, text.title, text.body, href, [row.id]);
   } catch (error) {
     console.error("[notify] failed", input.type, error);
   }
@@ -131,20 +116,26 @@ async function sendSingleEmail(userId: string, title: string, body: string, href
   await prisma.notification.updateMany({ where: { id: { in: ids } }, data: { emailedAt: new Date() } });
 }
 
-/** Sends a message digest now, unless one was sent inside the window. Pending rows wait for the flush. */
-async function sendDigestIfDue(userId: string, now = new Date()): Promise<void> {
+async function lastMessageEmailedAt(userId: string): Promise<Date | null> {
   const last = await prisma.notification.findFirst({
     where: { userId, type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: { not: null } },
     orderBy: { emailedAt: "desc" },
     select: { emailedAt: true },
   });
-  if (last?.emailedAt && now.getTime() - last.emailedAt.getTime() < DIGEST_WINDOW_MS) return;
+  return last?.emailedAt ?? null;
+}
+
+/** Sends a message digest now, unless one was sent inside the window. Pending rows wait for the flush. */
+async function sendDigestIfDue(userId: string, now = new Date()): Promise<void> {
+  if (!digestDue(await lastMessageEmailedAt(userId), now)) return;
   await sendMessageDigest(userId, now);
 }
 
+/** Emails the pending message notifications for one user as one digest. Returns how many rows it covered. */
 async function sendMessageDigest(userId: string, now = new Date()): Promise<number> {
+  const pendingWhere = { userId, type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: null };
   const pending = await prisma.notification.findMany({
-    where: { userId, type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: null },
+    where: pendingWhere,
     orderBy: { createdAt: "asc" },
     take: 200,
     select: { id: true },
@@ -153,15 +144,9 @@ async function sendMessageDigest(userId: string, now = new Date()): Promise<numb
 
   const to = await recipientEmail(userId);
   if (to) {
-    const count = pending.length;
-    await getEmailProvider().send({
-      to,
-      subject: "Gemstone Selections: new messages",
-      text:
-        `You have ${count} new ${count === 1 ? "message" : "messages"} on Gemstone Selections.\n\n` +
-        `Open your conversations here: ${absoluteUrl("/conversations")}\n\n` +
-        "Messages stay on the platform. Change email preferences in your account settings.",
-    });
+    const total = await prisma.notification.count({ where: pendingWhere });
+    const copy = digestCopy(total, absoluteUrl("/conversations"));
+    await getEmailProvider().send({ to, subject: copy.subject, text: copy.text });
   }
   await prisma.notification.updateMany({
     where: { id: { in: pending.map((p) => p.id) } },
@@ -172,7 +157,7 @@ async function sendMessageDigest(userId: string, now = new Date()): Promise<numb
 
 /**
  * Sends one digest for each user with pending message emails whose window has passed.
- * Call from a scheduled job or a maintenance script. Returns the number of digests sent.
+ * Run from a scheduler (npm run notify:flush). Returns the number of digests sent.
  */
 export async function flushMessageDigests(now = new Date()): Promise<number> {
   const users = await prisma.notification.findMany({
@@ -184,13 +169,8 @@ export async function flushMessageDigests(now = new Date()): Promise<number> {
   let sent = 0;
   for (const { userId } of users) {
     const prefs = await getNotificationPrefs(userId);
-    if (!prefs.emailEnabled || !prefs.messages) continue;
-    const last = await prisma.notification.findFirst({
-      where: { userId, type: NOTIFICATION_TYPES.MESSAGE_RECEIVED, emailedAt: { not: null } },
-      orderBy: { emailedAt: "desc" },
-      select: { emailedAt: true },
-    });
-    if (last?.emailedAt && now.getTime() - last.emailedAt.getTime() < DIGEST_WINDOW_MS) continue;
+    if (!shouldEmail(prefs, NOTIFICATION_TYPES.MESSAGE_RECEIVED)) continue;
+    if (!digestDue(await lastMessageEmailedAt(userId), now)) continue;
     try {
       sent += (await sendMessageDigest(userId, now)) > 0 ? 1 : 0;
     } catch (error) {
@@ -198,6 +178,58 @@ export async function flushMessageDigests(now = new Date()): Promise<number> {
     }
   }
   return sent;
+}
+
+/**
+ * Tells approved sellers in the requirement's category that a buyer posted it. Fixed text only: the
+ * requirement's notes and gemstone type are buyer-written and are never included. Never throws.
+ */
+export async function notifyRequirementMatches(input: {
+  requirementId: string;
+  buyerId: string;
+  categoryId: string | null;
+}): Promise<number> {
+  if (!input.categoryId) return 0;
+  try {
+    const sellers = await prisma.sellerProfile.findMany({
+      where: {
+        approvalStatus: "APPROVED",
+        user: { status: "ACTIVE", id: { not: input.buyerId } },
+        categories: { some: { id: input.categoryId } },
+      },
+      select: { userId: true },
+      orderBy: { id: "asc" },
+      take: MAX_REQUIREMENT_MATCH_RECIPIENTS,
+    });
+    for (const seller of sellers) {
+      await notify({
+        userId: seller.userId,
+        type: NOTIFICATION_TYPES.REQUIREMENT_MATCH,
+        title: "New buyer requirement",
+        body: "A buyer has posted a requirement in a category you sell in. Open the requirements board to see it and respond.",
+        href: "/seller/requirements",
+      });
+    }
+    return sellers.length;
+  } catch (error) {
+    console.error("[notify] requirement matches failed", input.requirementId, error);
+    return 0;
+  }
+}
+
+/** Tells the buyer that a seller responded to their requirement. Never throws. */
+export async function notifyRequirementResponse(input: {
+  buyerId: string;
+  requirementId: string;
+  conversationId: string;
+}): Promise<void> {
+  await notify({
+    userId: input.buyerId,
+    type: NOTIFICATION_TYPES.REQUIREMENT_RESPONSE,
+    title: "New response to your requirement",
+    body: "A seller has responded to your requirement. Open the conversation to read the reply.",
+    href: `/conversations/${input.conversationId}`,
+  });
 }
 
 export async function unreadNotificationCount(userId: string): Promise<number> {
