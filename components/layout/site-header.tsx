@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SessionLinks } from "@/components/auth/session-links";
 import { SignedOutLinks } from "@/components/auth/signed-out-links";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const nav = [
   { href: "/gemstones", label: "Gemstones" },
@@ -29,6 +30,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Signed-in only: renders nothing until the unread count loads. */}
+          <NotificationBell />
           {/* Session state streams in; the signed-out links are the static fallback. */}
           <Suspense fallback={<SignedOutLinks />}>
             <SessionLinks />

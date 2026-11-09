@@ -1,4 +1,5 @@
 import { getEnv } from "@/lib/config/env";
+import { ResendEmailProvider } from "./resend";
 
 export interface EmailMessage {
   to: string;
@@ -43,8 +44,18 @@ export function getEmailProvider(): EmailProvider {
     if (EMAIL_PROVIDER === "console" && NODE_ENV === "production" && ALLOW_NON_DELIVERING_PROVIDERS !== "true") {
       throw new Error("EMAIL_PROVIDER=console is not allowed in production. Configure a real provider.");
     }
-    if (EMAIL_PROVIDER === "console") instance = new ConsoleEmailProvider();
-    else throw new Error(`Unknown EMAIL_PROVIDER: ${EMAIL_PROVIDER}`);
+    if (EMAIL_PROVIDER === "console") {
+      instance = new ConsoleEmailProvider();
+    } else if (EMAIL_PROVIDER === "resend") {
+      // Refuse to build a sender without its key: nothing is sent and the caller gets a clear error.
+      const { RESEND_API_KEY, EMAIL_FROM } = getEnv();
+      if (!RESEND_API_KEY || !EMAIL_FROM) {
+        throw new Error("EMAIL_PROVIDER=resend needs RESEND_API_KEY and EMAIL_FROM. Email was not sent.");
+      }
+      instance = new ResendEmailProvider({ apiKey: RESEND_API_KEY, from: EMAIL_FROM });
+    } else {
+      throw new Error(`Unknown EMAIL_PROVIDER: ${EMAIL_PROVIDER}`);
+    }
   }
   return instance;
 }
