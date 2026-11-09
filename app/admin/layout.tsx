@@ -1,0 +1,50 @@
+import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
+import { requirePageRole } from "@/lib/auth/require-role";
+
+const NAV = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/sellers", label: "Sellers" },
+];
+
+const COMING_LATER = ["Buyers", "Listings", "Content", "Valuations", "Audit log"];
+
+/**
+ * Admin shell. The session check lives in an async child inside <Suspense>
+ * (Cache Components pattern), so the layout's static parts can still prerender.
+ */
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <AdminShell>{children}</AdminShell>
+    </Suspense>
+  );
+}
+
+async function AdminShell({ children }: { children: ReactNode }) {
+  const admin = await requirePageRole(["ADMIN"]);
+
+  return (
+    <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6">
+      <aside className="w-56 shrink-0 space-y-6 text-sm">
+        <div>
+          <p className="font-semibold">Admin</p>
+          <p className="truncate text-xs text-stone-600">{admin.email}</p>
+        </div>
+        <nav aria-label="Admin" className="space-y-1">
+          {NAV.map((item) => (
+            <Link key={item.href} href={item.href} className="block rounded px-2 py-1 hover:bg-stone-100">
+              {item.label}
+            </Link>
+          ))}
+          {COMING_LATER.map((label) => (
+            <span key={label} aria-disabled="true" className="block px-2 py-1 text-stone-400">
+              {label} <span className="text-xs">(coming later)</span>
+            </span>
+          ))}
+        </nav>
+      </aside>
+      <main className="min-w-0 flex-1">{children}</main>
+    </div>
+  );
+}
