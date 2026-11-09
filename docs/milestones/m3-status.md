@@ -1,46 +1,32 @@
-# M3 status (Communication) – handoff
+# M3 status (Communication): final handoff
 
-Branch: `m3-communication`. Latest commits: `acea0a7` (digest lock, README), `82db8dc` (handoff, build fix), `06cb3f7` (review fixes).
+Branch: `m3-communication`. This session's commits, oldest first: `5c745de` (sellers as buyers), `48300fd` (public text moderation), `4c706b6` (unflagged text unchanged), `cf84e64` (M3 browser journey), `9937319` (admin shell, header, flag copy). The M3 screenshot test is in `e2e/m3-journey.spec.ts`.
 
 ## Done and verified
-- Schema and migrations: `20261110120000_m3_communication`, `20261110130000_m3_flag_requirement` (applied to the dev DB).
-- Enquiries, general conversations, offers (send, accept, decline, counter), quotations (create, withdraw, accept, decline, PDF), requirements (post, edit, close, board, respond), seller inbox, notifications and preferences, contact moderation, admin moderation queues, reports, requirement list, audited conversation viewer, seller categories.
-- Unit tests: 595 pass at `06cb3f7`. Typecheck and eslint clean. `npm run build` passes.
-- Playwright: the M1 and M2 journey passes, 9 of 9, after `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo`.
-- Digest double-send (item 3): the flush takes a transaction-scoped Postgres advisory lock, and each digest claims its rows before sending, releasing the claim if the send fails. Typecheck and notification tests pass. Caveat: a concurrent run in the dev DB printed 0 because no digests were pending, so the lock has not been exercised against real rows.
-- README (items 4 and 5): env variable table (Resend, MSG91), digest schedule (`npm run notify:flush` every 5 minutes), accepted M3 gaps (phone split across messages; letters used as digit separators), and an M3 status section.
-- Demo sellers keep `demo.gemstone.local` (item 5).
 
-## Not started (from the latest request, in order)
-1. **Sellers as buyers (item 1).** Not started. Needed:
-   - Sellers may post requirements and send offers on other sellers' listings, never on their own. A seller's own requirements must not appear on the board to them.
-   - Keep one seller inbox with "Buying" and "Selling" filters.
-   - Journey step: seller posts a requirement, another seller responds.
-   - The `/buyer/*` routes are buyer-only in `proxy.ts`. Sellers need access to the buying parts (requirement posting, offers) without the buyer tabs being reachable as a separate area.
-2. **Moderation of public seller text (item 2).** Not started. Run `moderateContactDetails` on seller business name, portfolio about and specialties, listing titles and descriptions, and quotation terms, in the save actions. Block the save with a clear message when contact details are found, and record the attempt as a `ModerationFlag` so it appears in the admin queue.
-3. **Browser journey** (`e2e/m3-journey.spec.ts`): enquiry, quote and accept; requirement posted and answered; masked phone number in the flagged queue; seller enquires with another seller; seller posts a requirement and another seller responds (item 1). Needs buyer and seller accounts with known passwords. Not written.
-4. **M3 screenshots** at 390px and 1440px: inbox, chat thread, requirement form, requirements board, quotation, notification centre, admin flagged queue. Not taken.
-5. **M2 visual review:** 8 of 16 screenshots reviewed at 390px. Catalogue cards are long on phones. The header "Log out" wrap in the saved screenshot predates the nowrap fix in code. Re-shoot, then review the 1440px images.
-6. **Worktree cleanup (item 6), at the very end.** Not done. For each of the four `.claude/worktrees/m3-*` directories: `cmd /c rmdir <path>\node_modules` (no `/s`, which removes only the link), confirm the main `node_modules` is intact, then `git worktree remove` and `git worktree prune`. Older `agent-*` worktrees from earlier sessions are not touched.
+- Sellers as buyers: approved sellers post requirements, make offers and enquire on other sellers' listings. Own listings and own requirements are refused on the server (`lib/messaging/guards.ts`, tested). The board and match notifications exclude the poster. The requirement detail page refuses a seller's own requirement.
+- Seller inbox: Buying and Selling filters beside the kind filters (`lib/messaging/side.ts`, tested). The conversation view derives the viewer role from the side, so a buying-side seller gets the offer composer and no quote controls.
+- Public seller text: portfolio tagline, about and specialties, listing title and description, quotation terms, and business name at registration are refused on save when they contain contact details (`lib/moderation/`, tested). Refusals are logged to the flagged queue with the usual strike policy, except registration.
+- Moderation fix: unflagged text is returned exactly as typed, so codes such as `GIA-l2345` are no longer rewritten (tested).
+- Checks: 624 unit tests, typecheck, lint, production build. Playwright 17 of 17 (`e2e/journey.spec.ts` 9, `e2e/m3-journey.spec.ts` 8).
+- Screenshots at 390px and 1440px for the M2 and M3 pages, reviewed. Fixed: admin shell stacked on phones (the queue was 410px wide), and the header logo no longer wraps.
+- Worktree cleanup: the four `m3-*` worktrees were clean and merged. Each `node_modules` link was removed with `rmdir` (no `/s`), the main `node_modules` was checked after each, then `git worktree remove` and `prune`. The `agent-*` worktrees were not touched.
 
-## Known gaps (documented in the README, accepted)
-- A phone number split across messages is not joined.
-- Letters used as digit separators ("98765a43210") are not treated as separators.
-- Live Resend and MSG91 sending is untested (no keys). The MSG91 body follows its docs, not a live call.
-- Seller-entered public text is not yet moderated (item 2 above).
-- Sellers cannot open the buyer Enquiries and Conversations tabs (`/buyer/*` is buyer-only). They use `/seller/inbox`.
+## Not verified
+
+- Live Resend and MSG91 sending (no keys). The MSG91 body follows its docs.
+- A real device. The screenshots come from headless Chromium.
 
 ## Decisions to review
-- Only buyers post requirements and send offers today. Item 1 changes this for sellers, on other sellers' listings only.
-- Requirement matching: approved, active, verified sellers whose categories include the requirement's category. Capped at 200 notifications.
-- Offers: one pending offer per buyer per conversation. Currency is the buyer's choice.
-- Quotations: only in enquiry and requirement threads. Expiry is the end of the chosen UTC day.
-- Requirement response cap: 50 sellers per requirement.
-- Admin conversation viewer: the reason is held in a 30-minute cookie, and every load writes an audit row.
+
+- Quotation terms with contact details are now refused, not masked. This changes the chat rule for quotations. Quotation titles are still masked.
+- Sellers post and close their own requirements under `/seller/requirements/new` and `/seller/requirements/mine`. They have no edit page. The buyer `/buyer/*` area stays buyer-only.
+- Registration business name refusals are not logged, because no account exists yet.
+- A flag on public text records the seller and the source, not the listing ID. Adding a column would need a migration.
+- The demo seller's contact strikes accumulate across e2e runs. Reseed before each run (see README).
 
 ## Next steps
-1. Item 1 (sellers as buyers), then item 2 (public text moderation). Each with unit tests, then `npx vitest run`, typecheck, and lint.
-2. Journey (`e2e/m3-journey.spec.ts`), run `npm run build`, `npm run db:seed:demo` with `DEMO_SELLER_PASSWORD`, then `npm run test:e2e`.
-3. Screenshots at 390px and 1440px, fix obvious problems, re-shoot M2.
-4. Worktree cleanup (item 6).
-5. `npm run db:stop`. Start with `npm run db:start` before any e2e run.
+
+1. M4: valuation.
+2. Open question: should a seller's flagged public text strike count toward messaging restriction? Current behaviour: yes, the same two-strike rule as chat.
+3. Open question: should the listing ID be stored on public-text flags? That needs a migration.

@@ -144,7 +144,7 @@ proxy.ts              coarse route gate
 - [x] M0 – Foundation
 - [x] M1 – Auth, roles, seller onboarding, admin review, audit (verified: unit tests, production build, database-level flows, live HTTP gating and sign-in; not verified: browser click-through, real email/SMS)
 - [x] M2 – Catalogue and portfolios (verified: unit tests, production build, Playwright end-to-end journey on a production build with the demo seed, 16 screenshots at 390px and 1440px; not verified: real email/SMS, a real device)
-- [ ] M3 – Enquiries, requirements, chat, quotations, notifications, contact moderation (code complete and merged; the M3 browser journey and screenshots are not yet done; see docs/milestones/m3-status.md)
+- [x] M3 – Enquiries, requirements, chat, quotations, notifications, contact moderation, sellers acting as buyers (verified: unit tests, typecheck, lint, production build, Playwright M1–M3 journeys 17 of 17, M3 screenshots at 390px and 1440px reviewed and fixed; not verified: real email/SMS, a real device)
 
 ## M2 – catalogue, portfolios, moderation
 
@@ -183,8 +183,24 @@ npm run test:e2e              # Playwright; starts the server on port 3200
 ## M3 status (Communication)
 
 - Built: enquiries, general conversations, offers (send, accept, decline, counter), quotations (create, withdraw, accept, decline, PDF), requirements (post, edit, close, board, respond), seller inbox, notifications and preferences, contact moderation, admin moderation queues, reports, requirement list, audited conversation viewer, seller categories.
-- Verified: unit tests, typecheck, lint, production build, and the existing M1 and M2 Playwright journey (9 of 9).
-- Not yet verified: the M3 browser journey and the 390px and 1440px M3 screenshots. See `docs/milestones/m3-status.md` for what is left.
+- Sellers as buyers: approved sellers can post requirements, make offers and enquire on other sellers' listings. Own listings and own requirements are refused on the server (`lib/messaging/guards.ts`) and never appear on the board to the poster. The seller inbox has Buying and Selling filters (`lib/messaging/side.ts`). Seller pages: `/seller/requirements/new` and `/seller/requirements/mine`.
+- Public seller text is moderated on save. Business name (registration), portfolio tagline, about and specialties, listing title and description, and quotation terms are refused when they contain contact details. Each refusal is logged to the flagged queue, except registration (no account yet).
+- Verified: 624 unit tests, typecheck, lint, production build, and the Playwright suite (`e2e/journey.spec.ts` 9 steps and `e2e/m3-journey.spec.ts` 8 steps, 17 of 17). The M3 journey covers enquiry, quote and accept; requirement posted and answered; seller-to-seller requirement and enquiry, with own-item refusals; masked phone in the flagged queue; and a refused portfolio save. Screenshots at 390px and 1440px are in `screenshots/` and were reviewed. Fixes made from them: admin shell stacks on phones, header logo does not wrap.
+- Not verified: live Resend and MSG91 sending, and a real device.
+
+### Running the browser journey
+
+- Run `npm run db:start`, `npm run build`, then `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before every run. The journey's refused portfolio save adds a contact strike to a demo seller; two strikes restrict messaging for 24 hours. Reseeding clears it.
+- `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run test:e2e` runs both journeys.
+
+### Accepted M3 gaps
+
+- Phone number split across messages is not joined. Letters used as digit separators are not treated as separators.
+- Quotation terms with contact details are refused instead of masked. Quotation titles are still masked.
+- Registration business name refusals are not written to the flagged queue, because no account exists yet.
+- Flags on public text record the seller and the source, not the listing ID. The schema has no column for it.
+- Sellers cannot edit their own requirements (they can post and close them). Buyers keep edit.
+- `moderateContactDetails` returns text exactly as typed when nothing is masked. Masked text is still normalised, so a flagged message can change letter-digit codes near a masked item.
 
 ## Known limitations (M2)
 
