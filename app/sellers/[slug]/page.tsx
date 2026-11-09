@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -10,8 +11,8 @@ import { getApprovedReviews, getPublicSellerBySlug, listSellerGemstones } from "
 
 /**
  * Public seller portfolio. Shows only public profile fields, APPROVED reviews and the seller's
- * public gemstones. Logos and banners are not shown: they live in private storage and no public
- * image route exists yet, so the portfolio uses an initial-letter avatar and a plain banner.
+ * public gemstones. Logo and banner images come from /api/sellers/[slug]/assets/[kind], which
+ * serves them only for APPROVED sellers. A plain initial avatar and gradient show when none exist.
  */
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string | string[] }> };
@@ -52,15 +53,39 @@ async function SellerPortfolio({ params, searchParams }: Props) {
 
   return (
     <>
-      <div className="h-40 bg-gradient-to-r from-accent-soft to-surface-raised sm:h-52" aria-hidden="true" />
+      <div className="relative h-40 bg-gradient-to-r from-accent-soft to-surface-raised sm:h-52" aria-hidden="true">
+        {seller.hasBanner ? (
+          <Image
+            src={`/api/sellers/${encodeURIComponent(seller.slug)}/assets/banner`}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+            unoptimized
+          />
+        ) : null}
+      </div>
       <section className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div
-            aria-hidden="true"
-            className="flex size-24 shrink-0 items-center justify-center rounded-full border-4 border-surface bg-brand text-3xl font-semibold text-white"
-          >
-            {seller.businessName.charAt(0).toUpperCase()}
-          </div>
+          {seller.hasLogo ? (
+            <div className="relative size-24 shrink-0 overflow-hidden rounded-full border-4 border-surface bg-surface-raised">
+              <Image
+                src={`/api/sellers/${encodeURIComponent(seller.slug)}/assets/logo`}
+                alt={`${seller.businessName} logo`}
+                fill
+                sizes="96px"
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div
+              aria-hidden="true"
+              className="flex size-24 shrink-0 items-center justify-center rounded-full border-4 border-surface bg-brand text-3xl font-semibold text-white"
+            >
+              {seller.businessName.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="space-y-2 pb-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-semibold tracking-tight text-ink">{seller.businessName}</h1>

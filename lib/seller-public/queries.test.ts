@@ -49,9 +49,22 @@ describe("getPublicSellerBySlug", () => {
   it("selects only public profile fields (no contact, GST, address, pincode or documents)", async () => {
     await getPublicSellerBySlug("acme-gems");
     const select = db.sellerFindFirst.mock.calls[0][0].select as Record<string, boolean>;
-    for (const forbidden of ["userId", "gstNumber", "addressLine", "pincode", "logoKey", "bannerKey", "approvedById"]) {
+    for (const forbidden of ["userId", "gstNumber", "addressLine", "pincode", "approvedById"]) {
       expect(select).not.toHaveProperty(forbidden);
     }
+  });
+
+  it("never returns raw storage keys; exposes only hasLogo/hasBanner flags", async () => {
+    db.sellerFindFirst.mockResolvedValueOnce({
+      id: "s1", slug: "acme-gems", businessName: "Acme", tagline: null, description: null,
+      specialties: [], city: "Jaipur", state: "RJ", country: "India", yearsInBusiness: 3,
+      ratingAverage: null, reviewCount: 0, isDemo: false,
+      logoKey: "sellers/abc/logo-1.webp", bannerKey: null,
+    });
+    const result = await getPublicSellerBySlug("acme-gems");
+    expect(result).not.toHaveProperty("logoKey");
+    expect(result).not.toHaveProperty("bannerKey");
+    expect(result).toMatchObject({ hasLogo: true, hasBanner: false });
   });
 });
 

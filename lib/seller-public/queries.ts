@@ -25,6 +25,9 @@ export interface PublicSellerProfile {
   ratingAverage: string | null;
   reviewCount: number;
   isDemo: boolean;
+  /** Whether a logo/banner exists. Served by /api/sellers/[slug]/assets/[kind]; raw keys never leave the server. */
+  hasLogo: boolean;
+  hasBanner: boolean;
 }
 
 export const getPublicSellerBySlug = cache(async (slug: string): Promise<PublicSellerProfile | null> => {
@@ -44,10 +47,18 @@ export const getPublicSellerBySlug = cache(async (slug: string): Promise<PublicS
       ratingAverage: true,
       reviewCount: true,
       isDemo: true,
+      logoKey: true,
+      bannerKey: true,
     },
   });
   if (!row) return null;
-  return { ...row, ratingAverage: row.ratingAverage ? row.ratingAverage.toString() : null };
+  const { logoKey, bannerKey, ...rest } = row;
+  return {
+    ...rest,
+    ratingAverage: row.ratingAverage ? row.ratingAverage.toString() : null,
+    hasLogo: Boolean(logoKey),
+    hasBanner: Boolean(bannerKey),
+  };
 });
 
 export interface PublicReview {
