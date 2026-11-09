@@ -1,12 +1,17 @@
+import { OfferComposer } from "./offer-composer";
 import { QuotationComposer } from "./quotation-composer";
 import type { ThreadContext } from "./types";
 
 /**
- * Extra composer controls above the text box: the buyer's offer composer, the seller's quotation
- * composer. OWNERS: buyer agent (offer composer, buyer branch) and seller agent (quotation composer,
- * seller branch). Keep edits to one import and one conditional line each, to merge cleanly.
+ * Extra composer controls above the text box: the buyer's offer composer (listing enquiries)
+ * and the seller's quotation composer. Both hide themselves when they do not apply.
  */
 export function ComposerExtras({ context }: { context: ThreadContext }) {
-  // Seller branch (seller agent): quotations. The composer itself hides itself for general chats and closed requirements.
-  return context.viewerRole === "SELLER" ? <QuotationComposer context={context} /> : null;
+  if (context.viewerRole === "BUYER" && context.kind === "ENQUIRY" && !context.requirement) {
+    return <OfferComposer conversationId={context.conversationId} />;
+  }
+  if (context.viewerRole === "SELLER") {
+    return <QuotationComposer context={context} />;
+  }
+  return null;
 }

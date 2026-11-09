@@ -4,8 +4,11 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DemoBadge, VerifiedBadge } from "@/components/catalogue/badges";
 import { SellerCard } from "@/components/catalogue/seller-card";
+import { EnquireForm } from "@/components/product/enquire-form";
 import { ProductGallery, type GalleryItem } from "@/components/product/gallery";
 import { WishlistButton } from "@/components/product/wishlist-button";
+import { checkRole } from "@/lib/auth/require-role";
+import { MESSAGING_ROLES } from "@/lib/messaging/access";
 import { listingDocumentUrl, mediaUrl } from "@/lib/media/urls";
 import { formatMoney } from "@/lib/money/money";
 import { getPublicGemstoneBySlug } from "@/lib/seller-public/product";
@@ -123,7 +126,7 @@ async function GemstoneDetail({ params }: Props) {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <DisabledAction label="Request valuation" />
-              <DisabledAction label="Chat / Enquire" />
+              <EnquireSlot slug={listing.slug} listingId={listing.id} title={listing.title} sellerUserId={listing.seller.userId} />
             </div>
           </div>
 
@@ -226,6 +229,41 @@ function WishlistSlot({ state, listingId }: { state: WishlistViewerState; listin
     case "unavailable":
       return <p className="self-center text-xs text-ink-soft">Wishlist is available to buyer and seller accounts.</p>;
   }
+}
+
+/** Chat / Enquire: approved buyers and sellers (not the listing's own seller) get the enquiry form. */
+async function EnquireSlot({
+  slug,
+  listingId,
+  title,
+  sellerUserId,
+}: {
+  slug: string;
+  listingId: string;
+  title: string;
+  sellerUserId: string;
+}) {
+  const viewer = await checkRole(MESSAGING_ROLES, { sellerApproved: true });
+  if (!viewer.ok) {
+    if (viewer.code === "UNAUTHENTICATED") {
+      return (
+        <div className="space-y-2">
+          <Link
+            href={`/login?next=${encodeURIComponent(`/gemstones/${slug}`)}`}
+            className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
+          >
+            Sign in to enquire
+          </Link>
+          <p className="text-xs text-ink-soft">Sign in as a buyer to chat with the seller.</p>
+        </div>
+      );
+    }
+    return <p className="self-center text-xs text-ink-soft">Enquiries are available to approved buyer and seller accounts.</p>;
+  }
+  if (viewer.user.id === sellerUserId) {
+    return <p className="self-center text-xs text-ink-soft">This is your listing, so you cannot enquire about it.</p>;
+  }
+  return <EnquireForm gemstoneId={listingId} title={title} />;
 }
 
 function DisabledAction({ label }: { label: string }) {

@@ -11,7 +11,7 @@ export function BuyerTabs() {
     <nav aria-label="Buyer account sections" className="mt-8 border-b border-line">
       <ul className="-mb-px flex gap-1 overflow-x-auto">
         {BUYER_TABS.map((tab) => {
-          const active = pathname === tab.href;
+          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (
             <li key={tab.href}>
               <Link
