@@ -115,6 +115,8 @@ test.describe.serial("M1 + M2 journey", () => {
     await field("specialties").fill("Sapphire, Ruby");
     await field("idProof").setInputFiles({ name: "id.pdf", mimeType: "application/pdf", buffer: samplePdf() });
     await field("businessProof").setInputFiles({ name: "biz.pdf", mimeType: "application/pdf", buffer: samplePdf() });
+    // Categories are required on the application (M3). Tick the first top-level category.
+    await seller.locator('input[name="categoryIds"]').first().check();
     await seller.getByRole("button", { name: "Submit application" }).click();
     await expect(seller).toHaveURL(/\/check-email/);
 

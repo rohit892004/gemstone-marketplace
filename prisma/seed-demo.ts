@@ -157,6 +157,8 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
             country: "India",
             yearsInBusiness: s.yearsInBusiness,
             specialties: [...s.specialties],
+            // Categories are needed for the requirements board (M3). Connected from the specialties.
+            categories: { connect: s.specialties.map((sp) => categoryBySlug.get(sp.toLowerCase())).filter((id): id is string => Boolean(id)).map((id) => ({ id })) },
             tagline: s.tagline,
             approvalStatus: "APPROVED",
             approvedAt: new Date(),
