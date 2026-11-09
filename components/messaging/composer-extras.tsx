@@ -1,3 +1,4 @@
+import { QuotationComposer } from "./quotation-composer";
 import type { ThreadContext } from "./types";
 
 /**
@@ -5,6 +6,7 @@ import type { ThreadContext } from "./types";
  * composer. OWNERS: buyer agent (offer composer, buyer branch) and seller agent (quotation composer,
  * seller branch). Keep edits to one import and one conditional line each, to merge cleanly.
  */
-export function ComposerExtras(_props: { context: ThreadContext }) {
-  return null;
+export function ComposerExtras({ context }: { context: ThreadContext }) {
+  // Seller branch (seller agent): quotations. The composer itself hides itself for general chats and closed requirements.
+  return context.viewerRole === "SELLER" ? <QuotationComposer context={context} /> : null;
 }
