@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gemstone Selections – Web App
 
-## Getting Started
+Phase 1 core platform. See `../PHASE1_IMPLEMENTATION_PLAN.md` for scope and milestones.
 
-First, run the development server:
+## Stack
+
+Next.js 16 (App Router, TypeScript), Tailwind CSS v4, PostgreSQL with Prisma 7 (Postgres driver adapter), Zod for config validation, Vitest for tests.
+
+## Setup
+
+Requirements: Node 22+ and a PostgreSQL 16 database.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install                 # also runs prisma generate
+cp .env.example .env        # then set DATABASE_URL
+npm run db:migrate          # apply migrations (dev)
+npm run db:seed             # seed categories (idempotent)
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript without emit |
+| `npm test` | Vitest unit tests |
+| `npm run db:migrate` | Create/apply a dev migration |
+| `npm run db:deploy` | Apply committed migrations (CI and production) |
+| `npm run db:seed` | Seed reference data |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Layout
 
-## Learn More
+```
+app/                 routes (public pages now; auth, buyer, seller, admin in later milestones)
+components/layout/   site header and footer
+lib/config/env.ts    validated environment (use getEnv())
+lib/db/client.ts     shared Prisma client
+prisma/schema.prisma data model v1
+prisma/seed.ts       reference data seed
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Status (M0 – Foundation)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] Project scaffold, TypeScript, lint, tests, CI workflow
+- [x] Prisma schema v1 and initial migration
+- [x] Validated environment config
+- [x] Base layout, design tokens (placeholder brand), responsive header/footer
+- [ ] Auth and roles (M1)
+- Navigation links to pages not yet built (`/gemstones`, `/sellers`, `/valuation`, `/learn`, `/news`, `/login`, `/register`, legal pages) return 404 until their milestones.

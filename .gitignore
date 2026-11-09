@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# keep the template committed
+!.env.example
+
+# local agent tooling (not part of the app)
+.windsurf/
+skills-lock.json
