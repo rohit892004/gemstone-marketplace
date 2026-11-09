@@ -1,33 +1,40 @@
+import Link from "next/link";
 import { Suspense } from "react";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { requireBuyerPage } from "./guard";
+import { prisma } from "@/lib/db/client";
 
-export default function BuyerHomePage() {
+export default function BuyerDashboardPage() {
   return (
     <Suspense fallback={null}>
-      <BuyerHome />
+      <BuyerOverview />
     </Suspense>
   );
 }
 
-async function BuyerHome() {
-  const user = await requirePageRole(["BUYER"]);
+async function BuyerOverview() {
+  const user = await requireBuyerPage();
+  const wishlistCount = await prisma.wishlistItem.count({ where: { buyerId: user.id } });
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Buyer account</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
-        Welcome{user.name ? `, ${user.name}` : ""}
-      </h1>
-      <p className="mt-2 text-ink-soft">Signed in as {user.email}</p>
-
-      <div className="mt-10 rounded-lg border border-dashed border-line bg-surface-raised p-6">
-        <h2 className="text-lg font-semibold text-ink">Coming soon</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-ink-soft">
-          <li>Wishlist: save stones you are watching</li>
-          <li>Enquiries: contact sellers about a specific stone</li>
-          <li>Chat: follow up with sellers in one place</li>
-        </ul>
-      </div>
-    </section>
+    <div className="space-y-6">
+      <p className="text-ink-soft">
+        Welcome{user.name ? `, ${user.name}` : ""}. Signed in as {user.email}.
+      </p>
+      <ul className="grid gap-4 sm:grid-cols-2">
+        <li className="rounded-lg border border-line bg-surface-raised p-5">
+          <h2 className="font-semibold text-ink">Wishlist</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            {wishlistCount} {wishlistCount === 1 ? "stone" : "stones"} saved
+          </p>
+          <Link href="/buyer/wishlist" className="mt-3 inline-block text-sm font-medium text-brand-strong underline underline-offset-4">
+            Open wishlist
+          </Link>
+        </li>
+        <li className="rounded-lg border border-dashed border-line bg-surface-raised p-5">
+          <h2 className="font-semibold text-ink">Enquiries, chat and valuations</h2>
+          <p className="mt-1 text-sm text-ink-soft">These tabs go live in the next update.</p>
+        </li>
+      </ul>
+    </div>
   );
 }

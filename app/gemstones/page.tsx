@@ -1,0 +1,56 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { CatalogueFilters } from "@/components/catalogue/filters";
+import { CatalogueResults } from "@/components/catalogue/results";
+import { type RawSearchParams, parseCatalogueParams } from "@/components/catalogue/query-params";
+import { searchCatalogue } from "@/lib/listings/search";
+import { getCatalogueFacets } from "@/lib/seller-public/facets";
+
+export const metadata: Metadata = {
+  title: "Gemstones",
+  description: "Browse certified and verified gemstones from approved sellers.",
+};
+
+export default function GemstonesPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <header className="mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">Gemstones</h1>
+        <p className="mt-2 text-ink-soft">Stones listed by approved sellers. Filter by type, carat, price and certification.</p>
+      </header>
+      <Suspense fallback={null}>
+        <GemstonesResults searchParams={searchParams} />
+      </Suspense>
+    </section>
+  );
+}
+
+async function GemstonesResults({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
+  const query = parseCatalogueParams(await searchParams);
+  const [result, facets] = await Promise.all([searchCatalogue(query), getCatalogueFacets()]);
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[18rem_1fr]">
+      <aside aria-label="Filters">
+        <CatalogueFilters
+          action="/gemstones"
+          query={query}
+          facets={facets}
+          showCategory
+          clearHref="/gemstones"
+        />
+      </aside>
+      <div>
+        <CatalogueResults
+          items={result.items}
+          total={result.total}
+          page={result.page}
+          pageSize={result.pageSize}
+          query={query}
+          basePath="/gemstones"
+          clearHref="/gemstones"
+        />
+      </div>
+    </div>
+  );
+}
