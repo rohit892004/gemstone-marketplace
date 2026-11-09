@@ -48,3 +48,6 @@ next-env.d.ts
 # local agent tooling (not part of the app)
 .windsurf/
 skills-lock.json
+
+# local private file storage (dev)
+/.data/

@@ -1,5 +1,12 @@
-// Gemstone Marketplace – Phase 1 schema (v1)
-// Source of truth for entities: ../../PHASE1_IMPLEMENTATION_PLAN.md section 3
+// Gemstone Marketplace – schema.
+// M0: entity baseline. M1: auth, seller onboarding, documents, certificate labs,
+// auth tokens, rate limits, audit IP, minor-unit money.
+//
+// MONEY: every amount is an integer in minor units (paise for INR, cents for USD)
+// stored as BigInt, plus an ISO 4217 currency code. No floating point, no
+// live conversion in Phase 1. Default currency is INR.
+//
+// ONLY the lead agent edits this file and the migrations (team rule).
 
 generator client {
   provider = "prisma-client"
@@ -18,23 +25,49 @@ enum Role {
   ADMIN
 }
 
+/**
+ * Account-level status. Seller approval is tracked on SellerProfile.
+ */
 enum UserStatus {
-  PENDING
   ACTIVE
   SUSPENDED
-  REJECTED
 }
 
+/**
+ * Seller lifecycle: PENDING -> APPROVED | REJECTED; APPROVED <-> SUSPENDED.
+ */
 enum ApprovalStatus {
   PENDING
   APPROVED
   REJECTED
+  SUSPENDED
+}
+
+enum BusinessType {
+  SOLE_PROPRIETORSHIP
+  PARTNERSHIP
+  LLP
+  PRIVATE_LIMITED
+  PUBLIC_LIMITED
+  OTHER
+}
+
+enum DocumentType {
+  ID_PROOF
+  BUSINESS_PROOF
+  CERTIFICATE
 }
 
 enum DocumentStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum AuthTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  MOBILE_OTP
 }
 
 enum Availability {
@@ -109,31 +142,63 @@ enum CampaignStatus {
 // ---------- Users and roles ----------
 
 model User {
-  id               String     @id @default(cuid())
-  email            String     @unique
-  mobile           String?    @unique
-  passwordHash     String
-  role             Role
-  status           UserStatus @default(PENDING)
-  emailVerifiedAt  DateTime?
-  mobileVerifiedAt DateTime?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  id                String     @id @default(cuid())
+  email             String     @unique
+  name              String?
+  mobile            String?    @unique
+  passwordHash      String
+  role              Role
+  status            UserStatus @default(ACTIVE)
+  emailVerifiedAt   DateTime?
+  mobileVerifiedAt  DateTime?
+  passwordChangedAt DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   buyerProfile       BuyerProfile?
   sellerProfile      SellerProfile?
+  authTokens         AuthToken[]
   notifications      Notification[]
   sentMessages       Message[]        @relation("MessageSender")
   auditLogs          AuditLog[]       @relation("AuditActor")
   valuations         Valuation[]
+  expertValuations   Valuation[]      @relation("ValuationExpert")
   wishlist           WishlistItem[]
   buyerEnquiries     Enquiry[]        @relation("BuyerEnquiries")
   buyerConversations Conversation[]   @relation("BuyerConversations")
-  expertValuations   Valuation[]      @relation("ValuationExpert")
   reviewedDocuments  SellerDocument[] @relation("DocumentReviewer")
   approvedSellers    SellerProfile[]  @relation("SellerApprover")
 
   @@index([role, status])
+}
+
+model AuthToken {
+  id        String           @id @default(cuid())
+  userId    String
+  purpose   AuthTokenPurpose
+  /// SHA-256 of the raw token or OTP. The raw value is never stored.
+  tokenHash String           @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// Failed attempts (used for OTP lockout).
+  attempts  Int              @default(0)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+}
+
+/**
+ * Fixed-window rate limit counters, shared across server instances.
+ */
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+  updatedAt   DateTime @updatedAt
 }
 
 model BuyerProfile {
@@ -152,15 +217,22 @@ model SellerProfile {
   id              String         @id @default(cuid())
   userId          String         @unique
   businessName    String
-  registrationNo  String?
+  businessType    BusinessType
+  gstNumber       String?
+  addressLine     String
+  city            String
+  state           String
   country         String
-  address         String?
+  pincode         String?
+  yearsInBusiness Int?
+  specialties     String[]
   description     String?
   logoKey         String?
   bannerKey       String?
   approvalStatus  ApprovalStatus @default(PENDING)
   approvedById    String?
   approvedAt      DateTime?
+  reviewedAt      DateTime?
   rejectionReason String?
   slug            String         @unique
   createdAt       DateTime       @default(now())
@@ -178,17 +250,42 @@ model SellerProfile {
 }
 
 model SellerDocument {
-  id           String         @id @default(cuid())
-  sellerId     String
-  type         String
-  fileKey      String
-  status       DocumentStatus @default(PENDING)
-  reviewedById String?
-  reviewedAt   DateTime?
-  createdAt    DateTime       @default(now())
+  id                  String         @id @default(cuid())
+  sellerId            String
+  type                DocumentType
+  /// Storage key (never a public URL). Served only via admin-authorised routes.
+  fileKey             String         @unique
+  fileName            String
+  mimeType            String
+  sizeBytes           Int
+  certificateLabId    String?
+  certificateLabOther String?
+  status              DocumentStatus @default(PENDING)
+  reviewNote          String?
+  reviewedById        String?
+  reviewedAt          DateTime?
+  createdAt           DateTime       @default(now())
 
-  seller     SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  reviewedBy User?         @relation("DocumentReviewer", fields: [reviewedById], references: [id])
+  seller         SellerProfile   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  certificateLab CertificateLab? @relation(fields: [certificateLabId], references: [id])
+  reviewedBy     User?           @relation("DocumentReviewer", fields: [reviewedById], references: [id])
+
+  @@index([sellerId])
+}
+
+/**
+ * Admin-editable list of certificate labs. Not an enum. "Other" uses certificateLabOther.
+ */
+model CertificateLab {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  isOther   Boolean  @default(false)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  documents SellerDocument[]
 }
 
 // ---------- Catalogue ----------
@@ -219,8 +316,9 @@ model Gemstone {
   origin        String?
   treatment     String?
   certificateNo String?
-  price         Decimal?      @db.Decimal(14, 2)
-  currency      String        @default("USD")
+  /// Minor units (paise for INR). See schema header.
+  priceMinor    BigInt?
+  currency      String        @default("INR")
   availability  Availability  @default(AVAILABLE)
   status        ListingStatus @default(DRAFT)
   featured      Boolean       @default(false)
@@ -290,15 +388,16 @@ model Enquiry {
 }
 
 model Quotation {
-  id         String          @id @default(cuid())
-  enquiryId  String
-  sellerId   String
-  gemstoneId String?
-  amount     Decimal         @db.Decimal(14, 2)
-  currency   String          @default("USD")
-  validUntil DateTime?
-  status     QuotationStatus @default(SENT)
-  createdAt  DateTime        @default(now())
+  id          String          @id @default(cuid())
+  enquiryId   String
+  sellerId    String
+  gemstoneId  String?
+  /// Minor units. See schema header.
+  amountMinor BigInt
+  currency    String          @default("INR")
+  validUntil  DateTime?
+  status      QuotationStatus @default(SENT)
+  createdAt   DateTime        @default(now())
 
   enquiry  Enquiry       @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
   seller   SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -357,19 +456,20 @@ model Notification {
 // ---------- Valuation ----------
 
 model Valuation {
-  id           String          @id @default(cuid())
-  userId       String?
-  status       ValuationStatus @default(SUBMITTED)
-  inputs       Json
-  mediaKeys    String[]
-  estimateLow  Decimal?        @db.Decimal(14, 2)
-  estimateHigh Decimal?        @db.Decimal(14, 2)
-  currency     String?
-  confidence   Decimal?        @db.Decimal(4, 3)
-  reportKey    String?
-  expertId     String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                String          @id @default(cuid())
+  userId            String?
+  status            ValuationStatus @default(SUBMITTED)
+  inputs            Json
+  mediaKeys         String[]
+  /// Minor units. See schema header.
+  estimateLowMinor  BigInt?
+  estimateHighMinor BigInt?
+  currency          String?
+  confidence        Decimal?        @db.Decimal(4, 3)
+  reportKey         String?
+  expertId          String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   expert User? @relation("ValuationExpert", fields: [expertId], references: [id], onDelete: SetNull)
@@ -432,10 +532,12 @@ model AuditLog {
   entityType String
   entityId   String?
   meta       Json?
+  ip         String?
   createdAt  DateTime @default(now())
 
   actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
+  @@index([action, createdAt])
 }
