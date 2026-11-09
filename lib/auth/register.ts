@@ -58,6 +58,9 @@ export async function registerAccount(input: RegisterInput): Promise<RegisterRes
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      // A collision on a profile field (e.g. the seller slug) is a real failure, not a duplicate account.
+      // Rethrow so it is not silently reported as "email already exists".
+      if (String(error.meta?.target ?? "").includes("slug")) throw error;
       await notifyExistingAccount(input.email);
       await recordAudit({
         action: AuditAction.REGISTER_DUPLICATE_ATTEMPT,
