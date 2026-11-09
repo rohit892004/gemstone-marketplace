@@ -41,6 +41,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
           mimeType: a.mimeType,
           sizeBytes: a.sizeBytes,
         })),
+        offer: m.offer ? { ...m.offer, amountMinor: m.offer.amountMinor.toString() } : null,
+        quotation: m.quotation
+          ? {
+              ...m.quotation,
+              amountMinor: m.quotation.amountMinor.toString(),
+              validUntil: m.quotation.validUntil?.toISOString() ?? null,
+            }
+          : null,
       })),
       myLastReadAt: result.myLastReadAt?.toISOString() ?? null,
       counterpartLastReadAt: result.counterpartLastReadAt?.toISOString() ?? null,

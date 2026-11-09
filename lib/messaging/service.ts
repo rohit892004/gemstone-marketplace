@@ -525,6 +525,32 @@ export async function listMessagesSince(conversationId: string, userId: string, 
       createdAt: true,
       senderId: true,
       attachments: { select: { id: true, fileName: true, mimeType: true, sizeBytes: true } },
+      offer: {
+        select: {
+          id: true,
+          amountMinor: true,
+          currency: true,
+          note: true,
+          status: true,
+          proposerId: true,
+          counterOfId: true,
+          respondedById: true,
+        },
+      },
+      quotation: {
+        select: {
+          id: true,
+          itemTitle: true,
+          quantity: true,
+          amountMinor: true,
+          currency: true,
+          validUntil: true,
+          terms: true,
+          status: true,
+          sellerId: true,
+          gemstoneId: true,
+        },
+      },
     },
   });
   const counterpart = await prisma.conversationParticipant.findFirst({

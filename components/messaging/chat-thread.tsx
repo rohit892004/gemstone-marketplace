@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { markReadAction, sendMessageAction } from "@/app/conversations/actions";
+import { ComposerExtras } from "./composer-extras";
+import { MessageExtras } from "./message-extras";
+import type { OfferPayload, QuotationPayload, ThreadContext } from "./types";
 
 /**
  * Shared chat thread for buyers, sellers and the enquiry/requirement views.
@@ -18,6 +21,8 @@ export interface ThreadMessage {
   createdAt: string;
   mine: boolean;
   attachments: { id: string; fileName: string; mimeType: string; sizeBytes: number }[];
+  offer: OfferPayload | null;
+  quotation: QuotationPayload | null;
 }
 
 export interface ChatThreadProps {
@@ -27,6 +32,7 @@ export interface ChatThreadProps {
   counterpartLabel: string;
   isDemo: boolean;
   disabledReason?: string | null;
+  context: ThreadContext;
 }
 
 const POLL_MS = 5000;
@@ -139,6 +145,7 @@ export function ChatThread(props: ChatThreadProps) {
             <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm sm:max-w-[70%] ${m.mine ? "bg-brand text-white" : "bg-surface text-ink"}`}>
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                <MessageExtras message={m} context={props.context} />
                 {m.attachments.map((a) => (
                   <a
                     key={a.id}
@@ -167,8 +174,10 @@ export function ChatThread(props: ChatThreadProps) {
       {props.disabledReason ? (
         <p className="border-t border-line px-4 py-3 text-sm text-ink-soft">{props.disabledReason}</p>
       ) : (
+        <div className="flex flex-col gap-2 border-t border-line p-4">
+          <ComposerExtras context={props.context} />
         <form
-          className="flex flex-col gap-2 border-t border-line p-4"
+          className="flex flex-col gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             if (canSend) send();
@@ -209,6 +218,7 @@ export function ChatThread(props: ChatThreadProps) {
           </div>
           {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         </form>
+        </div>
       )}
     </section>
   );

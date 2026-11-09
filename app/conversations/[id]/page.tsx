@@ -6,6 +6,7 @@ import { getConversationForParticipant, isBlockedEitherWay, MESSAGING_ROLES, oth
 import { listMessagesSince } from "@/lib/messaging/service";
 import { ChatThread, type ThreadMessage } from "@/components/messaging/chat-thread";
 import { SafetyActions } from "@/components/messaging/safety-actions";
+import type { ThreadContext } from "@/components/messaging/types";
 
 export default function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -36,7 +37,28 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
     createdAt: m.createdAt.toISOString(),
     mine: m.senderId === user.id,
     attachments: m.attachments,
+    offer: m.offer ? { ...m.offer, amountMinor: m.offer.amountMinor.toString() } : null,
+    quotation: m.quotation
+      ? {
+          ...m.quotation,
+          amountMinor: m.quotation.amountMinor.toString(),
+          validUntil: m.quotation.validUntil?.toISOString() ?? null,
+        }
+      : null,
   }));
+
+  const context: ThreadContext = {
+    conversationId: id,
+    kind: conversation.kind,
+    viewerId: user.id,
+    viewerRole: user.role === "SELLER" ? "SELLER" : "BUYER",
+    counterpartId: counterpartId ?? null,
+    isDemo: conversation.isDemo,
+    gemstone: conversation.gemstone ? { id: conversation.gemstone.id, title: conversation.gemstone.title, slug: conversation.gemstone.slug } : null,
+    requirement: conversation.requirement
+      ? { id: conversation.requirement.id, gemstoneType: conversation.requirement.gemstoneType, status: conversation.requirement.status }
+      : null,
+  };
 
   const closedRequirement = conversation.requirement?.status === "CLOSED";
   const disabledReason = blocked
@@ -79,6 +101,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
           counterpartLabel={counterpartLabel}
           isDemo={conversation.isDemo}
           disabledReason={disabledReason}
+          context={context}
         />
       </div>
     </section>
