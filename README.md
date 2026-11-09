@@ -46,6 +46,8 @@ npm run db:stop      # stop the server; data is kept in .data/pg
 | `EMAIL_PROVIDER`, `SMS_PROVIDER` | yes | Only `console` exists. It is refused at send time in production |
 | `STORAGE_DIR` | yes | Private file storage root (default `./.data/uploads`). Never inside `public/` |
 | `UPLOAD_MAX_MB` | no | Per-file upload limit (default 10) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | for `EMAIL_PROVIDER=resend` | Resend sending key and a verified sender. Live sending is not yet verified (no keys in development) |
+| `MSG91_AUTH_KEY`, `MSG91_SENDER_ID`, `MSG91_TEMPLATE_ID` | for `SMS_PROVIDER=msg91` | MSG91 Flow API. The DLT template must take one variable carrying the full text. Not yet verified live |
 
 Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and must replace the console email and SMS providers. Those are not implemented yet, so production sends fail on purpose.
 
@@ -137,7 +139,7 @@ proxy.ts              coarse route gate
 - [x] M0 – Foundation
 - [x] M1 – Auth, roles, seller onboarding, admin review, audit (verified: unit tests, production build, database-level flows, live HTTP gating and sign-in; not verified: browser click-through, real email/SMS)
 - [x] M2 – Catalogue and portfolios (verified: unit tests, production build, Playwright end-to-end journey on a production build with the demo seed, 16 screenshots at 390px and 1440px; not verified: real email/SMS, a real device)
-- [ ] M3 – Enquiries, requirements, chat, quotations, notifications, contact moderation (see docs/ROADMAP.md)
+- [ ] M3 – Enquiries, requirements, chat, quotations, notifications, contact moderation (code complete and merged; the M3 browser journey and screenshots are not yet done; see docs/milestones/m3-status.md)
 
 ## M2 – catalogue, portfolios, moderation
 
@@ -146,7 +148,7 @@ proxy.ts              coarse route gate
 - **Admin:** `/admin/listings` (queue), `/admin/listings/all` (filters, featured), `/admin/documents` (verification), `/admin/reviews`, `/admin/homepage` (block editor), `/admin/settings` (auto-publish, default off).
 - **Buyer:** `/buyer` dashboard with wishlist, enquiries, conversations, valuations and reports tabs. Enquiry, chat and valuation are placeholders until M3/M4.
 - **Homepage:** hero search, top-rated sellers carousel, featured gemstones carousel, category grid, teasers, "Become a Seller".
-- **Demo data:** `npm run db:seed:demo` creates 6 demo sellers, 40 listings and 18 reviews. Every demo row is labelled "Demo" and the seed refuses to run when `NODE_ENV=production`. `DEMO_SELLER_PASSWORD`, when set, gives the demo sellers a known password for testing (unset, passwords are random).
+- **Demo data:** `npm run db:seed:demo` creates 6 demo sellers, 40 listings and 18 reviews. Every demo row is labelled "Demo" and the seed refuses to run when `NODE_ENV=production`. `DEMO_SELLER_PASSWORD`, when set, gives the demo sellers a known password for testing (unset, passwords are random). The end-to-end journey needs it: run `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before `npm run test:e2e`.
 
 ### Money, media and documents
 
