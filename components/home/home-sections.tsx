@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Carousel, CarouselItem } from "@/components/catalogue/carousel";
 import { ListingCard } from "@/components/catalogue/listing-card";
 import { SellerCard } from "@/components/catalogue/seller-card";
@@ -13,6 +14,8 @@ import { loadHomepageBlocks } from "@/lib/homepage/blocks";
  */
 
 export async function HeroCopy() {
+  // Homepage copy comes from the admin-edited HomepageBlock table, so it must not be frozen at build time.
+  await connection();
   const { hero } = await loadHomepageBlocks();
   return (
     <>
@@ -60,6 +63,9 @@ export function HeroSearch() {
 }
 
 export async function TopSellers() {
+  // Request-time: listings and ratings change as sellers publish and buyers review.
+  // Without this, Cache Components prerenders the section at build time and it goes stale.
+  await connection();
   // Approved sellers with at least one public listing, best rated first.
   const sellers = await prisma.sellerProfile.findMany({
     where: { approvalStatus: "APPROVED", gemstones: { some: publicListingWhere() } },
@@ -101,6 +107,8 @@ export async function TopSellers() {
 }
 
 export async function FeaturedListings() {
+  // Request-time, for the same reason as TopSellers: publishing and featuring must show immediately.
+  await connection();
   const rows = await prisma.gemstone.findMany({
     where: { AND: [publicListingWhere(), { featured: true }] },
     orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
@@ -132,6 +140,7 @@ export async function FeaturedListings() {
 }
 
 export async function CategoryGrid() {
+  await connection();
   const [categories, blocks] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } }),
     loadHomepageBlocks(),

@@ -51,3 +51,9 @@ skills-lock.json
 
 # local private file storage (dev)
 /.data/
+
+# Playwright and screenshots
+e2e/.server.log
+test-results/
+playwright-report/
+/screenshots/

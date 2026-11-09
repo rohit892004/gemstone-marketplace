@@ -39,8 +39,8 @@ export function setEmailProviderForTests(provider: EmailProvider | undefined): v
 export function getEmailProvider(): EmailProvider {
   if (override) return override;
   if (!instance) {
-    const { EMAIL_PROVIDER, NODE_ENV } = getEnv();
-    if (EMAIL_PROVIDER === "console" && NODE_ENV === "production") {
+    const { EMAIL_PROVIDER, NODE_ENV, ALLOW_NON_DELIVERING_PROVIDERS } = getEnv();
+    if (EMAIL_PROVIDER === "console" && NODE_ENV === "production" && ALLOW_NON_DELIVERING_PROVIDERS !== "true") {
       throw new Error("EMAIL_PROVIDER=console is not allowed in production. Configure a real provider.");
     }
     if (EMAIL_PROVIDER === "console") instance = new ConsoleEmailProvider();

@@ -1,0 +1,33 @@
+import { defineConfig, devices } from "@playwright/test";
+
+/**
+ * End-to-end tests run against a PRODUCTION build (`npm run build` first) with the demo seed loaded.
+ * Emails use the console provider, so the server writes them to e2e/.server.log, which the tests read
+ * to get verification links. The journey is one serial flow; workers stay at 1.
+ */
+export default defineConfig({
+  testDir: "e2e",
+  globalSetup: "./e2e/global-setup.ts",
+  fullyParallel: false,
+  workers: 1,
+  retries: 0,
+  timeout: 180_000,
+  expect: { timeout: 15_000 },
+  reporter: [["list"]],
+  use: {
+    baseURL: "http://localhost:3200",
+    trace: "retain-on-failure",
+    // Fail a missing element in seconds, not after the whole test timeout.
+    actionTimeout: 15_000,
+    screenshot: "only-on-failure",
+  },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  webServer: {
+    command: "npx next start -p 3200 > e2e/.server.log 2>&1",
+    url: "http://localhost:3200",
+    reuseExistingServer: false,
+    timeout: 180_000,
+    // Lets the console email provider run under NODE_ENV=production so the log captures links.
+    env: { ALLOW_NON_DELIVERING_PROVIDERS: "true" },
+  },
+});

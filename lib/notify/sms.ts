@@ -37,8 +37,8 @@ export function setSmsProviderForTests(provider: SmsProvider | undefined): void 
 export function getSmsProvider(): SmsProvider {
   if (override) return override;
   if (!instance) {
-    const { SMS_PROVIDER, NODE_ENV } = getEnv();
-    if (SMS_PROVIDER === "console" && NODE_ENV === "production") {
+    const { SMS_PROVIDER, NODE_ENV, ALLOW_NON_DELIVERING_PROVIDERS } = getEnv();
+    if (SMS_PROVIDER === "console" && NODE_ENV === "production" && ALLOW_NON_DELIVERING_PROVIDERS !== "true") {
       throw new Error("SMS_PROVIDER=console is not allowed in production. Configure a real provider.");
     }
     if (SMS_PROVIDER === "console") instance = new ConsoleSmsProvider();

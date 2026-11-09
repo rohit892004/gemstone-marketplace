@@ -21,6 +21,11 @@ const schema = z
     // Providers. "console" logs to stdout and is only allowed outside production.
     EMAIL_PROVIDER: z.enum(["console"]).default("console"),
     SMS_PROVIDER: z.enum(["console"]).default("console"),
+    /**
+     * Test-only opt-in. Console providers never deliver mail, so they are refused in production
+     * unless this is "true". Only the end-to-end run sets it (playwright.config.ts). Never set it on a real host.
+     */
+    ALLOW_NON_DELIVERING_PROVIDERS: z.enum(["true", "false"]).default("false"),
 
     // Local-disk storage root. Must NOT be inside /public.
     STORAGE_DIR: z.string().min(1).default("./.data/uploads"),
