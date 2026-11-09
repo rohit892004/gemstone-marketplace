@@ -143,7 +143,9 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
         role: "SELLER",
         status: "ACTIVE",
         emailVerifiedAt: new Date(),
-        passwordHash: await hashPassword(randomBytes(32).toString("hex")),
+        // Dev-only: DEMO_SELLER_PASSWORD lets the end-to-end tests log in as a demo seller.
+        // Unset, the password is random and unusable. Production never reaches this (guard above).
+        passwordHash: await hashPassword(process.env.DEMO_SELLER_PASSWORD || randomBytes(32).toString("hex")),
         sellerProfile: {
           create: {
             businessName: s.businessName,

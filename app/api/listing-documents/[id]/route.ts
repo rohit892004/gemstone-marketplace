@@ -57,7 +57,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       "Content-Length": String(bytes.length),
       "Content-Disposition": `attachment; filename="${sanitizeFileName(doc.fileName)}"`,
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": shared ? "public, max-age=600" : "private, no-store",
+      "Cache-Control": shared ? "public, max-age=60" : "private, no-store",
     },
   });
 }

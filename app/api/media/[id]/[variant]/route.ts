@@ -52,7 +52,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string; va
       "Content-Type": mimeType,
       "Content-Length": String(bytes.length),
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": publicToAnyone ? "public, max-age=3600" : "private, no-store",
+      // Short lifetime: a rejected or unpublished listing must disappear from shared caches quickly.
+      "Cache-Control": publicToAnyone ? "public, max-age=60" : "private, no-store",
     },
   });
 }

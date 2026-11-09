@@ -45,6 +45,13 @@ describe("processMedia", () => {
     expect(await processMedia(Buffer.alloc(0))).toEqual({ ok: false, reason: "empty" });
   });
 
+  it("refuses HEIC and AVIF photos instead of storing them unstripped as video", async () => {
+    for (const brand of ["heic", "mif1", "avif"]) {
+      const heif = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftyp"), Buffer.from(brand), Buffer.alloc(64)]);
+      expect(await processMedia(heif)).toEqual({ ok: false, reason: "unsupported_type" });
+    }
+  });
+
   it("accepts an MP4 signature as video without re-encoding", async () => {
     const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftypisom"), Buffer.alloc(64)]);
     const result = await processMedia(mp4);

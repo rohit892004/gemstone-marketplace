@@ -45,6 +45,9 @@ export const MEDIA_ERROR_TEXT: Record<MediaError, string> = {
 
 const MAX_PIXELS = 40_000_000;
 
+/** ISO-BMFF major brands used by HEIC/HEIF and AVIF still images. */
+const HEIF_BRANDS = new Set(["heic", "heix", "hevc", "heim", "heis", "hevm", "hevs", "mif1", "msf1", "avif", "avis"]);
+
 function sniff(bytes: Buffer): { kind: MediaKind; ext: string } | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return { kind: "IMAGE", ext: "jpg" };
   if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
@@ -53,7 +56,13 @@ function sniff(bytes: Buffer): { kind: MediaKind; ext: string } | null {
   if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") {
     return { kind: "IMAGE", ext: "webp" };
   }
-  if (bytes.length >= 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp") return { kind: "VIDEO", ext: "mp4" };
+  if (bytes.length >= 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp") {
+    // HEIF/AVIF photos share the ISO-BMFF container. They are refused rather than stored as
+    // "video", because they would bypass the EXIF/GPS-stripping re-encode.
+    const brand = bytes.subarray(8, 12).toString("ascii");
+    if (HEIF_BRANDS.has(brand)) return null;
+    return { kind: "VIDEO", ext: "mp4" };
+  }
   if (bytes.length >= 4 && bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))) return { kind: "VIDEO", ext: "webm" };
   return null;
 }

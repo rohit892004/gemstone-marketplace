@@ -451,9 +451,10 @@ export async function deleteDocumentAction(formData: FormData): Promise<void> {
   if (!owned || !doc || doc.gemstoneId !== owned.id) notFound();
   if (!canSellerDeleteDocument(doc)) return;
 
-  await prisma.listingDocument.deleteMany({
+  const removed = await prisma.listingDocument.deleteMany({
     where: { id: doc.id, verificationStatus: { not: "VERIFIED" }, gemstone: { seller: { userId: user.id } } },
   });
-  await deleteObjects([doc.fileKey]);
+  // Remove the file only when the row was actually deleted (an admin may have verified it meanwhile).
+  if (removed.count === 1) await deleteObjects([doc.fileKey]);
   revalidateListing(owned.id);
 }

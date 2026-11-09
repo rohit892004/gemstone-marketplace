@@ -45,6 +45,8 @@ export const listWishlist = cache(async (buyerId: string): Promise<WishlistRow[]
   const items = await prisma.wishlistItem.findMany({
     where: { buyerId },
     orderBy: { createdAt: "desc" },
+    // Capped so one account cannot make the dashboard load an unbounded list.
+    take: 200,
     select: {
       gemstoneId: true,
       gemstone: {
