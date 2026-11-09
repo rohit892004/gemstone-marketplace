@@ -1,24 +1,85 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import {
+  CategoryGrid,
+  FeaturedListings,
+  HeroCopy,
+  HeroSearch,
+  NewsletterTeaser,
+  Teasers,
+  TopSellers,
+} from "@/components/home/home-sections";
+
+/**
+ * Homepage. Static shell with Suspense boundaries around every database read, so the layout can be
+ * prerendered while the carousels and copy stream in.
+ */
+
+export const metadata = {
+  title: "Buy and value certified gemstones",
+  description:
+    "Browse gemstones from verified sellers, compare listings by category, and request an indicative valuation.",
+};
 
 export default function HomePage() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Gemstone marketplace</p>
-      <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-        Discover, compare and value gemstones from verified sellers.
-      </h1>
-      <p className="mt-6 max-w-2xl text-lg text-ink-soft">
-        Browse listings by category, speak directly with sellers on the platform, and request an
-        indicative valuation for your stone.
-      </p>
-      <div className="mt-10 flex flex-wrap gap-3">
-        <Link href="/gemstones" className="rounded-md bg-brand px-5 py-3 text-sm font-medium text-white hover:bg-brand-strong">
-          Browse gemstones
+    <div className="mx-auto max-w-7xl space-y-20 px-4 py-16 sm:px-6 sm:py-20">
+      <section>
+        <p className="text-sm font-medium uppercase tracking-widest text-accent">Gemstone marketplace</p>
+        <Suspense
+          fallback={
+            <h1 id="hero-heading" className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+              Discover, compare and value gemstones from verified sellers.
+            </h1>
+          }
+        >
+          <HeroCopy />
+        </Suspense>
+        <HeroSearch />
+      </section>
+
+      <Suspense fallback={null}>
+        <TopSellers />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <FeaturedListings />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <CategoryGrid />
+      </Suspense>
+
+      <section aria-labelledby="explore-heading" className="space-y-4">
+        <h2 id="explore-heading" className="sr-only">
+          Explore
+        </h2>
+        <Suspense fallback={null}>
+          <Teasers />
+        </Suspense>
+      </section>
+
+      <Suspense fallback={null}>
+        <NewsletterTeaser />
+      </Suspense>
+
+      <section aria-labelledby="become-seller-heading" className="grid gap-6 rounded-lg border border-line bg-surface-raised p-8 md:grid-cols-[1fr_auto] md:items-center">
+        <div className="space-y-3">
+          <h2 id="become-seller-heading" className="text-2xl font-semibold text-ink">
+            Become a seller
+          </h2>
+          <p className="max-w-2xl text-sm text-ink-soft">
+            Membership is free. Create a seller account, complete your business profile, and list your stones once our
+            team has approved your application. Verified documents help buyers trust your listings.
+          </p>
+        </div>
+        <Link
+          href="/register/seller"
+          className="rounded-md bg-brand px-5 py-3 text-center text-sm font-medium text-white hover:bg-brand-strong"
+        >
+          Register as a seller
         </Link>
-        <Link href="/valuation" className="rounded-md border border-line bg-surface-raised px-5 py-3 text-sm font-medium text-ink hover:border-ink-soft">
-          Get a valuation
-        </Link>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

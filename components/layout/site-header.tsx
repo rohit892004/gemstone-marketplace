@@ -9,6 +9,7 @@ const nav = [
   { href: "/valuation", label: "Valuation" },
   { href: "/learn", label: "Learn" },
   { href: "/news", label: "Market News" },
+  { href: "/register/seller", label: "Become a Seller" },
 ];
 
 export function SiteHeader() {

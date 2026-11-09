@@ -11,6 +11,7 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-col gap-2 text-sm">
+          <Link href="/register/seller" className="text-ink-soft hover:text-ink">Become a Seller</Link>
           <Link href="/about" className="text-ink-soft hover:text-ink">About</Link>
           <Link href="/contact" className="text-ink-soft hover:text-ink">Contact</Link>
           <Link href="/privacy" className="text-ink-soft hover:text-ink">Privacy</Link>

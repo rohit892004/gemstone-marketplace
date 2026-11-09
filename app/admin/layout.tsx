@@ -2,12 +2,21 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { requirePageRole } from "@/lib/auth/require-role";
 
+/** Admin pages are never indexed. */
+export const metadata = { robots: { index: false, follow: false } };
+
 const NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/sellers", label: "Sellers" },
+  { href: "/admin/listings", label: "Listing queue" },
+  { href: "/admin/listings/all", label: "All listings" },
+  { href: "/admin/documents", label: "Documents" },
+  { href: "/admin/reviews", label: "Reviews" },
+  { href: "/admin/homepage", label: "Homepage" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
-const COMING_LATER = ["Buyers", "Listings", "Content", "Valuations", "Audit log"];
+const COMING_LATER = ["Buyers", "Content", "Valuations", "Audit log"];
 
 /**
  * Admin shell. The session check lives in an async child inside <Suspense>
