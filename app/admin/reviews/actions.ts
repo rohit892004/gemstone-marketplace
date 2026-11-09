@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { CATALOGUE_AUDIT, recordCatalogueAudit } from "@/lib/admin-catalogue/audit";
 import { computeSellerRating } from "@/lib/admin-catalogue/rating";
-import { reviewDecisionSchema } from "@/lib/admin-catalogue/schemas";
+import { reviewDecisionSchema, reviewRejectSchema } from "@/lib/admin-catalogue/schemas";
 import type { AdminActionState } from "@/lib/admin/action-state";
 import { requireRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
@@ -28,6 +28,7 @@ async function decideReview(
   reviewId: string,
   adminId: string,
   status: "APPROVED" | "REJECTED",
+  reason: string | null,
 ): Promise<AdminActionState> {
   const review = await prisma.review.findUnique({ where: { id: reviewId }, select: { id: true, sellerId: true } });
   if (!review) return { ok: false, error: "Review not found." };
@@ -36,7 +37,7 @@ async function decideReview(
     await prisma.$transaction(async (tx) => {
       const result = await tx.review.updateMany({
         where: { id: reviewId, status: "PENDING" },
-        data: { status, moderatedById: adminId, moderatedAt: new Date() },
+        data: { status, moderatedById: adminId, moderatedAt: new Date(), rejectionReason: reason },
       });
       if (result.count === 0) throw new StaleReviewError();
 
@@ -75,12 +76,15 @@ export async function approveReview(_prev: AdminActionState, formData: FormData)
   const admin = await requireRole(["ADMIN"]);
   const parsed = reviewDecisionSchema.safeParse({ reviewId: formValue(formData, "reviewId") });
   if (!parsed.success) return { ok: false, error: "Invalid review." };
-  return decideReview(parsed.data.reviewId, admin.id, "APPROVED");
+  return decideReview(parsed.data.reviewId, admin.id, "APPROVED", null);
 }
 
 export async function rejectReview(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   const admin = await requireRole(["ADMIN"]);
-  const parsed = reviewDecisionSchema.safeParse({ reviewId: formValue(formData, "reviewId") });
-  if (!parsed.success) return { ok: false, error: "Invalid review." };
-  return decideReview(parsed.data.reviewId, admin.id, "REJECTED");
+  const parsed = reviewRejectSchema.safeParse({
+    reviewId: formValue(formData, "reviewId"),
+    reason: formValue(formData, "reason"),
+  });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid review." };
+  return decideReview(parsed.data.reviewId, admin.id, "REJECTED", parsed.data.reason);
 }

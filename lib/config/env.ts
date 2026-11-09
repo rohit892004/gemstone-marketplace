@@ -30,6 +30,9 @@ const schema = z
     // Local-disk storage root. Must NOT be inside /public.
     STORAGE_DIR: z.string().min(1).default("./.data/uploads"),
     UPLOAD_MAX_MB: z.coerce.number().positive().max(50).default(10),
+
+    /** Demo seed opt-in. Demo data is refused unless this is "true", in addition to the NODE_ENV check. */
+    ALLOW_DEMO_SEED: z.enum(["true", "false"]).default("false"),
   });
 // Production-only rules (console providers, AUTH_SECRET) are enforced where the
 // feature is used, not here. Validating them at import would break `next build`,

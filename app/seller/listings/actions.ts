@@ -250,6 +250,8 @@ export async function uploadMediaAction(_previous: MediaUploadState, formData: F
     }
 
     await prisma.$transaction(async (tx) => {
+      // Serialise media writes per listing: the row lock makes the limit check and the insert one step.
+      await tx.$queryRaw`SELECT "id" FROM "Gemstone" WHERE "id" = ${owned.id} FOR UPDATE`;
       const current = await tx.gemstoneMedia.findMany({
         where: { gemstoneId: owned.id },
         select: { type: true, isCover: true, sortOrder: true },
@@ -396,27 +398,35 @@ export async function uploadDocumentAction(_previous: DocumentUploadState, formD
   const checked = validateUpload(bytes);
   if (!checked.ok) return { error: uploadErrorMessage(checked.reason) };
 
-  const count = await prisma.listingDocument.count({ where: { gemstoneId: owned.id } });
-  if (!canAddDocument(count)) return { error: "A listing can have up to 10 documents." };
-
   const key = listingDocumentKey(owned.id, checked.ext);
   await getStorageProvider().put(key, bytes);
   try {
-    await prisma.listingDocument.create({
-      data: {
-        gemstoneId: owned.id,
-        type: type.data,
-        title: title.data,
-        fileKey: key,
-        // Display name only. It never reaches a storage key.
-        fileName: sanitizeFileName(file.name),
-        mimeType: checked.mimeType,
-        sizeBytes: checked.sizeBytes,
-        certificateLabId,
-        isPublic: false,
-        verificationStatus: "PENDING",
-      },
+    // Count and insert under a row lock on the listing, so parallel uploads cannot exceed the cap.
+    const saved = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Gemstone" WHERE "id" = ${owned.id} FOR UPDATE`;
+      const count = await tx.listingDocument.count({ where: { gemstoneId: owned.id } });
+      if (!canAddDocument(count)) return false;
+      await tx.listingDocument.create({
+        data: {
+          gemstoneId: owned.id,
+          type: type.data,
+          title: title.data,
+          fileKey: key,
+          // Display name only. It never reaches a storage key.
+          fileName: sanitizeFileName(file.name),
+          mimeType: checked.mimeType,
+          sizeBytes: checked.sizeBytes,
+          certificateLabId,
+          isPublic: false,
+          verificationStatus: "PENDING",
+        },
+      });
+      return true;
     });
+    if (!saved) {
+      await deleteObjects([key]);
+      return { error: "A listing can have up to 10 documents." };
+    }
   } catch (error) {
     await deleteObjects([key]);
     console.error("[seller-catalogue] document save failed", error);

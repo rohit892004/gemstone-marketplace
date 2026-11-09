@@ -38,7 +38,6 @@ let seller: Page;
 let admin: Page;
 let demo: Page;
 let listingPath = "";
-let listingEditUrl = "";
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
@@ -157,9 +156,7 @@ test.describe.serial("M1 + M2 journey", () => {
     await listingField("certificateLabId").selectOption({ label: "GIA" });
     await listingField("certificateNo").fill("E2E-123");
     await seller.getByRole("button", { name: "Save draft" }).click();
-    await seller.waitForURL(/\/seller\/listings\/[^/]+\/edit/);
-    listingEditUrl = seller.url();
-
+    await seller.waitForURL(/\/seller\/listings\/[^/]+\/edit/);
     // Photo.
     await seller.getByLabel("Add images or videos").setInputFiles({ name: "photo.jpg", mimeType: "image/jpeg", buffer: await sampleJpeg() });
     await seller.getByRole("button", { name: "Upload", exact: true }).click();

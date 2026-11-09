@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemoBadge } from "@/components/catalogue/badges";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { DecisionForm } from "@/components/admin/decision-form";
@@ -36,6 +37,7 @@ async function SellerDetail({ params }: { params: Params }) {
     select: {
       id: true,
       businessName: true,
+      isDemo: true,
       businessType: true,
       gstNumber: true,
       addressLine: true,
@@ -78,7 +80,9 @@ async function SellerDetail({ params }: { params: Params }) {
       </div>
 
       <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">{seller.businessName}</h1>
+        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
+          {seller.businessName} {seller.isDemo ? <DemoBadge /> : null}
+        </h1>
         <StatusBadge status={status} />
       </header>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemoBadge } from "@/components/catalogue/badges";
 import { Suspense } from "react";
 import { SELLER_PAGE_SIZE, SELLER_STATUS_FILTERS, parseSellerListParams, sellerWhere } from "@/lib/admin/seller-list";
 import { requirePageRole } from "@/lib/auth/require-role";
@@ -45,6 +46,7 @@ async function SellersList({ searchParams }: { searchParams: SearchParams }) {
     select: {
       id: true,
       businessName: true,
+      isDemo: true,
       city: true,
       state: true,
       specialties: true,
@@ -98,7 +100,10 @@ async function SellersList({ searchParams }: { searchParams: SearchParams }) {
             <tbody>
               {sellers.map((seller) => (
                 <tr key={seller.id} className="border-t border-stone-200">
-                  <td className="px-3 py-2 font-medium">{seller.businessName}</td>
+                  <td className="px-3 py-2 font-medium">
+                    {seller.businessName}{" "}
+                    {seller.isDemo ? <DemoBadge /> : null}
+                  </td>
                   <td className="px-3 py-2">
                     {seller.city}, {seller.state}
                   </td>

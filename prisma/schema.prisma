@@ -456,18 +456,20 @@ enum ReviewStatus {
 /// Seller review. Real reviews require a prior enquiry from the buyer (enforced in M3).
 /// Demo reviews have no author account and isDemo = true.
 model Review {
-  id            String       @id @default(cuid())
-  sellerId      String
-  authorId      String?
-  authorName    String
-  rating        Int
-  title         String?
-  body          String
-  status        ReviewStatus @default(PENDING)
-  isDemo        Boolean      @default(false)
-  moderatedById String?
-  moderatedAt   DateTime?
-  createdAt     DateTime     @default(now())
+  id              String       @id @default(cuid())
+  sellerId        String
+  authorId        String?
+  authorName      String
+  rating          Int
+  title           String?
+  body            String
+  status          ReviewStatus @default(PENDING)
+  isDemo          Boolean      @default(false)
+  moderatedById   String?
+  moderatedAt     DateTime?
+  /// Required by the admin when rejecting a review (shown to admins; the reviewer is told it was not published).
+  rejectionReason String?
+  createdAt       DateTime     @default(now())
 
   seller    SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   author    User?         @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: SetNull)

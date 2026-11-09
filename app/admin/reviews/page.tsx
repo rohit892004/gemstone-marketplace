@@ -70,9 +70,12 @@ async function ReviewQueue() {
                   action={rejectReview}
                   hidden={{ reviewId: review.id }}
                   title="Reject"
-                  description="The review is hidden and not counted."
+                  description="The review is hidden and not counted. Record why it was rejected."
                   submitLabel="Reject review"
                   tone="danger"
+                  fields={[
+                    { name: "reason", label: "Reason (at least 10 characters)", kind: "textarea", required: true, maxLength: 1000 },
+                  ]}
                 />
               </div>
             </li>

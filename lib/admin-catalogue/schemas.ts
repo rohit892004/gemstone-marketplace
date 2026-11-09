@@ -18,6 +18,12 @@ export const documentRejectSchema = z.object({ documentId: id, reason });
 
 export const reviewDecisionSchema = z.object({ reviewId: id });
 
+/** Rejecting a review needs a reason, like listings and documents. */
+export const reviewRejectSchema = z.object({
+  reviewId: id,
+  reason: z.string().trim().min(10, "Give a reason of at least 10 characters").max(1000),
+});
+
 export const autoPublishSchema = z.object({
   autoPublish: z.enum(["on", "off"]).transform((v) => v === "on"),
 });

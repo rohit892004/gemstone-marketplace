@@ -11,6 +11,8 @@ const h = vi.hoisted(() => {
     gemstoneMedia: { findMany: vi.fn(), findFirst: vi.fn(), createMany: vi.fn(), delete: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     listingDocument: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
+    // Row lock used by the upload paths (SELECT ... FOR UPDATE on the listing).
+    $queryRaw: vi.fn(async () => []),
   };
   prisma.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => fn(prisma));
   return {
