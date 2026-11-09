@@ -3,10 +3,13 @@ import { DemoBadge } from "@/components/catalogue/badges";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { DecisionForm } from "@/components/admin/decision-form";
+import { SellerCategoriesForm } from "@/components/admin/seller-categories-form";
 import { DOCUMENT_TYPE_LABELS, StatusBadge, formatBytes, formatDate } from "@/components/admin/admin-ui";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
+import { loadSellerCategories } from "@/lib/seller/categories";
 import { approveSeller, reactivateSeller, rejectSeller, suspendSeller } from "../actions";
+import { updateSellerCategories } from "../categories-actions";
 
 type Params = Promise<{ id: string }>;
 
@@ -52,6 +55,7 @@ async function SellerDetail({ params }: { params: Params }) {
       reviewedAt: true,
       approvedAt: true,
       createdAt: true,
+      categories: { orderBy: { name: "asc" }, select: { id: true, name: true } },
       user: { select: { name: true, email: true, mobile: true, status: true, emailVerifiedAt: true } },
       documents: {
         orderBy: { createdAt: "asc" },
@@ -70,6 +74,7 @@ async function SellerDetail({ params }: { params: Params }) {
   if (!seller) notFound();
 
   const status = seller.approvalStatus;
+  const categoryOptions = await loadSellerCategories();
 
   return (
     <div className="space-y-8">
@@ -155,8 +160,15 @@ async function SellerDetail({ params }: { params: Params }) {
           <Field label="Country" value={seller.country} />
           <Field label="PIN code" value={seller.pincode} />
           <Field label="Specialties" value={seller.specialties.join(", ")} />
+          <Field label="Gemstone categories" value={seller.categories.map((c) => c.name).join(", ")} />
           <Field label="Submitted" value={formatDate(seller.createdAt)} />
         </dl>
+        <SellerCategoriesForm
+          action={updateSellerCategories}
+          sellerId={seller.id}
+          options={categoryOptions}
+          selectedIds={seller.categories.map((c) => c.id)}
+        />
       </section>
 
       <section aria-labelledby="account-heading" className="space-y-3">

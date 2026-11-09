@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { registerAccount } from "@/lib/auth/register";
+import { loadSellerCategories } from "@/lib/seller/categories";
 import { loadActiveCertificateLabs } from "@/lib/seller/labs";
 import { generateSellerSlug } from "@/lib/seller/slug";
 import type { FieldErrors, SellerRegistrationInput, ValidatedFile } from "@/lib/seller/types";
@@ -60,10 +61,10 @@ export async function registerSeller(
   });
   if (!limit.allowed) return { ok: false, reason: "rate_limited" };
 
-  const labs = await loadActiveCertificateLabs();
-  const validated = validateSellerRegistration(input, labs);
+  const [labs, categories] = await Promise.all([loadActiveCertificateLabs(), loadSellerCategories()]);
+  const validated = validateSellerRegistration(input, labs, categories);
   if (!validated.ok) return { ok: false, reason: "validation", fieldErrors: validated.fieldErrors };
-  const { account, business, idProof, businessProof, certificates } = validated.value;
+  const { account, business, categoryIds, idProof, businessProof, certificates } = validated.value;
 
   // Keys written so far, across the callback and any retry. Deleted on failure or EXISTING.
   const writtenKeys: string[] = [];
@@ -125,6 +126,8 @@ export async function registerSeller(
             pincode: business.pincode ?? null,
             yearsInBusiness: business.yearsInBusiness,
             specialties: business.specialties,
+            // Kept on every status: pending and rejected applications keep their categories.
+            categories: { connect: categoryIds.map((id) => ({ id })) },
             slug: await findFreeSlug(tx),
             // approvalStatus defaults to PENDING in the schema.
           },

@@ -33,6 +33,8 @@ export interface SellerRegistrationInput {
   pincode: string;
   yearsInBusiness: string;
   specialties: string[];
+  /** Category ids as submitted (top-level Category ids). Checked against the list in validation. */
+  categoryIds: string[];
   idProof: UploadedFile | null;
   businessProof: UploadedFile | null;
   certificates: RawCertificate[];
@@ -56,6 +58,8 @@ export interface ValidatedCertificate {
 export interface ValidatedSellerRegistration {
   account: BuyerRegisterInput;
   business: SellerBusinessInput;
+  /** Chosen top-level category ids, in list order. At least one. */
+  categoryIds: string[];
   idProof: ValidatedFile;
   businessProof: ValidatedFile;
   certificates: ValidatedCertificate[];
