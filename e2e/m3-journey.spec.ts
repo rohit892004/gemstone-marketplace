@@ -1,3 +1,5 @@
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 import { type Browser, type BrowserContext, type Page, expect, test } from "@playwright/test";
 import { tokenSentTo } from "./helpers";
 
@@ -30,6 +32,23 @@ let buyerCtx: BrowserContext;
 let sellerACtx: BrowserContext;
 let sellerBCtx: BrowserContext;
 let adminCtx: BrowserContext;
+const SHOTS = path.join(__dirname, "..", "screenshots");
+const VIEWPORTS = [
+  { width: 390, height: 844, label: "390" },
+  { width: 1440, height: 900, label: "1440" },
+] as const;
+
+/** Full-page screenshots at both required widths, written to screenshots/ (git-ignored). */
+async function shot(page: Page, name: string) {
+  mkdirSync(SHOTS, { recursive: true });
+  for (const vp of VIEWPORTS) {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await page.waitForLoadState("networkidle");
+    await page.screenshot({ path: path.join(SHOTS, `${name}-${vp.label}.png`), fullPage: true });
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+}
+
 let buyer: Page;
 let sellerA: Page;
 let sellerB: Page;
@@ -236,5 +255,40 @@ test.describe.serial("M3 journey", () => {
     await admin.goto("/admin/moderation");
     await expect(admin.getByText("Seller profile text").first()).toBeVisible();
     await expect(admin.locator("body")).not.toContainText("98765 43210");
+  });
+
+  test("screenshots of the M3 screens at 390px and 1440px", async () => {
+    await sellerA.goto("/seller/inbox");
+    await shot(sellerA, "m3-seller-inbox-everything");
+    await sellerA.goto("/seller/inbox?side=buying");
+    await shot(sellerA, "m3-seller-inbox-buying");
+    await sellerA.goto("/seller/inbox?side=selling");
+    await shot(sellerA, "m3-seller-inbox-selling");
+
+    await buyer.goto(enquiryPath);
+    await shot(buyer, "m3-chat-thread-buyer");
+    await sellerA.goto(enquiryPath);
+    await shot(sellerA, "m3-chat-thread-seller");
+
+    await buyer.goto("/buyer/requirements/new");
+    await shot(buyer, "m3-requirement-form-buyer");
+    await sellerA.goto("/seller/requirements/new");
+    await shot(sellerA, "m3-requirement-form-seller");
+    await sellerA.goto("/seller/requirements/mine");
+    await shot(sellerA, "m3-own-requirements-seller");
+
+    await sellerB.goto("/seller/requirements");
+    await shot(sellerB, "m3-requirements-board");
+
+    await sellerA.goto("/seller/quotations");
+    await shot(sellerA, "m3-seller-quotations");
+
+    await buyer.goto("/notifications");
+    await shot(buyer, "m3-notification-centre-buyer");
+    await sellerA.goto("/notifications");
+    await shot(sellerA, "m3-notification-centre-seller");
+
+    await admin.goto("/admin/moderation");
+    await shot(admin, "m3-admin-flagged-queue");
   });
 });
