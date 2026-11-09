@@ -50,21 +50,21 @@ describe("parseBoardFilters", () => {
 
 describe("buildBoardWhere", () => {
   it("is always OPEN, in the seller's categories, and not past deadline", () => {
-    const where = buildBoardWhere({ currency: "INR" }, ["cat_a", "cat_b"], NOW);
+    const where = buildBoardWhere({ currency: "INR" }, "seller_1", ["cat_a", "cat_b"], NOW);
     expect(where.status).toBe("OPEN");
     expect(where.categoryId).toEqual({ in: ["cat_a", "cat_b"] });
     expect(JSON.stringify(where.AND)).toContain("2026-11-09T06:00:00.000Z");
   });
 
   it("narrows to one category only when the seller owns it", () => {
-    expect(buildBoardWhere({ currency: "INR", categoryId: "cat_b" }, ["cat_a", "cat_b"], NOW).categoryId).toEqual({
+    expect(buildBoardWhere({ currency: "INR", categoryId: "cat_b" }, "seller_1", ["cat_a", "cat_b"], NOW).categoryId).toEqual({
       in: ["cat_b"],
     });
-    expect(buildBoardWhere({ currency: "INR", categoryId: "cat_x" }, ["cat_a"], NOW).categoryId).toEqual({ in: ["cat_a"] });
+    expect(buildBoardWhere({ currency: "INR", categoryId: "cat_x" }, "seller_1", ["cat_a"], NOW).categoryId).toEqual({ in: ["cat_a"] });
   });
 
   it("matches no requirements when the seller has no categories", () => {
-    expect(buildBoardWhere({ currency: "INR" }, [], NOW).categoryId).toEqual({ in: [] });
+    expect(buildBoardWhere({ currency: "INR" }, "seller_1", [], NOW).categoryId).toEqual({ in: [] });
   });
 
   it("adds the carat and budget overlap clauses, and the currency for budgets", () => {
@@ -76,7 +76,7 @@ describe("buildBoardWhere", () => {
         budgetMinMinor: BigInt(100),
         budgetMaxMinor: BigInt(900),
       },
-      ["cat_a"],
+      "seller_1", ["cat_a"],
       NOW,
     );
     const clauses = JSON.stringify(where.AND, (_key, value: unknown) => (typeof value === "bigint" ? value.toString() : value));
@@ -89,13 +89,23 @@ describe("buildBoardWhere", () => {
 
   it("filters to certificate-needed requirements and to deadlines on or before a date", () => {
     const deadlineBy = new Date("2026-12-01T23:59:59.999Z");
-    const clauses = JSON.stringify(buildBoardWhere({ currency: "INR", certificateNeeded: true, deadlineBy }, ["cat_a"], NOW).AND);
+    const clauses = JSON.stringify(buildBoardWhere({ currency: "INR", certificateNeeded: true, deadlineBy }, "seller_1", ["cat_a"], NOW).AND);
     expect(clauses).toContain('"certificateNeeded":true');
     expect(clauses).toContain('"deadline":{"lte":"2026-12-01T23:59:59.999Z"}');
   });
 
-  it("never selects buyer fields", () => {
-    const where = buildBoardWhere({ currency: "INR" }, ["cat_a"], NOW);
-    expect(JSON.stringify(where)).not.toMatch(/buyer|email|mobile/i);
+  it("never selects buyer contact fields", () => {
+    const where = buildBoardWhere({ currency: "INR" }, "seller_1", ["cat_a"], NOW);
+    expect(JSON.stringify(where)).not.toMatch(/email|mobile|name/i);
+  });
+
+  it("excludes the viewing seller's own requirements, even when they are open in a matching category", () => {
+    const where = buildBoardWhere({ currency: "INR" }, "seller_1", ["cat_a"], NOW);
+    expect(where.AND).toEqual(expect.arrayContaining([{ buyerId: { not: "seller_1" } }]));
+  });
+
+  it("keeps the exclusion when filters are applied", () => {
+    const where = buildBoardWhere({ currency: "USD", caratMin: "1", certificateNeeded: true }, "seller_1", ["cat_a"], NOW);
+    expect(where.AND).toEqual(expect.arrayContaining([{ buyerId: { not: "seller_1" } }]));
   });
 });

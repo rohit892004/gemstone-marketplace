@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireMessagingUser } from "@/lib/messaging/access";
 import { messageForActionError, type ActionResult } from "@/lib/messaging/action-helpers";
 import { parseMajorToMinor } from "@/lib/money/money";
 import { sendOffer } from "@/lib/offers/send";
@@ -34,7 +34,7 @@ export async function sendOfferAction(
   }
 
   try {
-    const user = await requireRole(["BUYER"]);
+    const user = await requireMessagingUser();
     const result = await sendOffer({
       buyerId: user.id,
       conversationId: parsedId.data,

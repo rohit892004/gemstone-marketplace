@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { getConversationForParticipant, isBlockedEitherWay, MESSAGING_ROLES, otherParticipantIds } from "@/lib/messaging/access";
+import { conversationSide } from "@/lib/messaging/side";
 import { listMessagesSince } from "@/lib/messaging/service";
 import { ChatThread, type ThreadMessage } from "@/components/messaging/chat-thread";
 import { SafetyActions } from "@/components/messaging/safety-actions";
@@ -52,7 +53,8 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
     conversationId: id,
     kind: conversation.kind,
     viewerId: user.id,
-    viewerRole: user.role === "SELLER" ? "SELLER" : "BUYER",
+    // The side decides the controls: a seller enquiring on another seller's listing is the buyer here.
+    viewerRole: conversationSide(conversation, user.id) === "BUYING" ? "BUYER" : "SELLER",
     canQuote: quotationSides(conversation, user.id)?.viewerIsSeller === true,
     counterpartId: counterpartId ?? null,
     isDemo: conversation.isDemo,

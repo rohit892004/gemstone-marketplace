@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireMessagingUser } from "@/lib/messaging/access";
 import { messageForActionError } from "@/lib/messaging/action-helpers";
 import { RequirementError, closeRequirement, postRequirement, updateRequirement } from "@/lib/requirements/service";
 import { requirementRawFromFormData, type RequirementField } from "@/lib/requirements/validate";
 
 /**
- * Buyer requirement actions. Buyer role only; the buyer comes from the session. Every write is
- * scoped to that buyer, so a requirement ID from the client only works for the owner.
+ * Requirement actions for buyers and approved sellers acting as buyers. The poster comes from the session.
+ * Every write is scoped to that poster, so a requirement ID from the client only works for the owner.
  */
 
 export type RequirementActionResult =
@@ -28,7 +28,7 @@ function fail(error: unknown): RequirementActionResult {
 
 export async function postRequirementAction(formData: FormData): Promise<RequirementActionResult> {
   try {
-    const user = await requireRole(["BUYER"]);
+    const user = await requireMessagingUser();
     const result = await postRequirement({ buyerId: user.id, raw: requirementRawFromFormData(formData) });
     revalidatePath("/buyer/requirements");
     return { ok: true, requirementId: result.requirementId, warning: result.warning };
@@ -41,7 +41,7 @@ export async function updateRequirementAction(requirementId: string, formData: F
   const parsed = idSchema.safeParse(requirementId);
   if (!parsed.success) return { ok: false, error: NOT_FOUND };
   try {
-    const user = await requireRole(["BUYER"]);
+    const user = await requireMessagingUser();
     const result = await updateRequirement({
       buyerId: user.id,
       requirementId: parsed.data,
@@ -59,7 +59,7 @@ export async function closeRequirementAction(requirementId: string): Promise<Req
   const parsed = idSchema.safeParse(requirementId);
   if (!parsed.success) return { ok: false, error: NOT_FOUND };
   try {
-    const user = await requireRole(["BUYER"]);
+    const user = await requireMessagingUser();
     await closeRequirement({ buyerId: user.id, requirementId: parsed.data });
     revalidatePath("/buyer/requirements");
     revalidatePath(`/buyer/requirements/${parsed.data}`);

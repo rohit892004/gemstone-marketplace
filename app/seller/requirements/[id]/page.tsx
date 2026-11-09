@@ -35,6 +35,8 @@ async function RequirementDetail({ params }: { params: Promise<{ id: string }> }
   const requirement = await prisma.requirement.findFirst({
     where: {
       id,
+      // A seller's own requirement is never shown to them as a board item, even when it is open in their category.
+      buyerId: { not: user.id },
       OR: [
         { status: "OPEN", categoryId: { in: categoryIds } },
         { responses: { some: { sellerId: user.id } } },

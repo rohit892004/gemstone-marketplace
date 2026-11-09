@@ -10,6 +10,8 @@ import { sanitizeFileName } from "@/lib/seller/sanitize-filename";
 import { getStorageProvider } from "@/lib/storage/storage";
 import { uploadErrorMessage, validateUpload } from "@/lib/storage/upload-validation";
 import { isBlockedEitherWay } from "./access";
+import { isOwnListing } from "./guards";
+import { conversationSide, type ConversationSide, type SideFilter, sideWhere } from "./side";
 import { moderateContactDetails } from "./moderation";
 
 /**
@@ -294,7 +296,7 @@ export async function startEnquiry(input: {
     select: { id: true, title: true, seller: { select: { userId: true } } },
   });
   if (!listing) throw new MessagingError("NOT_AVAILABLE", "This gemstone is no longer available to enquire about.");
-  if (listing.seller.userId === input.buyerId) {
+  if (isOwnListing(input.buyerId, listing.seller.userId)) {
     throw new MessagingError("SELF_CONTACT", "You can't enquire about your own listing.");
   }
   if (input.body.trim().length === 0) throw new MessagingError("INVALID", "Write your enquiry before sending.");
@@ -407,6 +409,8 @@ export interface ConversationListItem {
   lastMessageAt: Date;
   gemstone: { id: string; title: string; slug: string } | null;
   requirement: { id: string; gemstoneType: string } | null;
+  /** BUYING when the viewer started the thread as a buyer, otherwise SELLING. */
+  side: ConversationSide;
   counterpart: { id: string; name: string | null; businessName: string | null; slug: string | null; role: string };
   lastMessage: { body: string; senderId: string; kind: MessageKind; createdAt: Date } | null;
   unreadCount: number;
@@ -416,13 +420,14 @@ export interface ConversationListItem {
 /** Conversations the user is in, newest first. Search matches counterpart name, business or listing title. */
 export async function listConversationsForUser(
   userId: string,
-  options: { kind?: ConversationKind; q?: string; take?: number } = {},
+  options: { kind?: ConversationKind; side?: SideFilter; q?: string; take?: number } = {},
 ): Promise<ConversationListItem[]> {
   const q = options.q?.trim();
   const rows = await prisma.conversation.findMany({
     where: {
       participants: { some: { userId } },
       ...(options.kind ? { kind: options.kind } : {}),
+      ...(options.side ? sideWhere(userId, options.side) : {}),
       ...(q
         ? {
             OR: [
@@ -450,9 +455,10 @@ export async function listConversationsForUser(
       id: true,
       kind: true,
       isDemo: true,
+      startedById: true,
       lastMessageAt: true,
       gemstone: { select: { id: true, title: true, slug: true } },
-      requirement: { select: { id: true, gemstoneType: true } },
+      requirement: { select: { id: true, gemstoneType: true, buyerId: true } },
       participants: {
         select: {
           userId: true,
@@ -494,7 +500,8 @@ export async function listConversationsForUser(
       isDemo: row.isDemo,
       lastMessageAt: row.lastMessageAt,
       gemstone: row.gemstone,
-      requirement: row.requirement,
+      requirement: row.requirement ? { id: row.requirement.id, gemstoneType: row.requirement.gemstoneType } : null,
+      side: conversationSide(row, userId),
       counterpart: {
         id: other.user.id,
         name: other.user.name,

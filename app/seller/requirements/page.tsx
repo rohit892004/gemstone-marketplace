@@ -42,6 +42,14 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
         <p className="mt-2 text-sm text-ink-soft">
           Open requirements in your gemstone categories. Buyer details stay hidden. Respond to start a conversation on the platform.
         </p>
+        <p className="mt-3 flex flex-wrap gap-4 text-sm">
+          <Link href="/seller/requirements/new" className="font-medium text-brand-strong underline underline-offset-4">
+            Post a requirement
+          </Link>
+          <Link href="/seller/requirements/mine" className="font-medium text-brand-strong underline underline-offset-4">
+            Your requirements
+          </Link>
+        </p>
       </div>
 
       {data.categories.length === 0 ? (

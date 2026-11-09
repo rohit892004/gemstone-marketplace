@@ -19,6 +19,8 @@ export interface RequirementFormProps {
   /** Existing gemstone types and shapes from the catalogue, offered as suggestions. */
   gemstoneTypeOptions: string[];
   shapeOptions: string[];
+  /** Approved sellers posting as buyers return to their own requirement list, not the buyer area. */
+  sellerPoster?: boolean;
 }
 
 const inputClass =
@@ -52,7 +54,7 @@ export function RequirementForm(props: RequirementFormProps) {
         setSaved({ requirementId: result.requirementId, warning: result.warning });
         return;
       }
-      router.push(`/buyer/requirements/${result.requirementId}`);
+      router.push(props.sellerPoster ? "/seller/requirements/mine" : `/buyer/requirements/${result.requirementId}`);
     });
   }
 
@@ -177,7 +179,7 @@ export function RequirementForm(props: RequirementFormProps) {
         >
           {pending ? "Saving..." : props.mode === "create" ? "Post requirement" : "Save changes"}
         </button>
-        <Link href={props.mode === "create" ? "/buyer/requirements" : `/buyer/requirements/${props.requirementId}`} className="text-sm text-ink-soft hover:text-ink">
+        <Link href={props.mode === "create" ? (props.sellerPoster ? "/seller/requirements/mine" : "/buyer/requirements") : `/buyer/requirements/${props.requirementId}`} className="text-sm text-ink-soft hover:text-ink">
           Cancel
         </Link>
       </div>

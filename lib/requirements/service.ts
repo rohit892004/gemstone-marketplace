@@ -1,6 +1,7 @@
 import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
 import { prisma } from "@/lib/db/client";
+import { canTransact } from "@/lib/messaging/guards";
 import { CONTACT_WARNING } from "@/lib/messaging/service";
 import { recordContactFlag } from "@/lib/commerce/strikes";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
@@ -16,9 +17,10 @@ import {
 /**
  * Buyer requirements. The only code that writes requirements.
  *
- * Posting: buyer only, validated, free text masked, rate limited (5 posts per 24 hours per buyer),
- * then approved sellers in the requirement's category (or all approved sellers when there is no
- * category) get a requirement.match notification. At most MAX_REQUIREMENT_RECIPIENTS are notified.
+ * Posting: buyers, and approved sellers acting as buyers, validated, free text masked, rate limited
+ * (5 posts per 24 hours per user), then approved sellers in the requirement's category (or all approved
+ * sellers when there is no category) get a requirement.match notification, except the poster.
+ * At most MAX_REQUIREMENT_RECIPIENTS are notified.
  * Editing: owner only, OPEN requirements only. Closing: owner only, sets status CLOSED.
  *
  * Callers pass a trusted buyerId from the server session. Every read and write is scoped to it.
@@ -47,9 +49,14 @@ function requireValid(check: RequirementCheck): Extract<RequirementCheck, { ok: 
   return check;
 }
 
-async function assertBuyer(buyerId: string): Promise<void> {
-  const user = await prisma.user.findUnique({ where: { id: buyerId }, select: { role: true } });
-  if (user?.role !== "BUYER") throw new RequirementError("NOT_AVAILABLE", "Only buyers can post requirements.");
+async function assertPoster(userId: string): Promise<void> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, sellerProfile: { select: { approvalStatus: true } } },
+  });
+  if (!user || !canTransact({ role: user.role, approvalStatus: user.sellerProfile?.approvalStatus ?? null })) {
+    throw new RequirementError("NOT_AVAILABLE", "Only buyers and approved sellers can post requirements.");
+  }
 }
 
 /** Contact-detail restrictions also stop requirement posts and edits, not only chat. */
@@ -89,10 +96,14 @@ function toDbData(values: RequirementValues) {
   };
 }
 
-/** Approved, active, email-verified sellers in the category, excluding anyone blocked either way. */
+/**
+ * Approved, active, email-verified sellers in the category, excluding anyone blocked either way and the
+ * poster themselves (a seller never gets a match for their own requirement).
+ */
 export async function findMatchingSellerIds(buyerId: string, categoryId: string | null): Promise<string[]> {
   const rows = await prisma.user.findMany({
     where: {
+      id: { not: buyerId },
       role: "SELLER",
       status: "ACTIVE",
       emailVerifiedAt: { not: null },
@@ -142,7 +153,7 @@ export async function postRequirement(input: {
   now?: Date;
 }): Promise<PostRequirementResult> {
   const now = input.now ?? new Date();
-  await assertBuyer(input.buyerId);
+  await assertPoster(input.buyerId);
   await assertNotRestricted(input.buyerId, now);
   const check = requireValid(validateRequirementInput(input.raw, now));
   await assertCategory(check.values.categoryId);

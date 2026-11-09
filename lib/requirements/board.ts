@@ -91,13 +91,20 @@ export function parseBoardFilters(raw: RawParams): { filters: BoardFilters; erro
   return { filters, errors };
 }
 
-/** The Prisma filter for the board. Pure: takes the seller's category IDs and the current time. */
+/**
+ * The Prisma filter for the board. Pure: takes the viewing seller's ID, their category IDs and the
+ * current time. The viewer's own requirements are always excluded.
+ */
 export function buildBoardWhere(
   filters: BoardFilters,
+  viewerUserId: string,
   sellerCategoryIds: string[],
   now: Date,
 ): Prisma.RequirementWhereInput {
-  const and: Prisma.RequirementWhereInput[] = [{ OR: [{ deadline: null }, { deadline: { gte: now } }] }];
+  const and: Prisma.RequirementWhereInput[] = [
+    { buyerId: { not: viewerUserId } },
+    { OR: [{ deadline: null }, { deadline: { gte: now } }] },
+  ];
 
   if (filters.gemstoneType) {
     and.push({ gemstoneType: { contains: filters.gemstoneType, mode: "insensitive" } });
@@ -140,6 +147,7 @@ export async function loadRequirementBoard(sellerUserId: string, rawParams: RawP
   const rows = await prisma.requirement.findMany({
     where: buildBoardWhere(
       filters,
+      sellerUserId,
       categories.map((c) => c.id),
       now,
     ),

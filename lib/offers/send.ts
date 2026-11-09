@@ -1,6 +1,7 @@
 import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
 import { prisma } from "@/lib/db/client";
+import { canTransact, isOwnListing } from "@/lib/messaging/guards";
 import { assertCanMessage, CONTACT_WARNING, MessagingError } from "@/lib/messaging/service";
 import { recordContactStrike } from "@/lib/messaging/strikes";
 import { moderateContactDetails, type ContactKind } from "@/lib/messaging/moderation";
@@ -14,7 +15,8 @@ import { consumeRateLimit } from "@/lib/security/rate-limit";
  * agent's flow; this module only sends. No payments.
  *
  * Rules:
- *  - Buyer role only. Participant only. Not blocked, not restricted (assertCanMessage).
+ *  - Buyers, and approved sellers acting as buyers on another seller's listing. Participant only.
+ *    Not blocked, not restricted (assertCanMessage). A seller's own listing is always refused.
  *  - Listing (ENQUIRY) conversations only. The listing must still be publicly visible.
  *  - Amount is a positive integer in minor units, at most MAX_MINOR. Currency INR or USD.
  *  - Note is optional, at most OFFER_NOTE_MAX characters, and moderated like a message.
@@ -94,8 +96,13 @@ export async function sendOffer(input: {
   const checked = validateOfferInput(input);
   if (!checked.ok) throw new MessagingError("INVALID", checked.error);
 
-  const buyer = await prisma.user.findUnique({ where: { id: input.buyerId }, select: { role: true } });
-  if (buyer?.role !== "BUYER") throw new MessagingError("NOT_AVAILABLE", "Only buyers can make an offer.");
+  const buyer = await prisma.user.findUnique({
+    where: { id: input.buyerId },
+    select: { role: true, sellerProfile: { select: { approvalStatus: true } } },
+  });
+  if (!buyer || !canTransact({ role: buyer.role, approvalStatus: buyer.sellerProfile?.approvalStatus ?? null })) {
+    throw new MessagingError("NOT_AVAILABLE", "Only buyers and approved sellers can make an offer.");
+  }
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: input.conversationId, participants: { some: { userId: input.buyerId } } },
@@ -113,7 +120,10 @@ export async function sendOffer(input: {
   if (!listing) throw new MessagingError("NOT_AVAILABLE", "This gemstone is no longer available to make an offer on.");
 
   const sellerId = listing.seller.userId;
-  if (sellerId === input.buyerId || !conversation.participants.some((p) => p.userId === sellerId)) {
+  if (isOwnListing(input.buyerId, sellerId)) {
+    throw new MessagingError("SELF_CONTACT", "You can't make an offer on your own listing.");
+  }
+  if (!conversation.participants.some((p) => p.userId === sellerId)) {
     throw new MessagingError("NOT_FOUND", "Conversation not found.");
   }
 

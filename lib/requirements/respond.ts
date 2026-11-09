@@ -4,6 +4,7 @@ import { recordAudit } from "@/lib/audit/audit";
 import { CommerceError } from "@/lib/commerce/errors";
 import { consumeRequirementResponseLimit } from "@/lib/commerce/strikes";
 import { prisma } from "@/lib/db/client";
+import { isOwnRequirement } from "@/lib/messaging/guards";
 import { assertCanMessage, getOrCreateConversation, MESSAGE_MAX_CHARS, sendMessage } from "@/lib/messaging/service";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 
@@ -31,7 +32,7 @@ export function requirementResponseProblem(
   seller: { sellerId: string; categoryIds: string[] },
   now: Date,
 ): CommerceError | null {
-  if (requirement.buyerId === seller.sellerId) {
+  if (isOwnRequirement(seller.sellerId, requirement.buyerId)) {
     return new CommerceError("NOT_ALLOWED", "You can't respond to your own requirement.");
   }
   if (requirement.status !== "OPEN") return new CommerceError("CLOSED", "This requirement is closed.");

@@ -8,8 +8,10 @@ import { gateApprovedSeller } from "@/lib/seller/approved-gate";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /**
- * Seller inbox: every conversation the seller is in (enquiries about their listings, enquiries they made
- * to other sellers, requirement responses, and general chats), with unread counts and search.
+ * Seller inbox: every conversation the seller is in. Two filters work together:
+ *  - Buying / Selling: the seller's own enquiries and requirement threads (buying) are kept apart from
+ *    the customers who contact their listings (selling).
+ *  - Kind: enquiries, requirement responses and general chats.
  */
 export default function SellerInboxPage({ searchParams }: { searchParams: SearchParams }) {
   return (
@@ -19,16 +21,23 @@ export default function SellerInboxPage({ searchParams }: { searchParams: Search
   );
 }
 
-const tabs = [
+const kindTabs = [
   { value: "all", label: "All" },
   { value: "enquiry", label: "Enquiries" },
   { value: "requirement", label: "Requirements" },
   { value: "general", label: "Chats" },
 ] as const;
 
-type TabValue = (typeof tabs)[number]["value"];
+const sideTabs = [
+  { value: "all", label: "Everything" },
+  { value: "buying", label: "Buying" },
+  { value: "selling", label: "Selling" },
+] as const;
 
-const kindFor: Record<Exclude<TabValue, "all">, "ENQUIRY" | "REQUIREMENT" | "GENERAL"> = {
+type KindValue = (typeof kindTabs)[number]["value"];
+type SideValue = (typeof sideTabs)[number]["value"];
+
+const kindFor: Record<Exclude<KindValue, "all">, "ENQUIRY" | "REQUIREMENT" | "GENERAL"> = {
   enquiry: "ENQUIRY",
   requirement: "REQUIREMENT",
   general: "GENERAL",
@@ -38,18 +47,30 @@ function one(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
 }
 
+/** Builds an inbox link that keeps the other filter. "all" values are left out of the URL. */
+function inboxHref(kind: KindValue, side: SideValue): string {
+  const params = new URLSearchParams();
+  if (kind !== "all") params.set("kind", kind);
+  if (side !== "all") params.set("side", side);
+  const query = params.toString();
+  return query ? `/seller/inbox?${query}` : "/seller/inbox";
+}
+
 async function Inbox({ searchParams }: { searchParams: SearchParams }) {
   const state = await gateApprovedSeller();
   if (state !== "approved") return <AwaitingApprovalPage title="Inbox" />;
 
   const user = await requireRole(["SELLER"], { sellerApproved: true });
   const params = await searchParams;
-  const requested = one(params.kind);
-  const tab: TabValue = tabs.some((t) => t.value === requested) ? (requested as TabValue) : "all";
+  const requestedKind = one(params.kind);
+  const kind: KindValue = kindTabs.some((t) => t.value === requestedKind) ? (requestedKind as KindValue) : "all";
+  const requestedSide = one(params.side);
+  const side: SideValue = sideTabs.some((t) => t.value === requestedSide) ? (requestedSide as SideValue) : "all";
   const q = one(params.q).slice(0, 100);
 
   const items = await listConversationsForUser(user.id, {
-    kind: tab === "all" ? undefined : kindFor[tab],
+    kind: kind === "all" ? undefined : kindFor[kind],
+    side: side === "all" ? undefined : side,
     q: q || undefined,
   });
   const unreadTotal = items.reduce((sum, item) => sum + item.unreadCount, 0);
@@ -67,7 +88,8 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
       </div>
 
       <form method="get" className="flex flex-col gap-3 sm:flex-row">
-        {tab !== "all" && <input type="hidden" name="kind" value={tab} />}
+        {kind !== "all" && <input type="hidden" name="kind" value={kind} />}
+        {side !== "all" && <input type="hidden" name="side" value={side} />}
         <label className="sr-only" htmlFor="inbox-q">Search conversations</label>
         <input
           id="inbox-q"
@@ -81,29 +103,18 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
         </button>
       </form>
 
-      <nav aria-label="Filter conversations">
-        <ul className="flex flex-wrap gap-2">
-          {tabs.map((t) => (
-            <li key={t.value}>
-              <Link
-                href={t.value === "all" ? "/seller/inbox" : `/seller/inbox?kind=${t.value}`}
-                aria-current={tab === t.value ? "page" : undefined}
-                className={`rounded-full border px-3 py-1 text-sm ${
-                  tab === t.value ? "border-brand bg-brand text-white" : "border-line text-ink-soft"
-                }`}
-              >
-                {t.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="space-y-3">
+        <FilterRow label="Side" tabs={sideTabs} active={side} hrefFor={(value) => inboxHref(kind, value)} />
+        <FilterRow label="Type" tabs={kindTabs} active={kind} hrefFor={(value) => inboxHref(value, side)} />
+      </div>
 
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
           <h2 className="text-lg font-semibold text-ink">No conversations here yet</h2>
           <p className="mt-2 text-sm text-ink-soft">
-            Buyers who enquire about your listings, and sellers you contact, appear here. Requirement responses also start here.
+            {side === "buying"
+              ? "Enquiries you make on other sellers' listings, requirements you post and responses to them appear here."
+              : "Buyers who enquire about your listings, and sellers you contact, appear here. Requirement responses also start here."}
           </p>
         </div>
       ) : (
@@ -116,6 +127,39 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
         </ul>
       )}
     </section>
+  );
+}
+
+function FilterRow<T extends string>({
+  label,
+  tabs,
+  active,
+  hrefFor,
+}: {
+  label: string;
+  tabs: readonly { value: T; label: string }[];
+  active: T;
+  hrefFor: (value: T) => string;
+}) {
+  return (
+    <nav aria-label={`Filter by ${label.toLowerCase()}`} className="flex flex-wrap items-center gap-2">
+      <span className="w-12 text-xs uppercase tracking-widest text-ink-soft">{label}</span>
+      <ul className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <li key={t.value}>
+            <Link
+              href={hrefFor(t.value)}
+              aria-current={active === t.value ? "page" : undefined}
+              className={`rounded-full border px-3 py-1 text-sm ${
+                active === t.value ? "border-brand bg-brand text-white" : "border-line text-ink-soft"
+              }`}
+            >
+              {t.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 
@@ -133,6 +177,7 @@ function InboxRow({ item }: { item: ConversationListItem }) {
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-accent">
           <span>{kindLabels[item.kind]}</span>
+          <span className="text-ink-soft">{item.side === "BUYING" ? "Buying" : "Selling"}</span>
           {item.isDemo && <span className="rounded bg-accent-soft px-1.5 py-0.5 normal-case tracking-normal text-ink">Demo</span>}
         </p>
         <p className="mt-1 flex items-center gap-2 font-medium text-ink">
