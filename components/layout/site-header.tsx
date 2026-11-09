@@ -17,7 +17,7 @@ export function SiteHeader() {
   return (
     <header className="border-b border-line bg-surface-raised">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-brand-strong">
+        <Link href="/" className="whitespace-nowrap text-base font-semibold tracking-tight text-brand-strong sm:text-lg">
           Gemstone Selections
         </Link>
 

@@ -37,13 +37,14 @@ async function AdminShell({ children }: { children: ReactNode }) {
   const admin = await requirePageRole(["ADMIN"]);
 
   return (
-    <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-      <aside className="w-56 shrink-0 space-y-6 text-sm">
+    // Stacked on phones (nav above content), side by side from md up.
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:flex-row">
+      <aside className="w-full space-y-6 text-sm md:w-56 md:shrink-0">
         <div>
           <p className="font-semibold">Admin</p>
           <p className="truncate text-xs text-stone-600">{admin.email}</p>
         </div>
-        <nav aria-label="Admin" className="space-y-1">
+        <nav aria-label="Admin" className="flex flex-wrap gap-1 md:block md:space-y-1">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="block rounded px-2 py-1 hover:bg-stone-100">
               {item.label}
@@ -56,7 +57,7 @@ async function AdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       </aside>
-      <main className="min-w-0 flex-1">{children}</main>
+      <main className="min-w-0 flex-1 w-full">{children}</main>
     </div>
   );
 }

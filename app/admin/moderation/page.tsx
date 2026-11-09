@@ -129,7 +129,11 @@ async function FlagQueue() {
                       Open the conversation (logged with a reason)
                     </Link>
                   ) : (
-                    <p className="text-sm text-stone-600">Requirement note: no conversation to open.</p>
+                    <p className="text-sm text-stone-600">
+                      {flag.source.startsWith("PUBLIC_")
+                        ? "Refused save of public seller text. Nothing was stored, so there is no conversation to open."
+                        : "Requirement note: no conversation to open."}
+                    </p>
                   )}
                 </div>
 
