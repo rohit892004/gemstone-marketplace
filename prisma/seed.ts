@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../app/generated/prisma/client";
+import { seedAdminFromEnv } from "../lib/admin/seed-admin";
 
 /**
  * Seeds reference data every environment needs. Idempotent: safe to run repeatedly.
@@ -50,6 +51,8 @@ async function main() {
     });
   }
   console.log(`Seeded ${certificateLabs.length} certificate labs.`);
+
+  await seedAdminFromEnv(prisma);
 }
 
 main()
