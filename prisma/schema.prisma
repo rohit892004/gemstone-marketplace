@@ -1,5 +1,5 @@
 // Gemstone Marketplace – schema.
-// M0: entity baseline. M1: auth, seller onboarding, documents, certificate labs,
+// M0: entity baseline. M3: communication (enquiries, offers, requirements, quotations, chat, moderation). M1: auth, seller onboarding, documents, certificate labs,
 // auth tokens, rate limits, audit IP, minor-unit money.
 //
 // MONEY: every amount is an integer in minor units (paise for INR, cents for USD)
@@ -97,25 +97,6 @@ enum MediaStatus {
   FAILED
 }
 
-enum EnquiryType {
-  ENQUIRY
-  REQUIREMENT
-  OFFER
-}
-
-enum EnquiryStatus {
-  OPEN
-  RESPONDED
-  CLOSED
-}
-
-enum QuotationStatus {
-  SENT
-  ACCEPTED
-  DECLINED
-  EXPIRED
-}
-
 enum ValuationStatus {
   SUBMITTED
   ANALYSING
@@ -144,37 +125,52 @@ enum CampaignStatus {
 // ---------- Users and roles ----------
 
 model User {
-  id                String     @id @default(cuid())
-  email             String     @unique
-  name              String?
-  mobile            String?    @unique
-  passwordHash      String
-  role              Role
-  status            UserStatus @default(ACTIVE)
-  emailVerifiedAt   DateTime?
-  mobileVerifiedAt  DateTime?
-  passwordChangedAt DateTime?
-  lastLoginAt       DateTime?
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id                       String     @id @default(cuid())
+  email                    String     @unique
+  name                     String?
+  mobile                   String?    @unique
+  passwordHash             String
+  role                     Role
+  status                   UserStatus @default(ACTIVE)
+  emailVerifiedAt          DateTime?
+  mobileVerifiedAt         DateTime?
+  passwordChangedAt        DateTime?
+  lastLoginAt              DateTime?
+  /// Contact-detail strikes from moderation. 1 = warning, 2+ = temporary restriction.
+  contactStrikes           Int        @default(0)
+  messagingRestrictedUntil DateTime?
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
 
-  buyerProfile        BuyerProfile?
-  sellerProfile       SellerProfile?
-  authTokens          AuthToken[]
-  notifications       Notification[]
-  sentMessages        Message[]         @relation("MessageSender")
-  auditLogs           AuditLog[]        @relation("AuditActor")
-  valuations          Valuation[]
-  expertValuations    Valuation[]       @relation("ValuationExpert")
-  wishlist            WishlistItem[]
-  buyerEnquiries      Enquiry[]         @relation("BuyerEnquiries")
-  buyerConversations  Conversation[]    @relation("BuyerConversations")
-  reviewedDocuments   SellerDocument[]  @relation("DocumentReviewer")
-  approvedSellers     SellerProfile[]   @relation("SellerApprover")
-  reviewsAuthored     Review[]          @relation("ReviewAuthor")
-  reviewsModerated    Review[]          @relation("ReviewModerator")
-  listingsReviewed    Gemstone[]        @relation("ListingReviewer")
-  listingDocsVerified ListingDocument[] @relation("ListingDocumentVerifier")
+  buyerProfile               BuyerProfile?
+  sellerProfile              SellerProfile?
+  authTokens                 AuthToken[]
+  notifications              Notification[]
+  sentMessages               Message[]                 @relation("MessageSender")
+  auditLogs                  AuditLog[]                @relation("AuditActor")
+  valuations                 Valuation[]
+  expertValuations           Valuation[]               @relation("ValuationExpert")
+  wishlist                   WishlistItem[]
+  startedConversations       Conversation[]            @relation("ConversationStarter")
+  conversationParticipations ConversationParticipant[]
+  offersProposed             Offer[]                   @relation("OfferProposer")
+  offersResponded            Offer[]                   @relation("OfferResponder")
+  quotationsSent             Quotation[]               @relation("QuotationSeller")
+  requirements               Requirement[]             @relation("RequirementBuyer")
+  requirementResponses       RequirementResponse[]     @relation("RequirementResponder")
+  blocksGiven                UserBlock[]               @relation("BlocksGiven")
+  blocksReceived             UserBlock[]               @relation("BlocksReceived")
+  reportsFiled               Report[]                  @relation("ReportsFiled")
+  reportsResolved            Report[]                  @relation("ReportResolver")
+  flagsAsSender              ModerationFlag[]          @relation("FlagSender")
+  flagsResolved              ModerationFlag[]          @relation("FlagResolver")
+  notificationPreference     NotificationPreference?
+  reviewedDocuments          SellerDocument[]          @relation("DocumentReviewer")
+  approvedSellers            SellerProfile[]           @relation("SellerApprover")
+  reviewsAuthored            Review[]                  @relation("ReviewAuthor")
+  reviewsModerated           Review[]                  @relation("ReviewModerator")
+  listingsReviewed           Gemstone[]                @relation("ListingReviewer")
+  listingDocsVerified        ListingDocument[]         @relation("ListingDocumentVerifier")
 
   @@index([role, status])
 }
@@ -252,13 +248,11 @@ model SellerProfile {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy    User?            @relation("SellerApprover", fields: [approvedById], references: [id])
-  documents     SellerDocument[]
-  gemstones     Gemstone[]
-  enquiries     Enquiry[]
-  quotations    Quotation[]
-  conversations Conversation[]
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User?            @relation("SellerApprover", fields: [approvedById], references: [id])
+  documents  SellerDocument[]
+  gemstones  Gemstone[]
+  categories Category[]
 
   reviews Review[]
 
@@ -310,13 +304,15 @@ model CertificateLab {
 // ---------- Catalogue ----------
 
 model Category {
-  id        String     @id @default(cuid())
-  name      String
-  slug      String     @unique
-  parentId  String?
-  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children  Category[] @relation("CategoryTree")
-  gemstones Gemstone[]
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  parentId     String?
+  parent       Category?       @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]      @relation("CategoryTree")
+  gemstones    Gemstone[]
+  sellers      SellerProfile[]
+  requirements Requirement[]
 }
 
 /// A listing. Seller-owned; public only when PUBLISHED, availability is not HIDDEN,
@@ -370,7 +366,6 @@ model Gemstone {
   media          GemstoneMedia[]
   documents      ListingDocument[]
   wishlistedBy   WishlistItem[]
-  enquiries      Enquiry[]
   quotations     Quotation[]
   conversations  Conversation[]
 
@@ -499,91 +494,325 @@ model WishlistItem {
 
 // ---------- Enquiries, quotations, chat ----------
 
-model Enquiry {
-  id         String        @id @default(cuid())
-  buyerId    String
-  sellerId   String
-  gemstoneId String?
-  type       EnquiryType
-  message    String
-  status     EnquiryStatus @default(OPEN)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  buyer        User          @relation("BuyerEnquiries", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller       SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  gemstone     Gemstone?     @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
-  quotations   Quotation[]
-  conversation Conversation?
-
-  @@index([buyerId, createdAt])
-  @@index([sellerId, status])
+enum ConversationKind {
+  ENQUIRY // a buyer enquires about a listing (gemstoneId set)
+  GENERAL // a user contacts another user, e.g. from a portfolio page
+  REQUIREMENT // a seller responds to a buyer requirement (requirementId set)
 }
 
-model Quotation {
-  id          String          @id @default(cuid())
-  enquiryId   String
-  sellerId    String
-  gemstoneId  String?
-  /// Minor units. See schema header.
-  amountMinor BigInt
-  currency    String          @default("INR")
-  validUntil  DateTime?
-  status      QuotationStatus @default(SENT)
-  createdAt   DateTime        @default(now())
-
-  enquiry  Enquiry       @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
-  seller   SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  gemstone Gemstone?     @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
+enum MessageKind {
+  TEXT
+  OFFER
+  QUOTATION
+  SYSTEM
 }
 
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  WITHDRAWN
+}
+
+enum QuotationStatus {
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum RequirementStatus {
+  OPEN
+  CLOSED
+}
+
+enum ReportReason {
+  SPAM
+  SCAM
+  HARASSMENT
+  FAKE_LISTING
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationStatus {
+  OPEN
+  DISMISSED
+  ACTIONED
+}
+
+/// One conversation between two users. Access is checked against ConversationParticipant.
 model Conversation {
-  id            String   @id @default(cuid())
-  enquiryId     String?  @unique
-  buyerId       String
-  sellerId      String
+  id            String           @id @default(cuid())
+  kind          ConversationKind
+  /// Unique key that stops duplicate conversations: ENQUIRY "enq:<gemstone>:<buyer>",
+  /// GENERAL "gen:<sorted user ids>", REQUIREMENT "req:<requirement>:<seller>".
+  pairKey       String           @unique
+  startedById   String
   gemstoneId    String?
-  lastMessageAt DateTime @default(now())
-  createdAt     DateTime @default(now())
+  requirementId String?
+  /// Set on demo seed data only. Shown with a Demo label.
+  isDemo        Boolean          @default(false)
+  lastMessageAt DateTime         @default(now())
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  enquiry  Enquiry?      @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
-  buyer    User          @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller   SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  gemstone Gemstone?     @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
-  messages Message[]
+  startedBy    User                      @relation("ConversationStarter", fields: [startedById], references: [id], onDelete: Cascade)
+  gemstone     Gemstone?                 @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
+  requirement  Requirement?              @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+  offers       Offer[]
+  quotations   Quotation[]
+  reports      Report[]
+  flags        ModerationFlag[]
 
-  @@unique([buyerId, sellerId, gemstoneId])
-  @@index([sellerId, lastMessageAt])
-  @@index([buyerId, lastMessageAt])
+  @@index([gemstoneId])
+  @@index([requirementId])
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  /// Last time this user opened the thread. Unread count = messages from others after this.
+  lastReadAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId, createdAt])
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String      @id @default(cuid())
   conversationId String
   senderId       String
+  kind           MessageKind @default(TEXT)
+  /// Text AFTER contact-detail masking. Raw contact details are never stored.
   body           String
-  flagged        Boolean  @default(false)
-  flagReason     String?
-  createdAt      DateTime @default(now())
+  /// True when moderation changed or flagged the message.
+  flagged        Boolean     @default(false)
+  createdAt      DateTime    @default(now())
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  attachments  MessageAttachment[]
+  offer        Offer?
+  quotation    Quotation?
+  flags        ModerationFlag[]
 
   @@index([conversationId, createdAt])
-  @@index([flagged])
+  @@index([flagged, createdAt])
 }
 
+model MessageAttachment {
+  id         String   @id @default(cuid())
+  messageId  String
+  /// Opaque private storage key. Served only through an authorised route.
+  storageKey String   @unique
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+/// A structured price offer in a listing conversation. Money in minor units.
+model Offer {
+  id             String      @id @default(cuid())
+  conversationId String
+  messageId      String      @unique
+  proposerId     String
+  amountMinor    BigInt
+  currency       String      @default("INR")
+  note           String?
+  status         OfferStatus @default(PENDING)
+  /// Set when this offer is a counter to an earlier offer.
+  counterOfId    String?     @unique
+  respondedById  String?
+  respondedAt    DateTime?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  proposer     User         @relation("OfferProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  responder    User?        @relation("OfferResponder", fields: [respondedById], references: [id], onDelete: SetNull)
+  counterOf    Offer?       @relation("OfferCounter", fields: [counterOfId], references: [id], onDelete: SetNull)
+  counteredBy  Offer?       @relation("OfferCounter")
+
+  @@index([conversationId, createdAt])
+}
+
+/// A seller's quotation inside a conversation: a listing or a custom item. Money in minor units.
+model Quotation {
+  id             String          @id @default(cuid())
+  conversationId String
+  messageId      String          @unique
+  sellerId       String
+  gemstoneId     String?
+  itemTitle      String
+  quantity       Int             @default(1)
+  amountMinor    BigInt
+  currency       String          @default("INR")
+  validUntil     DateTime?
+  terms          String?
+  status         QuotationStatus @default(SENT)
+  respondedAt    DateTime?
+  withdrawnAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  seller       User         @relation("QuotationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  gemstone     Gemstone?    @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@index([sellerId, status])
+}
+
+/// A buyer's requirement. Visible to approved sellers in the matching categories only.
+model Requirement {
+  id                String            @id @default(cuid())
+  buyerId           String
+  categoryId        String?
+  gemstoneType      String
+  shape             String?
+  caratMin          Decimal?          @db.Decimal(10, 3)
+  caratMax          Decimal?          @db.Decimal(10, 3)
+  budgetMinMinor    BigInt?
+  budgetMaxMinor    BigInt?
+  currency          String            @default("INR")
+  certificateNeeded Boolean           @default(false)
+  originPreference  String?
+  quantity          Int               @default(1)
+  deadline          DateTime?
+  /// Stored after contact-detail masking.
+  notes             String?
+  status            RequirementStatus @default(OPEN)
+  isDemo            Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  buyer     User                  @relation("RequirementBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  category  Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  responses RequirementResponse[]
+  threads   Conversation[]
+
+  @@index([status, categoryId, createdAt])
+  @@index([buyerId, createdAt])
+}
+
+model RequirementResponse {
+  id             String   @id @default(cuid())
+  requirementId  String
+  sellerId       String
+  conversationId String   @unique
+  createdAt      DateTime @default(now())
+
+  requirement Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  seller      User        @relation("RequirementResponder", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([requirementId, sellerId])
+}
+
+/// One user blocks another. Blocked users cannot start or continue a conversation with the blocker.
+model UserBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("BlocksGiven", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  reporterId     String
+  conversationId String?
+  messageId      String?
+  reason         ReportReason
+  details        String?
+  status         ReportStatus @default(OPEN)
+  resolvedById   String?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  createdAt      DateTime     @default(now())
+
+  reporter     User          @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolvedBy   User?         @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([reporterId, createdAt])
+}
+
+/// Created when contact-detail moderation flags text. Holds masked text only.
+model ModerationFlag {
+  id             String           @id @default(cuid())
+  conversationId String
+  messageId      String?
+  requirementId  String?
+  senderId       String
+  /// MESSAGE, OFFER, QUOTATION or REQUIREMENT.
+  source         String
+  /// Detected kinds, e.g. PHONE, EMAIL, URL, HANDLE. Never the detected value.
+  kinds          String[]
+  status         ModerationStatus @default(OPEN)
+  resolvedById   String?
+  resolvedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  sender       User         @relation("FlagSender", fields: [senderId], references: [id], onDelete: Cascade)
+  resolvedBy   User?        @relation("FlagResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model NotificationPreference {
+  userId          String   @id
+  emailEnabled    Boolean  @default(true)
+  enquiries       Boolean  @default(true)
+  messages        Boolean  @default(true)
+  offersAndQuotes Boolean  @default(true)
+  requirements    Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// In-app notification. The bell and centre read this. Email is sent separately and marked emailedAt.
 model Notification {
   id        String    @id @default(cuid())
   userId    String
   type      String
   payload   Json?
   readAt    DateTime?
+  emailedAt DateTime?
   createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 // ---------- Valuation ----------

@@ -31,6 +31,27 @@ export const AuditAction = {
   REVIEW_REJECTED: "review.rejected",
   HOMEPAGE_BLOCK_CHANGED: "homepage.block_changed",
   SETTING_CHANGED: "setting.changed",
+  // Communication (M3)
+  ENQUIRY_STARTED: "conversation.enquiry_started",
+  GENERAL_STARTED: "conversation.general_started",
+  MESSAGE_SENT: "message.sent",
+  MESSAGE_FLAGGED: "message.flagged",
+  MESSAGING_RESTRICTED: "messaging.restricted",
+  OFFER_SENT: "offer.sent",
+  OFFER_RESPONDED: "offer.responded",
+  QUOTATION_SENT: "quotation.sent",
+  QUOTATION_RESPONDED: "quotation.responded",
+  QUOTATION_WITHDRAWN: "quotation.withdrawn",
+  REQUIREMENT_POSTED: "requirement.posted",
+  REQUIREMENT_UPDATED: "requirement.updated",
+  REQUIREMENT_CLOSED: "requirement.closed",
+  REQUIREMENT_RESPONDED: "requirement.responded",
+  USER_BLOCKED: "user.blocked",
+  USER_UNBLOCKED: "user.unblocked",
+  REPORT_FILED: "report.filed",
+  REPORT_RESOLVED: "report.resolved",
+  FLAG_RESOLVED: "message.flag_resolved",
+  CONVERSATION_ADMIN_VIEWED: "conversation.admin_viewed",
 } as const;
 
 export type AuditActionName = (typeof AuditAction)[keyof typeof AuditAction];
