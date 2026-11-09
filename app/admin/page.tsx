@@ -17,10 +17,13 @@ const STATUSES: ApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED", "SUSPENDE
 async function DashboardStats() {
   await requirePageRole(["ADMIN"]);
 
-  // Two cheap aggregates: one groupBy for seller statuses, one count for buyers.
-  const [groups, buyerCount] = await Promise.all([
+  // Cheap aggregates: seller statuses, buyers, and the three moderation queues.
+  const [groups, buyerCount, listingsPending, documentsPending, reviewsPending] = await Promise.all([
     prisma.sellerProfile.groupBy({ by: ["approvalStatus"], _count: { _all: true } }),
     prisma.user.count({ where: { role: "BUYER" } }),
+    prisma.gemstone.count({ where: { status: "PENDING_REVIEW" } }),
+    prisma.listingDocument.count({ where: { verificationStatus: "PENDING" } }),
+    prisma.review.count({ where: { status: "PENDING" } }),
   ]);
 
   const sellerCounts: Record<ApprovalStatus, number> = { PENDING: 0, APPROVED: 0, REJECTED: 0, SUSPENDED: 0 };
@@ -44,6 +47,20 @@ async function DashboardStats() {
           <p className="text-xs uppercase tracking-wide text-stone-600">Buyers</p>
           <p className="text-2xl font-semibold">{buyerCount}</p>
         </div>
+      </section>
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <Link href="/admin/listings" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
+          <p className="text-xs uppercase tracking-wide text-stone-600">Listings pending review</p>
+          <p className="text-2xl font-semibold">{listingsPending}</p>
+        </Link>
+        <Link href="/admin/documents" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
+          <p className="text-xs uppercase tracking-wide text-stone-600">Documents pending</p>
+          <p className="text-2xl font-semibold">{documentsPending}</p>
+        </Link>
+        <Link href="/admin/reviews" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
+          <p className="text-xs uppercase tracking-wide text-stone-600">Reviews pending</p>
+          <p className="text-2xl font-semibold">{reviewsPending}</p>
+        </Link>
       </section>
       {sellerCounts.PENDING > 0 ? (
         <p className="text-sm">
