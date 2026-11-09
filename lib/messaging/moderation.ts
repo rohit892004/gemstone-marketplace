@@ -179,6 +179,8 @@ function maskPhones(s: string): { text: string; found: boolean } {
  */
 export function moderateContactDetails(input: string): ModerationResult {
   const kinds = new Set<ContactKind>();
+  // The normalised copy is used only for detection and masking. Text with nothing to mask is returned
+  // exactly as typed, so certificate and stock codes such as "GIA-l2345" are not rewritten.
   let s = normaliseForModeration(input);
   s = convertSpelledDomains(s);
   s = convertNumberWords(s);
@@ -207,5 +209,6 @@ export function moderateContactDetails(input: string): ModerationResult {
   s = s.replace(new RegExp(`(?:${MASK.replace(/[[\]]/g, "\\$&")}\\s*){2,}`, "g"), MASK + " ");
   s = s.replace(/[ \t]{2,}/g, " ").trim();
 
-  return { text: s, kinds: [...kinds], flagged: kinds.size > 0 };
+  if (kinds.size === 0) return { text: input, kinds: [], flagged: false };
+  return { text: s, kinds: [...kinds], flagged: true };
 }

@@ -109,6 +109,11 @@ describe("contact-detail moderation: handles and messaging apps", () => {
 });
 
 describe("contact-detail moderation: clean text and behaviour", () => {
+  it("returns text with nothing to mask exactly as typed, so codes keep their letters", () => {
+    const text = "GIA report GIA-l2345, stock ref 2l3 and  double  spaces";
+    expect(moderateContactDetails(text)).toEqual({ text, kinds: [], flagged: false });
+  });
+
   it("leaves a normal enquiry untouched", () => {
     const text = "Hello, I am interested in the blue sapphire. Could you share the certificate?";
     expect(moderateContactDetails(text)).toEqual({ text, kinds: [], flagged: false });
