@@ -121,4 +121,42 @@ proxy.ts              coarse route gate
 
 - [x] M0 – Foundation
 - [x] M1 – Auth, roles, seller onboarding, admin review, audit (verified: unit tests, production build, database-level flows, live HTTP gating and sign-in; not verified: browser click-through, real email/SMS)
-- [ ] M2 – Public site and catalogue
+- [x] M2 – Catalogue and portfolios (verified: unit tests, production build, Playwright end-to-end journey on a production build with the demo seed, 16 screenshots at 390px and 1440px; not verified: real email/SMS, a real device)
+- [ ] M3 – Enquiries, requirements, chat, quotations, notifications, contact moderation (see docs/ROADMAP.md)
+
+## M2 – catalogue, portfolios, moderation
+
+- **Catalogue:** `/gemstones` (Postgres full-text search, filters, sort, pagination), `/categories/[slug]`, `/sellers` (approved only), `/sellers/[slug]` (portfolio with approved reviews), `/gemstones/[slug]` (gallery, specs, verified public documents, seller card, wishlist).
+- **Seller:** `/seller/portfolio`, `/seller/listings` (create, edit, media, documents, submit), `/seller/inventory` (bulk availability).
+- **Admin:** `/admin/listings` (queue), `/admin/listings/all` (filters, featured), `/admin/documents` (verification), `/admin/reviews`, `/admin/homepage` (block editor), `/admin/settings` (auto-publish, default off).
+- **Buyer:** `/buyer` dashboard with wishlist, enquiries, conversations, valuations and reports tabs. Enquiry, chat and valuation are placeholders until M3/M4.
+- **Homepage:** hero search, top-rated sellers carousel, featured gemstones carousel, category grid, teasers, "Become a Seller".
+- **Demo data:** `npm run db:seed:demo` creates 6 demo sellers, 40 listings and 18 reviews. Every demo row is labelled "Demo" and the seed refuses to run when `NODE_ENV=production`. `DEMO_SELLER_PASSWORD`, when set, gives the demo sellers a known password for testing (unset, passwords are random).
+
+### Money, media and documents
+
+- Prices are integer minor units with an ISO currency (INR default, USD). "Price on request" is a separate flag.
+- Images are re-encoded to WebP, which drops EXIF and GPS. Thumbnails are generated. HEIC/HEIF and AVIF are refused, because they would bypass that re-encode.
+- Listing files are private. `/api/media/[id]/[variant]`, `/api/listing-documents/[id]` and `/api/sellers/[slug]/assets/[kind]` return 404 unless the item is visible to the requester.
+- A listing document is public only when the seller marks it public **and** an admin verifies it **and** the listing is public.
+
+### End-to-end tests
+
+```bash
+npm run build                 # production build
+npm run db:seed:demo          # demo data (dev database only)
+npm run test:e2e              # Playwright; starts the server on port 3200
+```
+
+`playwright.config.ts` sets `ALLOW_NON_DELIVERING_PROVIDERS=true` for the server, so the console email provider can print verification links to `e2e/.server.log`. Without that flag, console providers are refused in production. `e2e/global-setup.ts` clears the database rate-limit counters before each run; it refuses to run in production. Screenshots are written to `screenshots/` (git-ignored).
+
+### Known limitations (M2)
+
+- **Video metadata is not stripped.** Videos are stored as uploaded, so GPS tags in a video container survive. Images are fine. Needs an ffmpeg step.
+- **Logo and banner** are served through an authorised route, but the seller editor's upload and preview controls are minimal.
+- **Review rejection has no reason field.** The brief asks for reasons on listing and document decisions; reviews need a schema change to match.
+- **Media and document count caps are check-then-act.** Two parallel uploads can each pass the check and exceed the cap by one. A row lock would fix it.
+- **Admin seller lists do not show Demo labels** yet, although the public surfaces do.
+- **Audit writes are best-effort**, and catalogue audit runs after the decision.
+- **Duplicate mobile numbers** on a new email trigger the "account already exists" email to that new address (carried over from M1).
+- **Caching:** public media and documents are cached for 60 seconds. A rejection or unpublish can take up to a minute to reach shared caches.
