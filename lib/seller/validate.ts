@@ -1,5 +1,6 @@
 import { getEnv } from "@/lib/config/env";
 import { selectSellerCategories, type CategoryOption } from "@/lib/seller/category-selection";
+import { publicTextBlockedMessage, scanPublicText } from "@/lib/moderation/scan";
 import { sanitizeFileName } from "@/lib/seller/sanitize-filename";
 import type { CertificateLabOption } from "@/lib/seller/labs";
 import {
@@ -140,6 +141,11 @@ export function validateSellerRegistration(
 
     if (file) certificates.push({ file, labId: lab.id, labOther });
   }
+
+  // The business name is public once approved. Contact details are refused here. No account exists yet, so
+  // this attempt is not written to the flagged queue.
+  const nameScan = scanPublicText([{ field: "businessName", label: "Business name", value: input.businessName }]);
+  if (nameScan.flagged) errors.businessName ??= publicTextBlockedMessage(nameScan.flaggedLabels);
 
   if (!idProof) errors.idProof ??= "Upload your ID proof";
   if (!businessProof) errors.businessProof ??= "Upload your business proof";

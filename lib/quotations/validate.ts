@@ -39,6 +39,8 @@ export interface ValidQuotation {
   /** True when contact details were masked in the item name or terms. */
   flagged: boolean;
   kinds: ContactKind[];
+  /** Kinds found in the terms alone. Terms with contact details are refused, not masked. */
+  termsKinds: ContactKind[];
 }
 
 export type QuotationValidation = { ok: true; value: ValidQuotation } | { ok: false; error: string };
@@ -115,6 +117,7 @@ export function validateQuotation(draft: QuotationDraft, now: Date): QuotationVa
       terms: maskedTerms ? maskedTerms.text : null,
       flagged: kinds.length > 0,
       kinds,
+      termsKinds: maskedTerms?.kinds ?? [],
     },
   };
 }

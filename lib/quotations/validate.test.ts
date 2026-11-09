@@ -78,6 +78,21 @@ describe("validateQuotation", () => {
     expect(validateQuotation(input, NOW).ok).toBe(false);
   });
 
+  it("reports contact details found in the terms alone, so the service can refuse the save", () => {
+    const result = validateQuotation(draft({ terms: "Call 98765 43210 to pay", itemTitle: "Ruby" }), NOW);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.termsKinds).toContain("PHONE");
+      expect(result.value.flagged).toBe(true);
+    }
+  });
+
+  it("does not report terms when only the item name has contact details", () => {
+    const result = validateQuotation(draft({ terms: "Payment by bank transfer.", itemTitle: "Ruby, WhatsApp 9876543210" }), NOW);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.termsKinds).toEqual([]);
+  });
+
   it("masks contact details in the item name and terms, and reports them as flagged", () => {
     const result = validateQuotation(
       draft({ terms: "Call me on 98765 43210 or mail dealer at gmail dot com", itemTitle: "Ruby, WhatsApp 9876543210" }),

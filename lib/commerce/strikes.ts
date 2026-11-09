@@ -24,7 +24,7 @@ export async function consumeRequirementResponseLimit(userId: string): Promise<v
 }
 
 /**
- * Records a contact-detail flag for a quotation, offer or requirement note. Same policy as chat messages:
+ * Records a contact-detail flag for a quotation, offer, requirement note or public seller text. Same policy as chat messages:
  * the first strike is a warning, a second strike starts a temporary messaging restriction.
  * Runs inside the caller's transaction.
  */
@@ -36,7 +36,7 @@ export async function recordContactFlag(
     messageId: string | null;
     requirementId?: string | null;
     senderId: string;
-    source: "OFFER" | "QUOTATION" | "REQUIREMENT";
+    source: "OFFER" | "QUOTATION" | "REQUIREMENT" | "PUBLIC_PROFILE" | "PUBLIC_LISTING";
     kinds: ContactKind[];
     now: Date;
   },

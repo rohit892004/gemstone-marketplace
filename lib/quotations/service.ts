@@ -6,6 +6,8 @@ import { assertCanMessage, CONTACT_WARNING, MessagingError } from "@/lib/messagi
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 import { CommerceError } from "@/lib/commerce/errors";
 import { consumeCommerceLimit, recordContactFlag } from "@/lib/commerce/strikes";
+import { recordBlockedPublicText } from "@/lib/moderation/public-text";
+import { publicTextBlockedMessage } from "@/lib/moderation/scan";
 import {
   effectiveQuotationStatus,
   isQuotationExpired,
@@ -48,6 +50,18 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
   const check = validateQuotation(input, now);
   if (!check.ok) throw new CommerceError("INVALID", check.error);
   const value = check.value;
+
+  // Terms are sent to the buyer as written, so terms with contact details are refused. The attempt is logged.
+  if (value.termsKinds.length > 0) {
+    await recordBlockedPublicText({
+      senderId: input.sellerId,
+      source: "QUOTATION",
+      kinds: value.termsKinds,
+      conversationId: input.conversationId,
+      now,
+    });
+    throw new CommerceError("INVALID", publicTextBlockedMessage(["Terms"]));
+  }
 
   await assertCanMessage(input.sellerId, [sides.buyerId], now);
   await consumeCommerceLimit(input.sellerId);

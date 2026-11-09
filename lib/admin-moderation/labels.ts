@@ -16,6 +16,8 @@ export const FLAG_SOURCE_LABELS: Record<string, string> = {
   OFFER: "Offer note",
   QUOTATION: "Quotation",
   REQUIREMENT: "Requirement notes",
+  PUBLIC_PROFILE: "Seller profile text",
+  PUBLIC_LISTING: "Listing text",
 };
 
 export const REPORT_REASON_LABELS: Record<ReportReason, string> = {

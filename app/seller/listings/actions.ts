@@ -14,6 +14,8 @@ import { sanitizeFileName } from "@/lib/seller/sanitize-filename";
 import { checkMediaBatch, coverPromotionAfterRemoval, applyCover, moveItem, sortMedia, sortOrderAssignments, type IncomingFile, type MediaItem } from "@/lib/seller-catalogue/media-rules";
 import { canAddDocument, canSellerDeleteDocument } from "@/lib/seller-catalogue/documents";
 import { parseListingForm, type ListingFormField } from "@/lib/seller-catalogue/listing-form";
+import { recordBlockedPublicText } from "@/lib/moderation/public-text";
+import { publicTextBlockedMessage, scanPublicText } from "@/lib/moderation/scan";
 import { findOwnedDocument, findOwnedListing, findOwnedMedia } from "@/lib/seller-catalogue/ownership";
 import { generateListingSlug, listingDocumentKey, listingMediaKey } from "@/lib/seller-catalogue/keys";
 import { resolveSaveStatus } from "@/lib/seller-catalogue/transitions";
@@ -80,6 +82,18 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   const parsed = parseListingForm(formData);
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values: parsed.values, formError: "Please correct the highlighted fields." };
   const { input, priceMinor, priceOnRequest, intent, values } = parsed.value;
+
+  // Listing titles and descriptions are public. Contact details are refused, not masked.
+  const scan = scanPublicText([
+    { field: "title", label: "Title", value: input.title },
+    { field: "description", label: "Description", value: input.description },
+  ]);
+  if (scan.flagged) {
+    await recordBlockedPublicText({ senderId: user.id, source: "PUBLIC_LISTING", kinds: scan.kinds });
+    const fieldErrors: Partial<Record<ListingFormField, string>> = {};
+    for (const field of scan.flaggedFields) fieldErrors[field as ListingFormField] = "Contact details are not allowed here.";
+    return { fieldErrors, values, formError: publicTextBlockedMessage(scan.flaggedLabels) };
+  }
 
   const listingIdRaw = text(formData, "listingId");
   const listingId = listingIdRaw ? idSchema.safeParse(listingIdRaw) : null;

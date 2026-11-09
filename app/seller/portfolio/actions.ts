@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db/client";
 import { MEDIA_LIMITS } from "@/lib/listings/schema";
 import { MEDIA_ERROR_TEXT, processMedia } from "@/lib/media/pipeline";
 import { portfolioImageKey } from "@/lib/seller-catalogue/keys";
+import { recordBlockedPublicText } from "@/lib/moderation/public-text";
+import { publicTextBlockedMessage, scanPublicText } from "@/lib/moderation/scan";
 import { validatePortfolioText, type PortfolioField } from "@/lib/seller/portfolio";
 import { getStorageProvider } from "@/lib/storage/storage";
 
@@ -58,6 +60,19 @@ export async function savePortfolioAction(
   };
   const parsed = validatePortfolioText(values);
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values, formError: "Please correct the highlighted fields." };
+
+  // Public text with contact details is refused, not masked. The attempt goes to the admin flagged queue.
+  const scan = scanPublicText([
+    { field: "tagline", label: "Tagline", value: parsed.value.tagline },
+    { field: "description", label: "About", value: parsed.value.description },
+    { field: "specialties", label: "Specialties", value: parsed.value.specialties.join(", ") },
+  ]);
+  if (scan.flagged) {
+    await recordBlockedPublicText({ senderId: user.id, source: "PUBLIC_PROFILE", kinds: scan.kinds });
+    const fieldErrors: Partial<Record<PortfolioField, string>> = {};
+    for (const field of scan.flaggedFields) fieldErrors[field as PortfolioField] = "Contact details are not allowed here.";
+    return { fieldErrors, values, formError: publicTextBlockedMessage(scan.flaggedLabels) };
+  }
 
   const logo = await readImage(formData, "logo", seller.id);
   if (!logo.ok) return { fieldErrors: { logo: logo.error }, values, formError: "Please correct the highlighted fields." };

@@ -42,6 +42,19 @@ function input(overrides: Partial<SellerRegistrationInput> = {}): SellerRegistra
   };
 }
 
+describe("validateSellerRegistration: public business name", () => {
+  it("refuses a business name with contact details, on the businessName field", () => {
+    const result = validateSellerRegistration(input({ businessName: "Asha Gems, call 98765 43210" }), labs, categories);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.fieldErrors.businessName).toContain("Business name");
+  });
+
+  it("accepts an ordinary business name", () => {
+    const result = validateSellerRegistration(input({ businessName: "Asha Gems" }), labs, categories);
+    expect(result.ok).toBe(true);
+  });
+});
+
 describe("validateSellerRegistration: gemstone categories", () => {
   it("passes the chosen categories through in list order", () => {
     const result = validateSellerRegistration(input({ categoryIds: ["cat_ruby", "cat_diamond"] }), labs, categories);
