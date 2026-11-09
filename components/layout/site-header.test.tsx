@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+
+// The session lookup needs Auth.js and the database. The header test only checks the static nav.
+vi.mock("@/components/auth/session-links", () => ({
+  SessionLinks: () => null,
+}));
+
 import { SiteHeader } from "./site-header";
 
 describe("SiteHeader", () => {
