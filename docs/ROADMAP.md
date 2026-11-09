@@ -1,47 +1,66 @@
 # Gemstone Selections – Roadmap
 
-Status as of M2 start. Source of scope: the Phase 1 spec and the client brief (M2 onward).
+Checked against `docs/client-brief.md` (the second brief, after M2) and the original Phase 1 spec.
 
 ## Done
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M0 Foundation | Next.js 16, Prisma 7 schema v1, validated env, base layout, CI | Done (`63a4db2`) |
-| M1 Auth & roles | Buyer/seller/admin roles, verification, OTP, password reset, seller onboarding with documents, admin review, audit log, rate limits | Done (`40d9c4e`, on `main`) |
+| M0 Foundation | Next.js 16, Prisma 7, validated env, base layout, CI | Done |
+| M1 Auth & roles | Roles, verification, OTP, password reset, seller onboarding with documents, admin review, audit, rate limits | Done |
+| M2 Catalogue & portfolios | Public catalogue and search, seller portfolios and listings, media and documents, moderation, homepage carousels, wishlist, demo data | Done (end-to-end verified on a production build) |
 
 ## Remaining
 
-| Milestone | Scope | Depends on |
-|---|---|---|
-| **M2 Catalogue & portfolios** (current) | Seller portfolio and listings (CRUD, media, documents), listing moderation and document verification, public catalogue (search, filters, categories, product page), homepage carousels, demo reviews, wishlist, buyer dashboard shell, demo seed, SEO | M1 |
-| M3 Enquiries & chat | Enquiries and requirement posts (buyers post requirements, relevant sellers respond), quotations, in-platform chat, notifications, contact-detail moderation, "Chat / Enquire" buttons go live | M2 (listings, sellers) |
-| M4 Valuation | Three-step valuation (upload, analysis, results), "Request valuation" from a product page, downloadable PDF reports, saved reports | M2 (media pipeline); M3 for expert-review routing and notifications |
-| M5 Analytics & membership | Seller analytics (profile visits, product views, enquiries), membership tiers (Free / Premium / Elite, demo-only upgrades), referrals and progress, admin for memberships and referrals | M2 (view tracking), M3 (enquiry counts) |
-| M6 Content & launch | Education library, market news, newsletter with double opt-in and campaigns, admin content publishing, platform analytics, accessibility and polish, deployment preparation | M2 (homepage blocks, admin shell) |
+| Milestone | Scope |
+|---|---|
+| **M3 Communication** (current) | Enquiries from product and portfolio pages, offers (accept, decline, counter), buyer requirements with seller responses and a requirements board, quotations (with PDF), in-platform chat with attachments, notifications (bell and email via Resend), notification preferences, contact-detail moderation, admin flagged queue and audited conversation viewing, reports and blocks, Resend and MSG91 providers |
+| M4 Valuation | Three-step valuation (upload, analysis, results), "Request valuation" from a product page, downloadable PDF reports, saved reports |
+| M5 Analytics & membership | Seller analytics (profile visits, product views, enquiries, performance), membership tiers Free / Premium / Elite (Free live; paid tiers as demo), referral programme with progress, admin for memberships and referrals |
+| M6 Content & launch | Education, market news, newsletter (double opt-in, campaigns), admin content publishing, platform activity and analytics, accessibility and polish, deployment preparation |
 
-## Order: what changed and why
+## Coverage of the client brief
 
-- **Enquiries moved to M3, ahead of valuation.** Valuation's expert-review path and report delivery need notifications and the conversation model. Building chat and enquiries first means valuation can reuse them.
-- **Analytics and membership stay together in M5, analytics first.** Membership tiers need view and enquiry counts to mean anything, so the counting pipeline is built first within M5.
-- **Education, news and newsletter stay last (M6).** They have no dependencies on the commerce flow. Their M2 teaser sections link to "coming soon" pages, so the homepage is complete without them.
-- **Reviews are modelled in M2 but eligibility is enforced in M3.** A review requires a prior enquiry with that seller, so the rule can only be enforced once enquiries exist. M2 shows labelled demo ratings only.
+| Brief section | Where it is covered |
+|---|---|
+| 1. Buyer: top-rated and verified sellers carousel, featured carousel, categories, search and filters | M2 (done) |
+| 1. Buyer: seller profile and portfolio, product detail page | M2 (done) |
+| 1. Buyer: from product page, view portfolio, wishlist, **request valuation**, **chat or enquire** | Wishlist and portfolio: M2. Enquire and chat: M3. Request valuation: M4 |
+| 1. Buyer: post gemstone requirements for sellers to respond to | M3 |
+| 1. Buyer: dashboard for wishlists, enquiries, conversations, valuations, saved reports | Wishlist: M2. Enquiries and conversations: M3. Valuations and saved reports: M4 |
+| 2. Seller: "Become a Seller", application with contact details, location, categories and documents | M1 (done). Categories on the application: **not yet**, to add in M3 |
+| 2. Seller: admin approves or rejects; secure activation; seller dashboard | M1 (done). The approval email links to sign-in, which the client accepts as activation |
+| 2. Seller: business profile and portfolio; products with images, videos, specs, pricing, availability | M2 (done) |
+| 2. Seller: certificates, **SSL-related options**, valuation reports, lab documents | Certificates, valuation reports and lab documents: M2 (done). "Other lab document" with a label: M3 (added in M3). SSL-related options: **open**, treated as SSEF until confirmed |
+| 2. Seller: admin reviews listings and documents, manages verification | M2 (done) |
+| 2. Seller: manage buyer enquiries, quotations, conversations | M3 |
+| 2. Seller: analytics (profile visits, product views, enquiries, performance) | M5. Product views and profile visits need tracking added in M5 |
+| 3. Membership: Free live; Premium and Elite upcoming; progress and upcoming benefits in the dashboard; referrals and engagement | M5. Free is live from M1. Progress display is part of M5 |
+| 4. Admin: applications, approvals, products, categories, certificates, reports, document verification, memberships, referrals, buyer enquiries, platform activity | Applications, approvals, products, documents, categories and certificates: done (M1 and M2). Reports and buyer enquiries: M3. Memberships and referrals: M5. Platform activity: M6 |
+| 5. Connected journeys (buyer and seller) | Built up across M1–M5; the full journey is covered by the end-to-end tests from M3 onward |
+| Design: preserve the current direction; demo data labelled | Ongoing, every milestone |
 
-## Decisions carried across milestones
+## Gaps found against the brief
 
-- One role per user. Buyer-feature checks accept `SELLER` as well. Sellers cannot enquire about, wishlist, or review their own listings or business.
-- Seller approval email links to sign-in; that is the account activation step.
-- All demo data (ratings, reviews, verification badges, sample sellers) is labelled "Demo" and is refused in production.
-- Design direction stays as set in M0/M1: premium, minimal, professional tokens.
+1. **Seller application lacks gemstone categories.** The application form (M1) does not ask which categories a seller deals in. Add to M3 with the requirements board, which filters by category.
+2. **SSL-related options.** Unclear in the brief. Nothing is built beyond SSEF lab certificates. Needs client confirmation.
+3. **Product views and profile visits are not tracked yet.** Needed for seller analytics in M5. Tracking should start before M5 so the numbers exist when the dashboard ships.
+4. **Valuation report on the product page.** The brief asks for valuation reports on the product detail page. M2 shows verified public documents, which can include a valuation report if the seller uploads one. The "request valuation" flow is M4.
 
-## External dependencies (block production, not development)
+## Order
 
-- Real email provider (Resend or similar) and SMS provider (for OTP). Console providers refuse to run in production.
-- Payment gateway. Not needed for Phase 1 (membership upgrades are demo-only); needed before real payments.
-- Hosting, managed Postgres, object storage for uploads (replacing local disk), and a reverse proxy that sets `X-Forwarded-For` (see README).
+- Enquiries and requirements before valuation (M3 before M4). Valuation's expert review needs notifications and the conversation model.
+- Analytics and membership stay together in M5, with the counting pipeline first.
+- Content and launch last (M6). Its teaser sections already link to "coming soon" pages.
+
+## External dependencies
+
+- **Resend** (email) and **MSG91** (SMS). Implementations are built in M3 behind the existing interfaces. API keys are needed to go live; development uses the console providers.
+- Payment gateway: not needed for Phase 1 (memberships are demo-only; no payments).
+- Hosting, managed Postgres, object storage replacing local disk, and a reverse proxy that sets `X-Forwarded-For` (see README).
 
 ## Open questions
 
-1. **"SSL-related options" in the brief.** The brief text was not available in full when this was written. Possibly this refers to the SSEF lab already in the lab list. Nothing has been built for it. Needs clarification.
-2. Are the membership tiers' feature limits final (for example listing counts per tier)?
-3. Which email and SMS providers does the client want?
-4. Are the expert valuators internal staff or external appraisers?
+1. What do "SSL-related options" mean in the brief? (Currently treated as SSEF.)
+2. Final limits for each membership tier (listing counts, featured slots).
+3. Are expert valuators internal staff or external appraisers? (Needed for M4.)
