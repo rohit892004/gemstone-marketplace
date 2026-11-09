@@ -74,6 +74,8 @@ enum Availability {
   AVAILABLE
   RESERVED
   SOLD
+  /// Seller-hidden: never shown publicly, even when PUBLISHED.
+  HIDDEN
 }
 
 enum ListingStatus {
@@ -156,19 +158,23 @@ model User {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
-  buyerProfile       BuyerProfile?
-  sellerProfile      SellerProfile?
-  authTokens         AuthToken[]
-  notifications      Notification[]
-  sentMessages       Message[]        @relation("MessageSender")
-  auditLogs          AuditLog[]       @relation("AuditActor")
-  valuations         Valuation[]
-  expertValuations   Valuation[]      @relation("ValuationExpert")
-  wishlist           WishlistItem[]
-  buyerEnquiries     Enquiry[]        @relation("BuyerEnquiries")
-  buyerConversations Conversation[]   @relation("BuyerConversations")
-  reviewedDocuments  SellerDocument[] @relation("DocumentReviewer")
-  approvedSellers    SellerProfile[]  @relation("SellerApprover")
+  buyerProfile        BuyerProfile?
+  sellerProfile       SellerProfile?
+  authTokens          AuthToken[]
+  notifications       Notification[]
+  sentMessages        Message[]         @relation("MessageSender")
+  auditLogs           AuditLog[]        @relation("AuditActor")
+  valuations          Valuation[]
+  expertValuations    Valuation[]       @relation("ValuationExpert")
+  wishlist            WishlistItem[]
+  buyerEnquiries      Enquiry[]         @relation("BuyerEnquiries")
+  buyerConversations  Conversation[]    @relation("BuyerConversations")
+  reviewedDocuments   SellerDocument[]  @relation("DocumentReviewer")
+  approvedSellers     SellerProfile[]   @relation("SellerApprover")
+  reviewsAuthored     Review[]          @relation("ReviewAuthor")
+  reviewsModerated    Review[]          @relation("ReviewModerator")
+  listingsReviewed    Gemstone[]        @relation("ListingReviewer")
+  listingDocsVerified ListingDocument[] @relation("ListingDocumentVerifier")
 
   @@index([role, status])
 }
@@ -234,6 +240,14 @@ model SellerProfile {
   approvedAt      DateTime?
   reviewedAt      DateTime?
   rejectionReason String?
+  tagline         String?
+  /// Admin-set: shown in the featured sellers carousel.
+  featured        Boolean        @default(false)
+  /// Set on demo seed data only. Demo sellers are labelled and refused in production.
+  isDemo          Boolean        @default(false)
+  /// Cached from approved reviews. Null until the first review.
+  ratingAverage   Decimal?       @db.Decimal(3, 2)
+  reviewCount     Int            @default(0)
   slug            String         @unique
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -246,7 +260,10 @@ model SellerProfile {
   quotations    Quotation[]
   conversations Conversation[]
 
+  reviews Review[]
+
   @@index([approvalStatus])
+  @@index([approvalStatus, featured])
 }
 
 model SellerDocument {
@@ -285,7 +302,9 @@ model CertificateLab {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
-  documents SellerDocument[]
+  documents        SellerDocument[]
+  gemstones        Gemstone[]
+  listingDocuments ListingDocument[]
 }
 
 // ---------- Catalogue ----------
@@ -300,57 +319,169 @@ model Category {
   gemstones Gemstone[]
 }
 
+/// A listing. Seller-owned; public only when PUBLISHED, availability is not HIDDEN,
+/// and the seller is APPROVED (see lib/listings/visibility.ts).
 model Gemstone {
-  id            String        @id @default(cuid())
-  sellerId      String
-  categoryId    String?
-  title         String
-  slug          String        @unique
-  species       String?
-  variety       String?
-  caratWeight   Decimal?      @db.Decimal(10, 3)
-  colour        String?
-  clarity       String?
-  cut           String?
-  shape         String?
-  origin        String?
-  treatment     String?
-  certificateNo String?
-  /// Minor units (paise for INR). See schema header.
-  priceMinor    BigInt?
-  currency      String        @default("INR")
-  availability  Availability  @default(AVAILABLE)
-  status        ListingStatus @default(DRAFT)
-  featured      Boolean       @default(false)
-  specs         Json?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String                   @id @default(cuid())
+  sellerId         String
+  categoryId       String?
+  title            String
+  slug             String                   @unique
+  /// Gemstone type, e.g. "Sapphire". Free text constrained by the app's list.
+  species          String?
+  variety          String?
+  description      String?
+  caratWeight      Decimal?                 @db.Decimal(10, 3)
+  /// e.g. "7.5 x 5.2 x 3.1 mm"
+  dimensions       String?
+  colour           String?
+  clarity          String?
+  cut              String?
+  shape            String?
+  origin           String?
+  treatment        String?
+  certificateLabId String?
+  certificateNo    String?
+  quantity         Int                      @default(1)
+  /// Minor units (paise for INR, cents for USD). Null when priceOnRequest is true.
+  priceMinor       BigInt?
+  priceOnRequest   Boolean                  @default(false)
+  currency         String                   @default("INR")
+  availability     Availability             @default(AVAILABLE)
+  status           ListingStatus            @default(DRAFT)
+  featured         Boolean                  @default(false)
+  /// Set on demo seed data only. Demo rows are labelled in the UI and refused in production.
+  isDemo           Boolean                  @default(false)
+  submittedAt      DateTime?
+  publishedAt      DateTime?
+  reviewedAt       DateTime?
+  reviewedById     String?
+  rejectionReason  String?
+  specs            Json?
+  /// Full-text search vector. A generated column defined in the migration; Prisma does not write it.
+  searchText       Unsupported("tsvector")?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 
-  seller        SellerProfile   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category      Category?       @relation(fields: [categoryId], references: [id])
-  media         GemstoneMedia[]
-  wishlistedBy  WishlistItem[]
-  enquiries     Enquiry[]
-  quotations    Quotation[]
-  conversations Conversation[]
+  seller         SellerProfile     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category       Category?         @relation(fields: [categoryId], references: [id])
+  certificateLab CertificateLab?   @relation(fields: [certificateLabId], references: [id])
+  reviewedBy     User?             @relation("ListingReviewer", fields: [reviewedById], references: [id])
+  media          GemstoneMedia[]
+  documents      ListingDocument[]
+  wishlistedBy   WishlistItem[]
+  enquiries      Enquiry[]
+  quotations     Quotation[]
+  conversations  Conversation[]
 
   @@index([sellerId])
   @@index([status, availability])
-  @@index([species, caratWeight])
+  @@index([status, species])
+  @@index([status, caratWeight])
+  @@index([status, priceMinor])
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([featured])
+  @@index([searchText], type: Gin)
 }
 
 model GemstoneMedia {
   id         String      @id @default(cuid())
   gemstoneId String
   type       MediaType
-  fileKey    String
+  /// Original, metadata-stripped object key (private storage).
+  fileKey    String      @unique
+  /// Public thumbnail key (images only). Served via the media route, never directly from storage.
+  thumbKey   String?     @unique
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  alt        String?
   sortOrder  Int         @default(0)
+  isCover    Boolean     @default(false)
   status     MediaStatus @default(PROCESSING)
   createdAt  DateTime    @default(now())
 
   gemstone Gemstone @relation(fields: [gemstoneId], references: [id], onDelete: Cascade)
 
   @@index([gemstoneId, sortOrder])
+}
+
+enum ListingDocumentType {
+  CERTIFICATE
+  VALUATION_REPORT
+  LAB_DOCUMENT
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+/// Seller-attached document for a listing. Private by default. Shown publicly only when
+/// isPublic is true AND verificationStatus is VERIFIED AND the listing is public.
+model ListingDocument {
+  id                 String              @id @default(cuid())
+  gemstoneId         String
+  type               ListingDocumentType
+  title              String
+  fileKey            String              @unique
+  fileName           String
+  mimeType           String
+  sizeBytes          Int
+  certificateLabId   String?
+  isPublic           Boolean             @default(false)
+  verificationStatus VerificationStatus  @default(PENDING)
+  verificationReason String?
+  verifiedById       String?
+  verifiedAt         DateTime?
+  createdAt          DateTime            @default(now())
+
+  gemstone       Gemstone        @relation(fields: [gemstoneId], references: [id], onDelete: Cascade)
+  certificateLab CertificateLab? @relation(fields: [certificateLabId], references: [id])
+  verifiedBy     User?           @relation("ListingDocumentVerifier", fields: [verifiedById], references: [id])
+
+  @@index([gemstoneId])
+  @@index([verificationStatus])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Seller review. Real reviews require a prior enquiry from the buyer (enforced in M3).
+/// Demo reviews have no author account and isDemo = true.
+model Review {
+  id            String       @id @default(cuid())
+  sellerId      String
+  authorId      String?
+  authorName    String
+  rating        Int
+  title         String?
+  body          String
+  status        ReviewStatus @default(PENDING)
+  isDemo        Boolean      @default(false)
+  moderatedById String?
+  moderatedAt   DateTime?
+  createdAt     DateTime     @default(now())
+
+  seller    SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  author    User?         @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  moderator User?         @relation("ReviewModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+
+  @@index([sellerId, status])
+}
+
+/// Key/value platform settings (e.g. listing.autoPublishApprovedSellers). Absent key = default.
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
 }
 
 model WishlistItem {
