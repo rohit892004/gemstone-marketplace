@@ -1,0 +1,32 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import { SellerRegisterForm } from "@/components/seller/seller-register-form";
+import { loadActiveCertificateLabs } from "@/lib/seller/labs";
+
+export const metadata: Metadata = {
+  title: "Become a seller",
+};
+
+export default function SellerRegisterPage() {
+  return (
+    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <p className="text-sm font-medium uppercase tracking-widest text-accent">Sellers</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">Apply to sell on Gemstone Selections</h1>
+      <p className="mt-4 text-ink-soft">
+        Create your account and business profile. Our team reviews your documents before your listings go live.
+        Already registered? <Link href="/login" className="font-medium text-brand underline">Sign in</Link>.
+      </p>
+      <div className="mt-10">
+        <Suspense fallback={null}>
+          <SellerRegisterFormLoader />
+        </Suspense>
+      </div>
+    </section>
+  );
+}
+
+async function SellerRegisterFormLoader() {
+  const labs = await loadActiveCertificateLabs();
+  return <SellerRegisterForm labs={labs} />;
+}
