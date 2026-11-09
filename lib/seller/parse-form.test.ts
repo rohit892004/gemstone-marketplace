@@ -4,12 +4,19 @@ vi.mock("@/lib/config/env", () => ({
   getEnv: () => ({ UPLOAD_MAX_MB: 10 }),
 }));
 
+import type { CategoryOption } from "./category-selection";
 import type { CertificateLabOption } from "./labs";
 import { parseSellerForm } from "./parse-form";
 
 const labs: CertificateLabOption[] = [
   { id: "lab_gia", code: "gia", name: "GIA", isOther: false },
   { id: "lab_other", code: "other", name: "Other", isOther: true },
+];
+
+const categories: CategoryOption[] = [
+  { id: "cat_diamond", name: "Diamond", slug: "diamond" },
+  { id: "cat_ruby", name: "Ruby", slug: "ruby" },
+  { id: "cat_sapphire", name: "Sapphire", slug: "sapphire" },
 ];
 
 const PDF = Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(64)]);
@@ -37,13 +44,21 @@ function file(bytes: Buffer, name: string, type = "application/pdf"): File {
   return new File([new Uint8Array(bytes)], name, { type });
 }
 
-function buildForm(options: { omit?: string[]; files?: Record<string, File>; text?: Record<string, string> } = {}): FormData {
+function buildForm(
+  options: {
+    omit?: string[];
+    files?: Record<string, File>;
+    text?: Record<string, string>;
+    categoryIds?: string[];
+  } = {},
+): FormData {
   const form = new FormData();
   const text = { ...textFields, ...options.text };
   for (const [key, value] of Object.entries(text)) {
     if (options.omit?.includes(key)) continue;
     form.append(key, value);
   }
+  for (const id of options.categoryIds ?? ["cat_ruby"]) form.append("categoryIds", id);
   const files: Record<string, File> = {
     idProof: file(PDF, "id-proof.pdf"),
     businessProof: file(PNG, "business.png", "image/png"),
@@ -55,7 +70,7 @@ function buildForm(options: { omit?: string[]; files?: Record<string, File>; tex
 
 describe("parseSellerForm", () => {
   it("accepts a complete application and normalises the input", async () => {
-    const result = await parseSellerForm(buildForm(), labs);
+    const result = await parseSellerForm(buildForm(), labs, categories);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.account.email).toBe("seller@example.com");
@@ -64,10 +79,11 @@ describe("parseSellerForm", () => {
     expect(result.value.idProof.mimeType).toBe("application/pdf");
     expect(result.value.businessProof.mimeType).toBe("image/png");
     expect(result.value.certificates).toEqual([]);
+    expect(result.value.categoryIds).toEqual(["cat_ruby"]);
   });
 
   it("rejects a missing ID proof", async () => {
-    const result = await parseSellerForm(buildForm({ files: { idProof: new File([], "") as unknown as File } }), labs);
+    const result = await parseSellerForm(buildForm({ files: { idProof: new File([], "") as unknown as File } }), labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.idProof).toBeDefined();
   });
@@ -75,34 +91,35 @@ describe("parseSellerForm", () => {
   it("rejects a missing business proof", async () => {
     const form = new FormData();
     for (const [key, value] of Object.entries(textFields)) form.append(key, value);
+    form.append("categoryIds", "cat_ruby");
     form.append("idProof", file(PDF, "id.pdf"));
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.businessProof).toBeDefined();
   });
 
   it("rejects a malformed GST number", async () => {
-    const result = await parseSellerForm(buildForm({ text: { gstNumber: "27AAPFU0939F1Z" } }), labs);
+    const result = await parseSellerForm(buildForm({ text: { gstNumber: "27AAPFU0939F1Z" } }), labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.gstNumber).toBeDefined();
   });
 
   it("accepts a valid GST number", async () => {
-    const result = await parseSellerForm(buildForm({ text: { gstNumber: "27aapfu0939f1zv" } }), labs);
+    const result = await parseSellerForm(buildForm({ text: { gstNumber: "27aapfu0939f1zv" } }), labs, categories);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value.business.gstNumber).toBe("27AAPFU0939F1ZV");
   });
 
   it("rejects an oversized file using the claimed size", async () => {
     const big = file(Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(11 * 1024 * 1024)]), "big.pdf");
-    const result = await parseSellerForm(buildForm({ files: { idProof: big } }), labs);
+    const result = await parseSellerForm(buildForm({ files: { idProof: big } }), labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.idProof).toMatch(/10 MB/);
   });
 
   it("rejects a file of the wrong type even when its name and MIME type claim PDF", async () => {
     const fake = file(Buffer.from("<html>not a pdf</html>"), "id.pdf", "application/pdf");
-    const result = await parseSellerForm(buildForm({ files: { idProof: fake } }), labs);
+    const result = await parseSellerForm(buildForm({ files: { idProof: fake } }), labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.idProof).toMatch(/PDF, JPEG or PNG/);
   });
@@ -111,7 +128,7 @@ describe("parseSellerForm", () => {
     const form = buildForm();
     form.append("certificate_0_file", file(PDF, "cert.pdf"));
     form.append("certificate_0_lab", "not-a-lab");
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.certificate_0_lab).toBeDefined();
   });
@@ -120,7 +137,7 @@ describe("parseSellerForm", () => {
     const form = buildForm();
     form.append("certificate_0_file", file(PDF, "cert.pdf"));
     form.append("certificate_0_lab", "other");
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.certificate_0_labOther).toBeDefined();
   });
@@ -130,7 +147,7 @@ describe("parseSellerForm", () => {
     form.append("certificate_0_file", file(PDF, "cert.pdf"));
     form.append("certificate_0_lab", "other");
     form.append("certificate_0_labOther", "x".repeat(81));
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.certificate_0_labOther).toBeDefined();
   });
@@ -142,7 +159,7 @@ describe("parseSellerForm", () => {
     form.append("certificate_1_file", file(PNG, "other.png", "image/png"));
     form.append("certificate_1_lab", "other");
     form.append("certificate_1_labOther", "Jaipur Gem Lab");
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.certificates).toHaveLength(2);
@@ -156,7 +173,7 @@ describe("parseSellerForm", () => {
       form.append(`certificate_${i}_file`, file(PDF, `c${i}.pdf`));
       form.append(`certificate_${i}_lab`, "gia");
     }
-    const result = await parseSellerForm(form, labs);
+    const result = await parseSellerForm(form, labs, categories);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.fieldErrors.certificates).toBeDefined();
   });
@@ -165,8 +182,47 @@ describe("parseSellerForm", () => {
     const result = await parseSellerForm(
       buildForm({ files: { idProof: file(PDF, "../../etc/evil<script>.pdf") } }),
       labs,
+      categories,
     );
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value.idProof.fileName).toBe("evilscript.pdf");
+  });
+
+  describe("gemstone categories", () => {
+    it("accepts several categories and returns them in list order", async () => {
+      const result = await parseSellerForm(
+        buildForm({ categoryIds: ["cat_sapphire", "cat_diamond", "cat_ruby"] }),
+        labs,
+        categories,
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value.categoryIds).toEqual(["cat_diamond", "cat_ruby", "cat_sapphire"]);
+    });
+
+    it("rejects an application with no category selected", async () => {
+      const result = await parseSellerForm(buildForm({ categoryIds: [] }), labs, categories);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.fieldErrors.categoryIds).toMatch(/at least one/i);
+    });
+
+    it("rejects a category id that is not in the offered list", async () => {
+      const result = await parseSellerForm(buildForm({ categoryIds: ["cat_ruby", "cat_unknown"] }), labs, categories);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.fieldErrors.categoryIds).toMatch(/from the list/i);
+    });
+
+    it("ignores repeated and blank category values", async () => {
+      const result = await parseSellerForm(buildForm({ categoryIds: ["cat_ruby", " ", "cat_ruby"] }), labs, categories);
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value.categoryIds).toEqual(["cat_ruby"]);
+    });
+
+    it("refuses a category field that was sent as a file", async () => {
+      const form = buildForm({ categoryIds: [] });
+      form.append("categoryIds", file(PDF, "x.pdf"));
+      const result = await parseSellerForm(form, labs, categories);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.fieldErrors.categoryIds).toBeDefined();
+    });
   });
 });

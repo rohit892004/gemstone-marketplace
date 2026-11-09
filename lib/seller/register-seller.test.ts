@@ -18,6 +18,12 @@ vi.mock("@/lib/db/client", () => ({
         { id: "lab_other", code: "other", name: "Other", isOther: true },
       ]),
     },
+    category: {
+      findMany: vi.fn(async () => [
+        { id: "cat_diamond", name: "Diamond", slug: "diamond" },
+        { id: "cat_ruby", name: "Ruby", slug: "ruby" },
+      ]),
+    },
   },
 }));
 
@@ -73,6 +79,7 @@ function input(overrides: Partial<SellerRegistrationInput> = {}): SellerRegistra
     pincode: "",
     yearsInBusiness: "12",
     specialties: ["Ruby", "Sapphire"],
+    categoryIds: ["cat_ruby", "cat_diamond"],
     idProof: { name: "../id.pdf", size: PDF.length, data: PDF },
     businessProof: { name: "gst.png", size: PNG.length, data: PNG },
     certificates: [
@@ -131,6 +138,8 @@ describe("registerSeller", () => {
       gstNumber: null,
       pincode: null,
       specialties: ["Ruby", "Sapphire"],
+      // Stored in list order, whatever order the form sent them in.
+      categories: { connect: [{ id: "cat_diamond" }, { id: "cat_ruby" }] },
     });
     expect(String(profileCreates[0].slug)).toMatch(/^rao-gems-co-[0-9a-f]{6}$/);
 
@@ -177,6 +186,22 @@ describe("registerSeller", () => {
     expect(result).toMatchObject({ ok: false, reason: "validation" });
     expect(registerAccount).not.toHaveBeenCalled();
     expect(objects.size).toBe(0);
+  });
+
+  it("refuses an application with no gemstone category, before any write", async () => {
+    const result = await registerSeller(input({ categoryIds: [] }), { ip: "203.0.113.5" });
+    expect(result).toMatchObject({ ok: false, reason: "validation" });
+    if (result.ok === false && result.reason === "validation") {
+      expect(result.fieldErrors.categoryIds).toBeDefined();
+    }
+    expect(registerAccount).not.toHaveBeenCalled();
+    expect(objects.size).toBe(0);
+  });
+
+  it("refuses a category that is not in the list", async () => {
+    const result = await registerSeller(input({ categoryIds: ["cat_made_up"] }), { ip: "203.0.113.5" });
+    expect(result).toMatchObject({ ok: false, reason: "validation" });
+    expect(registerAccount).not.toHaveBeenCalled();
   });
 
   it("stops when the per-IP registration limit is reached", async () => {

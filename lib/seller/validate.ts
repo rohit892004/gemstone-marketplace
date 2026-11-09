@@ -1,4 +1,5 @@
 import { getEnv } from "@/lib/config/env";
+import { selectSellerCategories, type CategoryOption } from "@/lib/seller/category-selection";
 import { sanitizeFileName } from "@/lib/seller/sanitize-filename";
 import type { CertificateLabOption } from "@/lib/seller/labs";
 import {
@@ -72,6 +73,7 @@ function isUsedSlot(slot: RawCertificate): boolean {
 export function validateSellerRegistration(
   input: SellerRegistrationInput,
   labs: readonly CertificateLabOption[],
+  categories: readonly CategoryOption[],
 ): Validated<ValidatedSellerRegistration> {
   const errors: FieldErrors = {};
 
@@ -100,6 +102,10 @@ export function validateSellerRegistration(
   if (!business.success) {
     Object.assign(errors, issuesToErrors(business.error.issues, { country: "businessCountry" }));
   }
+
+  const categorySelection = selectSellerCategories(input.categoryIds, categories);
+  if (!categorySelection.ok) errors.categoryIds = categorySelection.error;
+  const categoryIds = categorySelection.ok ? categorySelection.ids : null;
 
   const idProof = validateFile(input.idProof, "idProof", errors);
   const businessProof = validateFile(input.businessProof, "businessProof", errors);
@@ -138,7 +144,14 @@ export function validateSellerRegistration(
   if (!idProof) errors.idProof ??= "Upload your ID proof";
   if (!businessProof) errors.businessProof ??= "Upload your business proof";
 
-  if (Object.keys(errors).length > 0 || !account.success || !business.success || !idProof || !businessProof) {
+  if (
+    Object.keys(errors).length > 0 ||
+    !account.success ||
+    !business.success ||
+    !categoryIds ||
+    !idProof ||
+    !businessProof
+  ) {
     return { ok: false, fieldErrors: errors };
   }
 
@@ -147,6 +160,7 @@ export function validateSellerRegistration(
     value: {
       account: account.data,
       business: business.data,
+      categoryIds,
       idProof,
       businessProof,
       certificates,

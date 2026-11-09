@@ -18,13 +18,16 @@ async function DashboardStats() {
   await requirePageRole(["ADMIN"]);
 
   // Cheap aggregates: seller statuses, buyers, and the three moderation queues.
-  const [groups, buyerCount, listingsPending, documentsPending, reviewsPending] = await Promise.all([
-    prisma.sellerProfile.groupBy({ by: ["approvalStatus"], _count: { _all: true } }),
-    prisma.user.count({ where: { role: "BUYER" } }),
-    prisma.gemstone.count({ where: { status: "PENDING_REVIEW" } }),
-    prisma.listingDocument.count({ where: { verificationStatus: "PENDING" } }),
-    prisma.review.count({ where: { status: "PENDING" } }),
-  ]);
+  const [groups, buyerCount, listingsPending, documentsPending, reviewsPending, flagsOpen, reportsOpen] =
+    await Promise.all([
+      prisma.sellerProfile.groupBy({ by: ["approvalStatus"], _count: { _all: true } }),
+      prisma.user.count({ where: { role: "BUYER" } }),
+      prisma.gemstone.count({ where: { status: "PENDING_REVIEW" } }),
+      prisma.listingDocument.count({ where: { verificationStatus: "PENDING" } }),
+      prisma.review.count({ where: { status: "PENDING" } }),
+      prisma.moderationFlag.count({ where: { status: "OPEN" } }),
+      prisma.report.count({ where: { status: "OPEN" } }),
+    ]);
 
   const sellerCounts: Record<ApprovalStatus, number> = { PENDING: 0, APPROVED: 0, REJECTED: 0, SUSPENDED: 0 };
   for (const group of groups) sellerCounts[group.approvalStatus] = group._count._all;
@@ -60,6 +63,14 @@ async function DashboardStats() {
         <Link href="/admin/reviews" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
           <p className="text-xs uppercase tracking-wide text-stone-600">Reviews pending</p>
           <p className="text-2xl font-semibold">{reviewsPending}</p>
+        </Link>
+        <Link href="/admin/moderation" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
+          <p className="text-xs uppercase tracking-wide text-stone-600">Flagged messages open</p>
+          <p className="text-2xl font-semibold">{flagsOpen}</p>
+        </Link>
+        <Link href="/admin/reports?status=OPEN" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
+          <p className="text-xs uppercase tracking-wide text-stone-600">Reports open</p>
+          <p className="text-2xl font-semibold">{reportsOpen}</p>
         </Link>
       </section>
       {sellerCounts.PENDING > 0 ? (

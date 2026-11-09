@@ -11,6 +11,8 @@ export interface SellerFormState {
   formError?: string;
   /** Submitted text values, returned so the form can repopulate after an error. */
   values?: Record<string, string>;
+  /** Submitted category ids, returned so the checkboxes stay ticked after an error. */
+  selectedCategoryIds?: string[];
 }
 
 export async function registerSellerAction(
@@ -23,6 +25,7 @@ export async function registerSellerAction(
 
   if (result.ok) redirect("/check-email");
 
+  const selectedCategoryIds = input.categoryIds;
   const values: Record<string, string> = {
     name: input.name,
     email: input.email,
@@ -44,9 +47,15 @@ export async function registerSellerAction(
     values[`certificate_${index}_labOther`] = slot.labOther;
   });
 
-  if (result.reason === "validation") return { fieldErrors: result.fieldErrors, values };
-  if (result.reason === "rate_limited") {
-    return { formError: "Too many registration attempts from your network. Please try again later.", values };
+  if (result.reason === "validation") {
+    return { fieldErrors: result.fieldErrors, values, selectedCategoryIds };
   }
-  return { formError: "We could not create your account. Please try again.", values };
+  if (result.reason === "rate_limited") {
+    return {
+      formError: "Too many registration attempts from your network. Please try again later.",
+      values,
+      selectedCategoryIds,
+    };
+  }
+  return { formError: "We could not create your account. Please try again.", values, selectedCategoryIds };
 }

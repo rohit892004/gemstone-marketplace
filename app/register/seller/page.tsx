@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SellerRegisterForm } from "@/components/seller/seller-register-form";
+import { loadSellerCategories } from "@/lib/seller/categories";
 import { loadActiveCertificateLabs } from "@/lib/seller/labs";
 
 export const metadata: Metadata = {
@@ -27,6 +28,6 @@ export default function SellerRegisterPage() {
 }
 
 async function SellerRegisterFormLoader() {
-  const labs = await loadActiveCertificateLabs();
-  return <SellerRegisterForm labs={labs} />;
+  const [labs, categories] = await Promise.all([loadActiveCertificateLabs(), loadSellerCategories()]);
+  return <SellerRegisterForm labs={labs} categories={categories} />;
 }

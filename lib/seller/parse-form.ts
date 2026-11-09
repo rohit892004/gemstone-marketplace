@@ -1,4 +1,6 @@
 import { getEnv } from "@/lib/config/env";
+import type { CategoryOption } from "@/lib/seller/category-selection";
+import { MAX_CATEGORY_VALUES } from "@/lib/seller/category-selection";
 import type { CertificateLabOption } from "@/lib/seller/labs";
 import { validateSellerRegistration } from "@/lib/seller/validate";
 import type { RawCertificate, SellerRegistrationInput, UploadedFile, Validated, ValidatedSellerRegistration } from "@/lib/seller/types";
@@ -72,6 +74,10 @@ export async function extractSellerForm(form: FormData): Promise<SellerRegistrat
     pincode: text(form, "pincode"),
     yearsInBusiness: text(form, "yearsInBusiness"),
     specialties: splitSpecialties(text(form, "specialties")),
+    categoryIds: form
+      .getAll("categoryIds")
+      .filter((value): value is string => typeof value === "string")
+      .slice(0, MAX_CATEGORY_VALUES),
     idProof: await readFile(form, "idProof"),
     businessProof: await readFile(form, "businessProof"),
     certificates,
@@ -82,6 +88,7 @@ export async function extractSellerForm(form: FormData): Promise<SellerRegistrat
 export async function parseSellerForm(
   form: FormData,
   labs: readonly CertificateLabOption[],
+  categories: readonly CategoryOption[],
 ): Promise<Validated<ValidatedSellerRegistration>> {
-  return validateSellerRegistration(await extractSellerForm(form), labs);
+  return validateSellerRegistration(await extractSellerForm(form), labs, categories);
 }

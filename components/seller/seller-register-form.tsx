@@ -2,21 +2,29 @@
 
 import { useActionState } from "react";
 import { registerSellerAction, type SellerFormState } from "@/app/register/seller/actions";
+import type { CategoryOption } from "@/lib/seller/category-selection";
 import type { CertificateLabOption } from "@/lib/seller/labs";
 import { businessTypeLabels } from "@/lib/seller/labels";
 import { businessTypeValues } from "@/lib/validation/schemas";
-import { FileField, SelectField, TextField } from "./form-fields";
+import { CheckboxGroupField, FileField, SelectField, TextField } from "./form-fields";
 
 const initialState: SellerFormState = {};
 const CERTIFICATE_SLOTS = 5;
 
 const businessTypeOptions = businessTypeValues.map((value) => ({ value, label: businessTypeLabels[value] }));
 
-export function SellerRegisterForm({ labs }: { labs: readonly CertificateLabOption[] }) {
+export function SellerRegisterForm({
+  labs,
+  categories,
+}: {
+  labs: readonly CertificateLabOption[];
+  categories: readonly CategoryOption[];
+}) {
   const [state, formAction, pending] = useActionState(registerSellerAction, initialState);
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {};
   const labOptions = labs.map((lab) => ({ value: lab.code, label: lab.name }));
+  const categoryOptions = categories.map((category) => ({ value: category.id, label: category.name }));
 
   return (
     <form action={formAction} encType="multipart/form-data" noValidate className="space-y-10">
@@ -101,6 +109,15 @@ export function SellerRegisterForm({ labs }: { labs: readonly CertificateLabOpti
           hint="Comma-separated, for example: Ruby, Sapphire, Emerald."
           defaultValue={values.specialties}
           error={errors.specialties}
+        />
+        <CheckboxGroupField
+          name="categoryIds"
+          label="Gemstone categories you deal in"
+          required
+          hint="Choose at least one. Buyers' requirements are matched to sellers by category."
+          options={categoryOptions}
+          defaultValues={state.selectedCategoryIds}
+          error={errors.categoryIds}
         />
       </fieldset>
 

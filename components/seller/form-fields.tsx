@@ -111,6 +111,58 @@ export function SelectField({
   );
 }
 
+/** Multi-select as a group of checkboxes. All boxes share `name`, so the form posts every ticked value. */
+export function CheckboxGroupField({
+  name,
+  label,
+  options,
+  defaultValues,
+  error,
+  hint,
+  required,
+}: BaseProps & {
+  options: readonly { value: string; label: string }[];
+  defaultValues?: readonly string[];
+}) {
+  const hintId = hint ? `${name}-hint` : undefined;
+  const errorId = error ? `${name}-error` : undefined;
+  return (
+    <fieldset className="space-y-2" aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}>
+      <legend className="text-sm font-medium text-ink">
+        {label}
+        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+      </legend>
+      {hint ? (
+        <p id={hintId} className="text-xs text-ink-soft">
+          {hint}
+        </p>
+      ) : null}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map((option) => (
+          <label
+            key={option.value}
+            className="flex items-center gap-3 rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink"
+          >
+            <input
+              type="checkbox"
+              name={name}
+              value={option.value}
+              defaultChecked={defaultValues?.includes(option.value) ?? false}
+              className="h-4 w-4 accent-brand"
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+      {error ? (
+        <p id={errorId} className="text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+    </fieldset>
+  );
+}
+
 export function FileField({ name, label, error, hint, required }: BaseProps) {
   return (
     <FieldShell name={name} label={label} error={error} hint={hint} required={required}>
