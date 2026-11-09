@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { SessionLinks } from "@/components/auth/session-links";
+import { SignedOutLinks } from "@/components/auth/signed-out-links";
 
 const nav = [
   { href: "/gemstones", label: "Gemstones" },
@@ -25,18 +28,10 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-strong"
-          >
-            Join
-          </Link>
+          {/* Session state streams in; the signed-out links are the static fallback. */}
+          <Suspense fallback={<SignedOutLinks />}>
+            <SessionLinks />
+          </Suspense>
         </div>
       </div>
 
