@@ -12,7 +12,7 @@ export function LegalPage({ title, updated, children }: { title: string; updated
       </div>
       <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">{title}</h1>
       <p className="mt-2 text-sm text-ink-soft">Last updated: {updated} (draft)</p>
-      <div className="mt-8 flex flex-col gap-8 text-base leading-7 text-ink-soft [&_h2]:text-lg [&_h2]:font-medium [&_h2]:text-ink [&_ul]:list-disc [&_ul]:pl-6">
+      <div className="mt-8 flex flex-col gap-8 text-base leading-7 text-ink-soft [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:text-ink [&_ul]:list-disc [&_ul]:pl-6">
         {children}
       </div>
     </article>

@@ -59,7 +59,7 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
   const buttonClass =
     tone === "danger"
       ? "inline-flex min-h-11 items-center justify-center border border-danger px-6 py-3 text-sm tracking-wide text-danger hover:bg-danger/5 disabled:opacity-50"
-      : "inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-[#2e2b26] disabled:opacity-50";
+      : "inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-brand/90 disabled:opacity-50";
 
   return (
     <form action={formAction} aria-labelledby={`${formId}-title`} className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">

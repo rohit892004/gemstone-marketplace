@@ -1,3 +1,4 @@
+import { buttonClasses } from "@/components/ui/button";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -94,11 +95,11 @@ async function NewsList({ searchParams }: { searchParams: SearchParams }) {
             name="q"
             maxLength={120}
             defaultValue={q}
-            className="mt-1 w-full border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft"
+            className="mt-1 min-h-11 w-full border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             placeholder="Search by title or word"
           />
         </div>
-        <button type="submit" className="bg-ink px-5 py-2.5 text-sm font-medium text-surface-raised hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <button type="submit" className={buttonClasses({ className: "min-h-11 px-6" })}>
           Search
         </button>
       </form>

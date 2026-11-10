@@ -47,7 +47,7 @@ async function List() {
         title="No campaigns yet"
         body="Write the first issue of the newsletter, then schedule or send it."
         action={
-          <Link href="/admin/newsletter/campaigns/new" className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-[#2e2b26]">
+          <Link href="/admin/newsletter/campaigns/new" className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-brand/90">
             New campaign
           </Link>
         }

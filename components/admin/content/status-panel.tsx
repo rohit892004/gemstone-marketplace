@@ -41,7 +41,7 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
   const invalidWhen = !when || Number.isNaN(new Date(when).getTime());
 
   const buttonBase = "inline-flex min-h-11 items-center justify-center px-5 py-2.5 text-sm tracking-wide transition duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
-  const primary = `${buttonBase} bg-brand text-ivory hover:bg-[#2e2b26]`;
+  const primary = `${buttonBase} bg-brand text-ivory hover:bg-brand/90`;
   const secondary = `${buttonBase} border border-brand text-brand hover:bg-brand/5`;
   const danger = `${buttonBase} border border-danger text-danger hover:bg-danger/5`;
 

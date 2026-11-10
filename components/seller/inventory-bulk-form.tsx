@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { bulkAvailabilityAction, type InventoryActionState } from "@/app/seller/inventory/actions";
 import { availabilityLabels } from "@/lib/seller-catalogue/labels";
@@ -31,7 +32,7 @@ export function InventoryBulkForm({ formId }: { formId: string }) {
           ))}
         </select>
       </div>
-      <button type="submit" disabled={pending} className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60">
+      <button type="submit" disabled={pending} className={buttonClasses({ className: "disabled:opacity-60" })}>
         Apply
       </button>
       {state.error ? (

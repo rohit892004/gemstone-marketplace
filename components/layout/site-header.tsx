@@ -46,7 +46,7 @@ export function SiteHeader() {
             <SessionLinks />
           </Suspense>
           <details className="group relative lg:hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-1.5 px-2 py-2 text-[12px] uppercase tracking-[0.18em] text-ink hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-2 py-2 text-[12px] uppercase tracking-[0.18em] text-ink hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
               Menu
               <ChevronDown className="h-3.5 w-3.5 transition duration-300 group-open:rotate-180" strokeWidth={1.25} aria-hidden />
             </summary>

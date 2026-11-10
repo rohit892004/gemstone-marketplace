@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { uploadDocumentAction, type DocumentUploadState } from "@/app/seller/listings/actions";
 import { ImageFileField, FieldFrame } from "@/components/seller/catalogue-fields";
@@ -66,7 +67,7 @@ export function DocumentUploadForm({
           {state.message}
         </p>
       ) : null}
-      <button type="submit" disabled={pending} className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60">
+      <button type="submit" disabled={pending} className={buttonClasses({ className: "disabled:opacity-60" })}>
         {pending ? "Uploading..." : "Upload document"}
       </button>
     </form>

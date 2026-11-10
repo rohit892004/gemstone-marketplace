@@ -25,10 +25,10 @@ export function buttonClasses({
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
     "disabled:cursor-not-allowed disabled:opacity-50",
     size === "md" ? "px-6 py-3 text-sm" : "px-8 py-4 text-sm",
-    variant === "primary" && "bg-brand text-ivory hover:bg-[#2e2b26]",
+    variant === "primary" && "bg-brand text-ivory hover:bg-brand/90",
     variant === "secondary" && "border border-brand text-brand hover:bg-brand/5",
     variant === "ghost" && "text-ink hover:text-accent-text underline-offset-4 hover:underline",
-    variant === "gold" && "bg-champagne text-brand-strong hover:bg-[#e6d3a8]",
+    variant === "gold" && "bg-champagne text-brand-strong hover:bg-champagne/90",
     block && "w-full",
     className,
   );

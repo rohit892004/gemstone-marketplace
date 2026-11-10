@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { TopicFieldset } from "@/components/newsletter/topic-fieldset";
 import type { AdminActionState } from "@/lib/admin/action-state";
@@ -46,7 +47,7 @@ export function CampaignForm({
         <p className="text-[12px] text-ink-soft">Raw HTML is not allowed. Links must be https, http, mailto or site paths. The footer with the unsubscribe link is added automatically.</p>
       </div>
 
-      <button type="submit" disabled={pending} className="bg-brand px-4 py-2 text-ivory disabled:opacity-50">
+      <button type="submit" disabled={pending} className={buttonClasses({ className: "disabled:opacity-50" })}>
         {pending ? "Saving..." : submitLabel}
       </button>
 
