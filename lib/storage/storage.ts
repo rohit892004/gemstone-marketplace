@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getEnv } from "@/lib/config/env";
+import { createS3StorageFromEnv } from "@/lib/storage/s3-storage";
 
 /**
  * Private object storage. Keys are opaque relative paths like "sellers/abc/doc-1.pdf".
@@ -56,8 +57,15 @@ export function setStorageProviderForTests(provider: StorageProvider | undefined
   override = provider;
 }
 
+/** Chooses the provider from STORAGE_PROVIDER: "local" (default) or "s3". Refuses s3 without bucket and keys. */
 export function getStorageProvider(): StorageProvider {
   if (override) return override;
-  instance ??= new LocalDiskStorageProvider(path.resolve(getEnv().STORAGE_DIR));
+  if (!instance) {
+    const env = getEnv();
+    instance =
+      env.STORAGE_PROVIDER === "s3"
+        ? createS3StorageFromEnv(env)
+        : new LocalDiskStorageProvider(path.resolve(env.STORAGE_DIR));
+  }
   return instance;
 }
