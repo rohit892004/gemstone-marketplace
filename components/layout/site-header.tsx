@@ -25,13 +25,13 @@ export function SiteHeader() {
         <Link href="/" className="group flex min-w-0 items-center gap-3">
           <span className="block h-8 w-px bg-accent transition duration-500 group-hover:h-9" aria-hidden />
           <span className="flex min-w-0 flex-col leading-none">
-            <span className="whitespace-nowrap font-heading text-xl font-medium text-brand-strong sm:text-2xl">Gemstone Selections</span>
+            <span className="font-heading text-xl font-medium text-brand-strong sm:whitespace-nowrap sm:text-2xl xl:text-xl 2xl:text-2xl">Gemstone Selections</span>
             <span className="mt-1 hidden text-[10px] uppercase tracking-[0.3em] text-ink-soft sm:block">Verified stones, India</span>
           </span>
         </Link>
 
         {/* Desktop nav from xl (1280px): below that the logo, signed-in controls and six links do not fit with clear space. */}
-        <nav aria-label="Primary" className="hidden items-center gap-7 xl:flex xl:px-8">
+        <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex 2xl:gap-7">
           {nav.map((item) => (
             <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] uppercase tracking-[0.18em] text-ink-soft transition duration-300 hover:text-ink">
               {item.label}

@@ -176,7 +176,7 @@ function Figures({
         {data.listings.length === 0 ? (
           <EmptyState icon={Eye} title="No listing views in this range yet" body="Views appear here once buyers open your listings." action={<ButtonLink href="/seller/listings" variant="secondary">Review your listings</ButtonLink>} />
         ) : (
-          <div className="overflow-x-auto border border-line bg-surface-raised">
+          <div tabIndex={0} className="overflow-x-auto border border-line bg-surface-raised">
             <table className="w-full min-w-[560px] border-collapse text-left text-[14px]">
               <caption className="sr-only">Your top listings in the last {data.range.days} days</caption>
               <thead>
