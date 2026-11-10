@@ -1,3 +1,5 @@
+/* Mock signatures take arguments they do not use; the names document the call shape. */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Unit tests for the locked check-then-write guards. The real race (two transactions, one seller row) needs a
