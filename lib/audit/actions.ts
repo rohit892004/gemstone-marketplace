@@ -82,6 +82,17 @@ export const AuditAction = {
   MEMBERSHIP_OVERRIDE_SET: "membership.override_set",
   MEMBERSHIP_OVERRIDE_CLEARED: "membership.override_cleared",
   TIER_RULES_CHANGED: "membership.tier_rules_changed",
+  CONTENT_CREATED: "content.created",
+  CONTENT_UPDATED: "content.updated",
+  CONTENT_PUBLISHED: "content.published",
+  CONTENT_UNPUBLISHED: "content.unpublished",
+  CONTENT_ARCHIVED: "content.archived",
+  NEWSLETTER_CAMPAIGN_CREATED: "newsletter.campaign_created",
+  NEWSLETTER_CAMPAIGN_CANCELLED: "newsletter.campaign_cancelled",
+  NEWSLETTER_CAMPAIGN_SENT: "newsletter.campaign_sent",
+  NEWSLETTER_CAMPAIGN_TEST_SENT: "newsletter.campaign_test_sent",
+  EMAIL_SUPPRESSED: "email.suppressed",
+  EMAIL_SUPPRESSION_CLEARED: "email.suppression_cleared",
 } as const;
 
 export type AuditActionName = (typeof AuditAction)[keyof typeof AuditAction];

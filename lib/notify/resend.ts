@@ -15,11 +15,14 @@ export interface ResendPayload {
   to: string[];
   subject: string;
   text: string;
+  headers?: Record<string, string>;
 }
 
 /** Builds the JSON body for one message. Pure, so it can be tested without the network. */
 export function buildResendPayload(message: EmailMessage, from: string): ResendPayload {
-  return { from, to: [message.to], subject: message.subject, text: message.text };
+  const payload: ResendPayload = { from, to: [message.to], subject: message.subject, text: message.text };
+  if (message.headers && Object.keys(message.headers).length > 0) payload.headers = message.headers;
+  return payload;
 }
 
 type FetchLike = (input: string, init: RequestInit) => Promise<Response>;

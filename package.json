@@ -28,6 +28,7 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "dotenv": "^18.0.10",
+    "markdown-it": "^15.0.3",
     "next": "16.4.5",
     "next-auth": "^5.0.0-beta.32",
     "pg": "^8.23.1",
@@ -40,8 +41,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.65.0",
     "@tailwindcss/turbopack": "^4",
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",

@@ -101,19 +101,59 @@ enum MediaStatus {
 
 enum ArticleType {
   EDUCATION
+  GUIDE
   RESEARCH
   NEWS
 }
 
+/// Editorial lifecycle. SCHEDULED goes live at scheduledFor (the worker publishes it). ARCHIVED is hidden everywhere.
 enum ContentStatus {
   DRAFT
+  SCHEDULED
   PUBLISHED
+  ARCHIVED
 }
 
 enum CampaignStatus {
   DRAFT
   SCHEDULED
+  SENDING
   SENT
+  CANCELLED
+}
+
+/// Newsletter topics a subscriber can choose. Digests and campaigns target one or more of these.
+enum NewsletterTopic {
+  EDUCATION
+  MARKET_NEWS
+  NEW_LISTINGS
+  PLATFORM_UPDATES
+}
+
+enum SubscriberStatus {
+  PENDING
+  CONFIRMED
+  UNSUBSCRIBED
+}
+
+enum ConsentAction {
+  REQUESTED
+  CONFIRMED
+  TOPICS_CHANGED
+  UNSUBSCRIBED
+}
+
+enum SendStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum SuppressionReason {
+  BOUNCE
+  COMPLAINT
+  MANUAL
 }
 
 // ---------- Users and roles ----------
@@ -168,6 +208,9 @@ model User {
   reviewsModerated           Review[]                  @relation("ReviewModerator")
   listingsReviewed           Gemstone[]                @relation("ListingReviewer")
   listingDocsVerified        ListingDocument[]         @relation("ListingDocumentVerifier")
+  articlesAuthored           Article[]                 @relation("ArticleAuthor")
+  campaignsCreated           NewsletterCampaign[]      @relation("CampaignAuthor")
+  newsletterSubscriber       NewsletterSubscriber?     @relation("SubscriberUser")
 
   @@index([role, status])
 }
@@ -836,18 +879,65 @@ model Notification {
 // ---------- Content and newsletter ----------
 
 model Article {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  type        ArticleType
-  body        String
-  status      ContentStatus @default(DRAFT)
-  authorId    String?
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  type            ArticleType
+  /// Short standfirst, shown on cards and in search results.
+  summary         String?
+  /// Markdown source. Rendered with the strict sanitiser (lib/content/markdown.ts). Never raw HTML.
+  body            String
+  status          ContentStatus @default(DRAFT)
+  tags            String[]      @default([])
+  /// News only: the category shown on the card (e.g. "Market", "Trade").
+  category        String?
+  /// News only: attribution of the original source. Required for NEWS before publishing (checked in the service).
+  sourceName      String?
+  sourceUrl       String?
+  /// Cover image, stored through StorageProvider under an opaque key.
+  coverKey        String?
+  coverAlt        String?
+  readingMinutes  Int           @default(1)
+  metaDescription String?
+  authorId        String?
+  author          User?         @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  scheduledFor    DateTime?
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  /// Set on demo content only. Demo content is labelled and refused in production.
+  isDemo          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([type, status, publishedAt])
+  @@index([status, scheduledFor])
+}
+
+/// Structured Gemstone Reference Library page: one per gemstone type. Links to catalogue listings by categorySlug.
+model ReferenceEntry {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  name            String
+  /// Matches Category.slug, so the page can list matching catalogue listings and link to valuation.
+  categorySlug    String
+  summary         String
+  hardness        String?
+  /// Markdown sections, each rendered with the strict sanitiser.
+  properties      String
+  origins         String
+  treatments      String
+  qualityGuide    String
+  care            String
+  priceFactors    String
+  metaDescription String?
+  status          ContentStatus @default(DRAFT)
+  sortOrder       Int           @default(0)
+  publishedAt     DateTime?
+  isDemo          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, sortOrder])
 }
 
 model HomepageBlock {
@@ -859,24 +949,108 @@ model HomepageBlock {
   updatedAt DateTime @updatedAt
 }
 
+/// A newsletter subscriber. Email is stored normalised (lowercase, trimmed). Tokens are stored as SHA-256 hashes only.
 model NewsletterSubscriber {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  topics         String[]
-  verifiedAt     DateTime?
-  unsubscribedAt DateTime?
-  createdAt      DateTime  @default(now())
+  id               String            @id @default(cuid())
+  email            String            @unique
+  status           SubscriberStatus  @default(PENDING)
+  topics           NewsletterTopic[]
+  /// Set when a signed-in user manages subscriptions from account settings.
+  userId           String?           @unique
+  user             User?             @relation("SubscriberUser", fields: [userId], references: [id], onDelete: SetNull)
+  /// Double opt-in: the confirmation link. Valid for a limited time, single use.
+  confirmTokenHash String?           @unique
+  confirmExpiresAt DateTime?
+  /// Source of the sign-up (footer, homepage, article, account). Preference and unsubscribe links are signed, not stored.
+  source           String            @default("unknown")
+  confirmedAt      DateTime?
+  unsubscribedAt   DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  consents         NewsletterConsent[]
+  sends            NewsletterSend[]
+
+  @@index([status])
 }
 
+/// Consent record for DPDP: when, what was agreed to, and where it came from. The IP is stored as a salted hash only.
+model NewsletterConsent {
+  id           String              @id @default(cuid())
+  subscriberId String
+  subscriber   NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  action       ConsentAction
+  topics       NewsletterTopic[]
+  source       String
+  ipHash       String?
+  createdAt    DateTime            @default(now())
+
+  @@index([subscriberId, createdAt])
+}
+
+/// An admin campaign. Body is Markdown (strict sanitiser). Sent in batches by the worker through EmailProvider.
 model NewsletterCampaign {
-  id           String         @id @default(cuid())
-  subject      String
-  body         String
-  topics       String[]
-  status       CampaignStatus @default(DRAFT)
-  scheduledFor DateTime?
+  id             String            @id @default(cuid())
+  subject        String
+  preheader      String?
+  body           String
+  topics         NewsletterTopic[]
+  status         CampaignStatus    @default(DRAFT)
+  scheduledFor   DateTime?
+  createdById    String?
+  createdBy      User?             @relation("CampaignAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  testSentAt     DateTime?
+  startedAt      DateTime?
+  sentAt         DateTime?
+  recipientCount Int               @default(0)
+  sentCount      Int               @default(0)
+  failedCount    Int               @default(0)
+  skippedCount   Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  sends          NewsletterSend[]
+
+  @@index([status, scheduledFor])
+}
+
+/// One campaign to one subscriber. The unique pair makes batch sends safe to retry.
+model NewsletterSend {
+  id           String              @id @default(cuid())
+  campaignId   String
+  campaign     NewsletterCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriberId String
+  subscriber   NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  status       SendStatus          @default(QUEUED)
+  attempts     Int                 @default(0)
+  lastError    String?
   sentAt       DateTime?
-  createdAt    DateTime       @default(now())
+  createdAt    DateTime            @default(now())
+
+  @@unique([campaignId, subscriberId])
+  @@index([campaignId, status])
+}
+
+/// Addresses we must not email: provider bounces and complaints, or a manual block.
+model EmailSuppression {
+  email     String            @id
+  reason    SuppressionReason
+  source    String?
+  createdAt DateTime          @default(now())
+}
+
+/// Provider webhook events, stored by id, so a redelivered event is handled once.
+model WebhookEvent {
+  id        String   @id
+  provider  String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+/// The weekly digest is sent once per period. The unique key makes a second worker run a no-op.
+model NewsletterDigestRun {
+  id             String   @id @default(cuid())
+  periodKey      String   @unique
+  recipientCount Int      @default(0)
+  sentAt         DateTime @default(now())
 }
 
 // ---------- Operations ----------

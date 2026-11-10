@@ -5,6 +5,8 @@ export interface EmailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Extra headers, e.g. List-Unsubscribe for newsletters. Never carries secrets. */
+  headers?: Record<string, string>;
 }
 
 /** Sends transactional email. Implementations must not log secrets in production. */
