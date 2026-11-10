@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { coverUrl } from "@/lib/content/cover";
 import { DEMO_LABEL } from "@/lib/demo/guard";
+import { NewsletterSignup } from "@/components/newsletter/newsletter-signup";
 
 /** Shown on every demo item, public and admin. Demo content needs expert review before anyone relies on it. */
 export function DemoNotice({ className = "" }: { className?: string }) {
@@ -95,7 +96,7 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
   );
 }
 
-/** Newsletter sign-up on article and reference pages. Placeholder until the newsletter component is merged. */
+/** Newsletter sign-up on article and reference pages. */
 export function NewsletterSlot({ source }: { source: string }) {
-  return <div data-newsletter-slot={source} hidden />;
+  return <NewsletterSignup source={source} variant="inline" />;
 }

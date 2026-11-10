@@ -106,7 +106,7 @@ describe("digest content", () => {
   it("builds a plain-text body with links and the footer", () => {
     const sections = itemsForSubscriber(digestItemsFromSource(SOURCE), ["EDUCATION", "MARKET_NEWS"]);
     const text = digestText(sections, "tok123")!;
-    expect(text).toContain("Sapphire guide: https://example.test/learn/sapphire-guide");
+    expect(text).toContain("Sapphire guide: https://example.test/education/sapphire-guide");
     expect(text).toContain("Mine opens: https://example.test/news/mine-opens");
     expect(text).not.toContain("Blue sapphire");
     expect(text).toContain("Unsubscribe: https://example.test/newsletter/unsubscribe?token=tok123");

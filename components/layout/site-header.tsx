@@ -8,7 +8,7 @@ const nav = [
   { href: "/gemstones", label: "Gemstones" },
   { href: "/sellers", label: "Sellers" },
   { href: "/valuation", label: "Valuation" },
-  { href: "/learn", label: "Learn" },
+  { href: "/education", label: "Learn" },
   { href: "/news", label: "Market News" },
   { href: "/register/seller", label: "Become a Seller" },
 ];

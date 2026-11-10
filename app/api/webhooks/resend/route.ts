@@ -6,8 +6,6 @@ import { parseResendEvent, verifyResendWebhook } from "@/lib/newsletter/webhook"
  * Resend delivery events (Svix-signed). Bounces and complaints suppress the address, so we never mail it
  * again. The raw body is read first, because the signature covers the exact bytes.
  */
-export const runtime = "nodejs";
-
 const PROVIDER = "resend";
 
 /** The event types that suppress recipients. Other types are acknowledged and ignored. */

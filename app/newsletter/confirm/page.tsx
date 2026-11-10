@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TokenActionForm } from "@/components/newsletter/token-action-form";
@@ -14,7 +15,15 @@ export const metadata: Metadata = {
  * GET never changes state. It reports whether the link can still be used and offers a button.
  * The button posts to the confirmation action.
  */
-export default async function ConfirmPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default function ConfirmPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  return (
+    <Suspense fallback={null}>
+      <ConfirmView searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function ConfirmView({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   const outcome = token ? await pendingConfirmation(token) : "INVALID";
 

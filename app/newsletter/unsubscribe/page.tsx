@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TokenActionForm } from "@/components/newsletter/token-action-form";
@@ -12,7 +13,15 @@ export const metadata: Metadata = {
 };
 
 /** GET shows a button. The unsubscribe happens on POST, so link scanners cannot unsubscribe people. */
-export default async function UnsubscribePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default function UnsubscribePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  return (
+    <Suspense fallback={null}>
+      <UnsubscribeView searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function UnsubscribeView({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   const subscriber = token ? await subscriberForManageToken(token) : null;
 

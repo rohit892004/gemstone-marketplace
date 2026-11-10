@@ -241,6 +241,9 @@ model RateLimit {
   count       Int
   windowStart DateTime
   updatedAt   DateTime @updatedAt
+
+  /// The hourly cleanup deletes rows by age.
+  @@index([updatedAt])
 }
 
 model BuyerProfile {

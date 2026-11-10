@@ -89,7 +89,7 @@ export const HOMEPAGE_DEFAULTS: { [K in HomepageBlockKey]: HomepageBlockContent<
     heading: "Learn about gemstones",
     body: "Guides on grading, treatments and buying with confidence. Coming soon.",
     ctaLabel: "Visit Learn",
-    ctaHref: "/learn",
+    ctaHref: "/education",
   },
   newsTeaser: {
     heading: "Market news",

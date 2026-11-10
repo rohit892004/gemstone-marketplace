@@ -13,10 +13,6 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Footer" className="flex flex-col gap-2 text-sm">
           <Link href="/register/seller" className="text-ink-soft hover:text-ink">Become a Seller</Link>
-          <Link href="/about" className="text-ink-soft hover:text-ink">About</Link>
-          <Link href="/contact" className="text-ink-soft hover:text-ink">Contact</Link>
-          <Link href="/privacy" className="text-ink-soft hover:text-ink">Privacy</Link>
-          <Link href="/terms" className="text-ink-soft hover:text-ink">Terms</Link>
           <Link href="/legal/terms" className="text-ink-soft hover:text-ink">Terms of use</Link>
           <Link href="/legal/privacy" className="text-ink-soft hover:text-ink">Privacy notice</Link>
           <Link href="/legal/cookies" className="text-ink-soft hover:text-ink">Cookies</Link>

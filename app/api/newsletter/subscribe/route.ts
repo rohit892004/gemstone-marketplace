@@ -5,8 +5,6 @@ import { getClientIp } from "@/lib/security/client-ip";
  * Newsletter sign-up. Accepts JSON or a form post. The response is the same for every address that is
  * well-formed and has a topic: nothing says whether the address already subscribes or is suppressed.
  */
-export const runtime = "nodejs";
-
 const ACCEPTED_MESSAGE =
   "Thank you. If this address can receive our newsletter, we have sent a confirmation link. Check your inbox and spam folder.";
 

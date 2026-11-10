@@ -13,7 +13,7 @@ export default function NotFound() {
         <Link href="/" className="underline">Home</Link>
         <Link href="/gemstones" className="underline">Gemstones</Link>
         <Link href="/valuation" className="underline">Valuation</Link>
-        <Link href="/learn" className="underline">Learn</Link>
+        <Link href="/education" className="underline">Learn</Link>
       </nav>
     </section>
   );

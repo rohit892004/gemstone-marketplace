@@ -73,7 +73,7 @@ export function digestItemsFromSource(source: DigestSource): DigestItem[] {
   for (const article of source.articles) {
     for (const [topic, kinds] of Object.entries(ARTICLE_TYPES_BY_TOPIC) as [NewsletterTopicName, readonly DigestKind[]][]) {
       if (!kinds.includes(article.type)) continue;
-      const path = article.type === "NEWS" ? `/news/${encodeURIComponent(article.slug)}` : `/learn/${encodeURIComponent(article.slug)}`;
+      const path = article.type === "NEWS" ? `/news/${encodeURIComponent(article.slug)}` : `/education/${encodeURIComponent(article.slug)}`;
       items.push({ topic, kind: article.type, title: article.title, url: path });
     }
   }

@@ -16,6 +16,8 @@ const NAV = [
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/requirements", label: "Requirements" },
   { href: "/admin/homepage", label: "Homepage" },
+  { href: "/admin/content", label: "Content" },
+  { href: "/admin/newsletter", label: "Newsletter" },
   { href: "/admin/valuations", label: "Valuations" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/memberships", label: "Memberships" },
@@ -23,7 +25,7 @@ const NAV = [
   { href: "/admin/settings", label: "Settings" },
 ];
 
-const COMING_LATER = ["Buyers", "Content", "Audit log"];
+const COMING_LATER = ["Buyers", "Audit log"];
 
 /**
  * Admin shell. The session check lives in an async child inside <Suspense>

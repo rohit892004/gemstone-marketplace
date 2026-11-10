@@ -95,6 +95,19 @@ export async function createArticle(input: ArticleInput, actorId: string): Promi
 export async function updateArticle(id: string, input: ArticleInput, actorId: string): Promise<void> {
   const current = await prisma.article.findUnique({ where: { id }, select: { status: true, type: true } });
   if (!current) throw new ContentError("This item no longer exists.");
+  // A live or scheduled item must still meet the publish rules after the edit (e.g. news keeps its source).
+  if (current.status === "PUBLISHED" || current.status === "SCHEDULED") {
+    const problems = publishProblems({
+      type: input.type,
+      title: input.title,
+      body: input.body,
+      summary: input.summary,
+      sourceName: input.sourceName,
+      sourceUrl: input.sourceUrl,
+      metaDescription: input.metaDescription,
+    });
+    if (problems.length > 0) throw new ContentError(problems[0]!.message, problems);
+  }
   await prisma.article.update({ where: { id }, data: articleData(input) });
   await recordAudit({ action: AuditAction.CONTENT_UPDATED, actorId, entityType: "Article", entityId: id, meta: { status: current.status } });
 }
@@ -168,10 +181,23 @@ export async function changeArticleStatus(
 export async function publishDueArticles(now: Date = new Date()): Promise<number> {
   const due = await prisma.article.findMany({
     where: { status: "SCHEDULED", scheduledFor: { lte: now } },
-    select: { id: true },
   });
   let published = 0;
   for (const row of due) {
+    // Re-check the publish rules at publish time. An item that no longer qualifies stays SCHEDULED and is logged.
+    const problems = publishProblems({
+      type: row.type as ContentTypeName,
+      title: row.title,
+      body: row.body,
+      summary: row.summary,
+      sourceName: row.sourceName,
+      sourceUrl: row.sourceUrl,
+      metaDescription: row.metaDescription,
+    });
+    if (problems.length > 0) {
+      console.error(`[content] scheduled item ${row.id} not published: ${problems[0]!.message}`);
+      continue;
+    }
     const result = await prisma.article.updateMany({
       where: { id: row.id, status: "SCHEDULED" },
       data: { status: "PUBLISHED", publishedAt: now, scheduledFor: null },

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { INVALID_PREFERENCES_LINK } from "@/lib/newsletter/messages";
@@ -11,7 +12,15 @@ export const metadata: Metadata = {
 };
 
 /** Reached from the newsletter email. Works without a login: the signed token identifies the subscriber. */
-export default async function PreferencesPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+export default function PreferencesPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  return (
+    <Suspense fallback={null}>
+      <PreferencesView searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function PreferencesView({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   const subscriber = token ? await subscriberForManageToken(token) : null;
 

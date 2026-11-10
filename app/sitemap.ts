@@ -12,7 +12,7 @@ import { publicListingWhere } from "@/lib/listings/visibility";
  */
 
 // /register/* is disallowed in robots.txt, so it is not listed here.
-const STATIC_PATHS = ["/", "/gemstones", "/sellers", "/valuation", "/learn", "/news", "/newsletter"];
+const STATIC_PATHS = ["/", "/gemstones", "/sellers", "/valuation", "/education", "/reference", "/news", "/newsletter"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
