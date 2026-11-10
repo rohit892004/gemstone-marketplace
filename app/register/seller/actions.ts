@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getClientIp } from "@/lib/security/client-ip";
 import { extractSellerForm } from "@/lib/seller/parse-form";
 import { registerSeller } from "@/lib/seller/register-seller";
+import { attributeSellerReferral } from "./referral";
 
 export interface SellerFormState {
   fieldErrors?: Record<string, string>;
@@ -23,7 +24,12 @@ export async function registerSellerAction(
   const ip = getClientIp(await headers());
   const result = await registerSeller(input, { ip });
 
-  if (result.ok) redirect("/check-email");
+  if (result.ok) {
+    // Referral attribution is best-effort and never changes the outcome the applicant sees.
+    const ref = formData.get("ref");
+    await attributeSellerReferral({ email: input.email, ref: typeof ref === "string" ? ref : null });
+    redirect("/check-email");
+  }
 
   const selectedCategoryIds = input.categoryIds;
   const values: Record<string, string> = {

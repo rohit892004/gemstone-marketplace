@@ -16,9 +16,12 @@ const businessTypeOptions = businessTypeValues.map((value) => ({ value, label: b
 export function SellerRegisterForm({
   labs,
   categories,
+  referralCode,
 }: {
   labs: readonly CertificateLabOption[];
   categories: readonly CategoryOption[];
+  /** From ?ref= on the registration page. Carried in a hidden field; the server validates it. */
+  referralCode?: string;
 }) {
   const [state, formAction, pending] = useActionState(registerSellerAction, initialState);
   const errors = state.fieldErrors ?? {};
@@ -28,6 +31,7 @@ export function SellerRegisterForm({
 
   return (
     <form action={formAction} encType="multipart/form-data" noValidate className="space-y-10">
+      {referralCode ? <input type="hidden" name="ref" value={referralCode} /> : null}
       {state.formError ? (
         <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
           {state.formError}

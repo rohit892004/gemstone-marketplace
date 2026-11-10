@@ -3,6 +3,8 @@ import { connection } from "next/server";
 import { Carousel, CarouselItem } from "@/components/catalogue/carousel";
 import { ListingCard } from "@/components/catalogue/listing-card";
 import { SellerCard } from "@/components/catalogue/seller-card";
+import { TierBadge } from "@/components/membership/tier-badge";
+import { topRankedSellers } from "@/lib/seller-public/directory";
 import { publicListingWhere } from "@/lib/listings/visibility";
 import { loadCards } from "@/lib/listings/search";
 import { prisma } from "@/lib/db/client";
@@ -66,23 +68,8 @@ export async function TopSellers() {
   // Request-time: listings and ratings change as sellers publish and buyers review.
   // Without this, Cache Components prerenders the section at build time and it goes stale.
   await connection();
-  // Approved sellers with at least one public listing, best rated first.
-  const sellers = await prisma.sellerProfile.findMany({
-    where: { approvalStatus: "APPROVED", gemstones: { some: publicListingWhere() } },
-    orderBy: [{ ratingAverage: { sort: "desc", nulls: "last" } }, { reviewCount: "desc" }, { id: "asc" }],
-    take: 12,
-    select: {
-      slug: true,
-      businessName: true,
-      city: true,
-      state: true,
-      country: true,
-      specialties: true,
-      ratingAverage: true,
-      reviewCount: true,
-      isDemo: true,
-    },
-  });
+  // Approved sellers with at least one public listing, best rated first, with the membership boost added.
+  const sellers = await topRankedSellers(12);
   if (sellers.length === 0) return null;
 
   return (
@@ -93,12 +80,10 @@ export async function TopSellers() {
       <Carousel label="Top-rated verified sellers">
         {sellers.map((seller) => (
           <CarouselItem key={seller.slug}>
-            <SellerCard
-              seller={{
-                ...seller,
-                ratingAverage: seller.ratingAverage ? seller.ratingAverage.toString() : null,
-              }}
-            />
+            <div className="flex h-full flex-col gap-2">
+              <TierBadge tier={seller.tier} hasBadge={seller.hasBadge} />
+              <SellerCard seller={seller} />
+            </div>
           </CarouselItem>
         ))}
       </Carousel>

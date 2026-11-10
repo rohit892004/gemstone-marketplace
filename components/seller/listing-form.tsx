@@ -31,6 +31,10 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
   const errors = state.fieldErrors ?? {};
   const values = state.values ?? {};
   const v = (key: string, fallback = "") => values[key] ?? defaults[key] ?? fallback;
+  // The featured checkbox shows only when the page supplies the current state (defaults.sellerFeatured), or for a new
+  // listing. Otherwise saving leaves the featured flag alone, so an edit page without the state cannot un-feature.
+  const featuredKnown = listingId === undefined || "sellerFeatured" in defaults;
+  const featuredDefault = (values.sellerFeatured ?? defaults.sellerFeatured ?? "") === "true";
 
   return (
     <form action={formAction} noValidate className="space-y-10">
@@ -132,6 +136,29 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
           />
         </div>
       </fieldset>
+
+      {featuredKnown ? (
+        <fieldset className="space-y-3">
+          <legend className="text-lg font-semibold text-ink">Featured</legend>
+          <input type="hidden" name="sellerFeaturedSet" value="1" />
+          <label className="flex items-start gap-3 text-sm text-ink">
+            <input
+              type="checkbox"
+              name="sellerFeatured"
+              value="on"
+              defaultChecked={featuredDefault}
+              aria-describedby="sellerFeatured-hint"
+              className="mt-1 size-4"
+            />
+            <span>
+              <span className="font-medium">Feature this listing</span>
+              <span id="sellerFeatured-hint" className="block text-xs text-ink-soft">
+                Uses one of your membership&apos;s featured slots. Free members have no featured slots. Turning this off is always allowed.
+              </span>
+            </span>
+          </label>
+        </fieldset>
+      ) : null}
 
       <fieldset className="space-y-5">
         <legend className="text-lg font-semibold text-ink">Description</legend>

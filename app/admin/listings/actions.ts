@@ -11,6 +11,7 @@ import { appUrl } from "@/lib/config/app-url";
 import { prisma } from "@/lib/db/client";
 import { getEmailProvider } from "@/lib/notify/email";
 import { getClientIp } from "@/lib/security/client-ip";
+import { notifyFollowersOfNewListing } from "@/lib/membership/notify-followers";
 
 /**
  * Listing moderation. Every action: requireRole(["ADMIN"]) first, validate, one updateMany guarded
@@ -52,6 +53,10 @@ export async function approveListing(_prev: AdminActionState, formData: FormData
     data: { status: "PUBLISHED", publishedAt: now, reviewedAt: now, reviewedById: admin.id, rejectionReason: null },
   });
   if (result.count === 0) return { ok: false, error: STALE_LISTING_ERROR };
+
+  // Followers hear about the listing only now that it is published (the transition, not a later edit).
+  const followed = await prisma.gemstone.findUnique({ where: { id: listingId }, select: { sellerId: true, slug: true } });
+  if (followed) await notifyFollowersOfNewListing({ sellerId: followed.sellerId, listingSlug: followed.slug });
 
   await recordCatalogueAudit({
     action: CATALOGUE_AUDIT.LISTING_APPROVED,
