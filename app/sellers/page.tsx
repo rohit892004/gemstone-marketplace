@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SellerCard } from "@/components/catalogue/seller-card";
 import { type RawSearchParams } from "@/components/catalogue/query-params";
+import { TierBadge } from "@/components/membership/tier-badge";
 import { listSpecialties, searchSellers } from "@/lib/seller-public/directory";
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default function SellersPage({ searchParams }: { searchParams: Promise<Ra
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-ink">Sellers</h1>
-        <p className="mt-2 text-ink-soft">Approved gemstone sellers, ranked by rating.</p>
+        <p className="mt-2 text-ink-soft">Approved gemstone sellers, ranked by rating and membership.</p>
       </header>
       <Suspense fallback={null}>
         <SellersDirectory searchParams={searchParams} />
@@ -118,7 +119,8 @@ async function SellersDirectory({ searchParams }: { searchParams: Promise<RawSea
         ) : (
           <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {result.items.map((seller) => (
-              <li key={seller.slug}>
+              <li key={seller.slug} className="space-y-2">
+                <TierBadge tier={seller.tier} hasBadge={seller.hasBadge} />
                 <SellerCard seller={seller} />
               </li>
             ))}

@@ -12,6 +12,10 @@ import { checkRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { MESSAGING_ROLES } from "@/lib/messaging/access";
 import { getApprovedReviews, getPublicSellerBySlug, listSellerGemstones } from "@/lib/seller-public/queries";
+import { FollowButton } from "@/components/membership/follow-button";
+import { TierBadge } from "@/components/membership/tier-badge";
+import { loadTierRules } from "@/lib/membership/service";
+import { ruleFor, type Tier } from "@/lib/membership/tiers";
 
 /**
  * Public seller portfolio. Shows only public profile fields, APPROVED reviews and the seller's
@@ -48,10 +52,15 @@ async function SellerPortfolio({ params, searchParams }: Props) {
   const pageNum = Number.parseInt(Array.isArray(raw) ? (raw[0] ?? "") : (raw ?? ""), 10);
   const page = Number.isFinite(pageNum) && pageNum >= 1 && pageNum <= 1000 ? pageNum : 1;
 
-  const [reviews, gemstones] = await Promise.all([
+  const [reviews, gemstones, followerCount, membership, rules] = await Promise.all([
     getApprovedReviews(seller.id),
     listSellerGemstones(seller.id, page),
+    prisma.follow.count({ where: { sellerId: seller.id } }),
+    prisma.sellerMembership.findUnique({ where: { sellerId: seller.id }, select: { tier: true } }),
+    loadTierRules(),
   ]);
+  const tier: Tier = membership?.tier ?? "FREE";
+  const tierRule = ruleFor(rules, tier);
   const totalPages = Math.max(1, Math.ceil(gemstones.total / gemstones.pageSize));
   const dateFormat = new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" });
 
@@ -95,7 +104,11 @@ async function SellerPortfolio({ params, searchParams }: Props) {
               <h1 className="text-3xl font-semibold tracking-tight text-ink">{seller.businessName}</h1>
               <VerifiedSellerBadge />
               {seller.isDemo ? <DemoBadge /> : null}
+              <TierBadge tier={tier} hasBadge={tierRule.hasBadge} />
             </div>
+            <p className="text-sm text-ink-soft">
+              {followerCount} {followerCount === 1 ? "follower" : "followers"}
+            </p>
             {seller.tagline ? <p className="text-ink-soft">{seller.tagline}</p> : null}
             <p className="text-sm text-ink-soft">
               {[seller.city, seller.state, seller.country].filter(Boolean).join(", ")}
@@ -156,6 +169,7 @@ async function SellerPortfolio({ params, searchParams }: Props) {
           </div>
 
           <aside className="space-y-6">
+            <FollowSection slug={seller.slug} sellerId={seller.id} />
             <ContactSection slug={seller.slug} businessName={seller.businessName} sellerId={seller.id} />
 
             <section aria-labelledby="specialties-heading" className="rounded-lg border border-line bg-surface-raised p-5">
@@ -204,6 +218,51 @@ async function SellerPortfolio({ params, searchParams }: Props) {
         </div>
       </section>
     </>
+  );
+}
+
+/**
+ * Follow the seller. Buyers and sellers can follow an approved seller and get told about new listings. Signed-out
+ * visitors get a sign-in link that comes back here. A seller's own profile gets a note instead.
+ */
+async function FollowSection({ slug, sellerId }: { slug: string; sellerId: string }) {
+  const viewer = await checkRole(["BUYER", "SELLER"]);
+  let content: ReactNode;
+  if (!viewer.ok) {
+    content =
+      viewer.code === "UNAUTHENTICATED" || viewer.code === "EMAIL_NOT_VERIFIED" ? (
+        <Link
+          href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`}
+          className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
+        >
+          Sign in to follow
+        </Link>
+      ) : (
+        <p className="text-sm text-ink-soft">Following is available to buyer and seller accounts.</p>
+      );
+  } else {
+    const [owner, follow] = await Promise.all([
+      prisma.sellerProfile.findUnique({ where: { id: sellerId }, select: { userId: true } }),
+      prisma.follow.findUnique({
+        where: { followerId_sellerId: { followerId: viewer.user.id, sellerId } },
+        select: { id: true },
+      }),
+    ]);
+    content =
+      owner?.userId === viewer.user.id ? (
+        <p className="text-sm text-ink-soft">This is your business profile.</p>
+      ) : (
+        <FollowButton sellerSlug={slug} following={Boolean(follow)} />
+      );
+  }
+  return (
+    <section aria-labelledby="follow-heading" className="rounded-lg border border-line bg-surface-raised p-5">
+      <h2 id="follow-heading" className="text-base font-semibold text-ink">
+        Follow
+      </h2>
+      <p className="mt-2 text-sm text-ink-soft">Get an alert when this seller publishes a new listing.</p>
+      <div className="mt-3">{content}</div>
+    </section>
   );
 }
 

@@ -24,6 +24,8 @@ import { unpublishValuationsOnStoneChange } from "@/lib/valuation/service";
 import { getStorageProvider } from "@/lib/storage/storage";
 import { uploadErrorMessage, validateUpload } from "@/lib/storage/upload-validation";
 import { getEnv } from "@/lib/config/env";
+import { assertCanPublishListing, assertFeaturedSlot, MembershipError } from "@/lib/membership/service";
+import { notifyFollowersOfNewListing } from "@/lib/membership/notify-followers";
 
 /** Server actions for the seller listing editor. Every write is scoped to the signed-in seller. */
 
@@ -132,8 +134,25 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
     };
   }
 
+  // Membership limits, checked on the server before anything is written. A listing that is already published is
+  // not a new publish, so editing it never counts against the limit. Downgrades never remove a listing.
+  const becomesLive = (resolved.status === "PUBLISHED" || resolved.status === "PENDING_REVIEW") && current?.status !== "PUBLISHED";
+  const wantsFeatured = formData.get("sellerFeatured") === "on";
+  const featuredSent = text(formData, "sellerFeaturedSet") === "1";
+  try {
+    if (becomesLive) await assertCanPublishListing(seller.id);
+    if (featuredSent && wantsFeatured) await assertFeaturedSlot(seller.id, current?.id ?? "new-listing");
+  } catch (error) {
+    if (error instanceof MembershipError) {
+      return { formError: error.message, values: { ...values, sellerFeatured: wantsFeatured ? "true" : "false" } };
+    }
+    throw error;
+  }
+  const publishedNow = resolved.status === "PUBLISHED" && current?.status !== "PUBLISHED";
+
   const now = new Date();
   const fields = {
+    ...(featuredSent ? { sellerFeatured: wantsFeatured } : {}),
     title: input.title,
     categoryId: input.categoryId,
     species: input.species,
@@ -175,17 +194,21 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
       const changed = changedKeyStoneFields(before, fields);
       await unpublishValuationsOnStoneChange({ gemstoneId: current.id, changed, actorId: user.id });
     }
+    if (publishedNow) {
+      const live = await prisma.gemstone.findUnique({ where: { id: current.id }, select: { slug: true } });
+      if (live) await notifyFollowersOfNewListing({ sellerId: seller.id, listingSlug: live.slug });
+    }
     revalidateListing(current.id);
     return { saved: intent, values: undefined };
   }
 
   // Create with a unique slug. Retry only on a slug collision.
-  let created: { id: string } | null = null;
+  let created: { id: string; slug: string } | null = null;
   for (let attempt = 0; attempt < 5 && !created; attempt++) {
     try {
       created = await prisma.gemstone.create({
         data: { ...fields, sellerId: seller.id, slug: generateListingSlug(input.title) },
-        select: { id: true },
+        select: { id: true, slug: true },
       });
     } catch (error) {
       if (!isSlugCollision(error)) throw error;
@@ -193,6 +216,7 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   }
   if (!created) return { formError: "Could not save the listing. Try again." };
 
+  if (publishedNow) await notifyFollowersOfNewListing({ sellerId: seller.id, listingSlug: created.slug });
   revalidatePath("/seller/listings");
   revalidatePath("/seller/inventory");
   redirect(`${listingPath(created.id)}?saved=${intent}`);

@@ -42,6 +42,13 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// Membership guards and follower notices are tested in lib/membership; here they always allow and do nothing.
+vi.mock("@/lib/membership/service", () => ({
+  assertCanPublishListing: vi.fn(async () => undefined),
+  assertFeaturedSlot: vi.fn(async () => undefined),
+  MembershipError: class MembershipError extends Error {},
+}));
+vi.mock("@/lib/membership/notify-followers", () => ({ notifyFollowersOfNewListing: vi.fn(async () => 0) }));
 
 import { deleteDocumentAction, moveMediaAction, saveListingAction, uploadDocumentAction, uploadMediaAction } from "./actions";
 
