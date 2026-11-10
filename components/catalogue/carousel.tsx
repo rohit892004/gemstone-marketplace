@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useRef } from "react";
+import { useImpressionTracking } from "@/components/analytics/track";
 
 /**
  * Horizontal carousel: scroll-snap for touch and trackpad swiping, previous/next buttons,
@@ -9,6 +10,7 @@ import { type ReactNode, useRef } from "react";
  */
 export function Carousel({ label, children }: { label: string; children: ReactNode }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  useImpressionTracking(trackRef);
 
   function scrollByPage(direction: 1 | -1) {
     const track = trackRef.current;

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertNotOwnBusiness, OwnBusinessError, requireBuyerFeatures } from "@/lib/auth/buyer-access";
+import { trackServer } from "@/lib/analytics/server";
 import { AuthzError } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { publicListingWhere } from "@/lib/listings/visibility";
@@ -32,17 +33,25 @@ export async function addToWishlist(listingId: string): Promise<WishlistResult> 
 
     const listing = await prisma.gemstone.findFirst({
       where: { id: parsed.data, ...publicListingWhere() },
-      select: { id: true, seller: { select: { userId: true } } },
+      select: { id: true, seller: { select: { id: true, userId: true } } },
     });
     if (!listing) return { ok: false, error: WISHLIST_GENERIC_ERROR };
 
     assertNotOwnBusiness(user.id, listing.seller.userId);
 
+    const existing = await prisma.wishlistItem.findUnique({
+      where: { buyerId_gemstoneId: { buyerId: user.id, gemstoneId: listing.id } },
+      select: { buyerId: true },
+    });
     await prisma.wishlistItem.upsert({
       where: { buyerId_gemstoneId: { buyerId: user.id, gemstoneId: listing.id } },
       create: { buyerId: user.id, gemstoneId: listing.id },
       update: {},
     });
+    // Counted only when the item is newly added, not when it was already saved.
+    if (!existing) {
+      void trackServer({ kind: "WISHLIST_ADD", gemstoneId: listing.id, sellerId: listing.seller.id, ownerUserId: listing.seller.userId });
+    }
     revalidatePath("/buyer/wishlist");
     return { ok: true, saved: true };
   } catch (err) {

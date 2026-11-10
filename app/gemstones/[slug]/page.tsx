@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { TrackView } from "@/components/analytics/track";
 import { DemoBadge, VerifiedBadge } from "@/components/catalogue/badges";
 import { SellerCard } from "@/components/catalogue/seller-card";
 import { EnquireForm } from "@/components/product/enquire-form";
@@ -93,6 +94,7 @@ async function GemstoneDetail({ params }: Props) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <TrackView kind="LISTING_VIEW" gemstoneId={listing.id} />
       <nav aria-label="Breadcrumb" className="mb-6 text-sm text-ink-soft">
         <Link href="/gemstones" className="hover:text-ink">
           Gemstones

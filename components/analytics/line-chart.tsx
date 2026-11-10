@@ -11,7 +11,8 @@ import "uplot/dist/uPlot.min.css";
 
 export interface LineSeries {
   label: string;
-  values: number[];
+  /** Null is a gap (no data for that day), not a zero. */
+  values: (number | null)[];
   color: string;
 }
 

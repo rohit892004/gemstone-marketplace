@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { TrackSearch } from "@/components/analytics/track";
 import { CatalogueFilters } from "@/components/catalogue/filters";
 import { CatalogueResults } from "@/components/catalogue/results";
 import { type RawSearchParams, parseCatalogueParams } from "@/components/catalogue/query-params";
@@ -31,6 +32,7 @@ async function GemstonesResults({ searchParams }: { searchParams: Promise<RawSea
 
   return (
     <div className="grid gap-8 lg:grid-cols-[18rem_1fr]">
+      <TrackSearch term={query.q} />
       <aside aria-label="Filters">
         <CatalogueFilters
           action="/gemstones"

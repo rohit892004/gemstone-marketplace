@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma, type ConversationKind, type MessageKind } from "@/app/generated/prisma/client";
 import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
+import { trackServer } from "@/lib/analytics/server";
 import { prisma } from "@/lib/db/client";
 import { publicListingWhere } from "@/lib/listings/visibility";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
@@ -293,7 +294,7 @@ export async function startEnquiry(input: {
 }): Promise<{ conversationId: string; created: boolean; warning: string | null }> {
   const listing = await prisma.gemstone.findFirst({
     where: { id: input.gemstoneId, ...publicListingWhere() },
-    select: { id: true, title: true, seller: { select: { userId: true } } },
+    select: { id: true, title: true, seller: { select: { id: true, userId: true } } },
   });
   if (!listing) throw new MessagingError("NOT_AVAILABLE", "This gemstone is no longer available to enquire about.");
   if (isOwnListing(input.buyerId, listing.seller.userId)) {
@@ -320,6 +321,8 @@ export async function startEnquiry(input: {
       entityId: conversationId,
       meta: { gemstoneId: listing.id },
     });
+    // Counted once per conversation, on creation. A repeat enquiry on the same listing is not a new start.
+    void trackServer({ kind: "ENQUIRY_STARTED", gemstoneId: listing.id, sellerId: listing.seller.id, ownerUserId: listing.seller.userId });
     await notify({
       userId: listing.seller.userId,
       type: NOTIFICATION_TYPES.ENQUIRY_RECEIVED,

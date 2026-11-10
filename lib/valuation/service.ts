@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { Role } from "@/app/generated/prisma/client";
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
+import { trackServer } from "@/lib/analytics/server";
 import { prisma } from "@/lib/db/client";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 import type { NotificationType } from "@/lib/notifications/rules";
@@ -192,7 +193,7 @@ export async function createValuationDraft(input: CreateDraftInput): Promise<{ v
           certificateLabId: true,
           certificateNo: true,
           currency: true,
-          seller: { select: { userId: true } },
+          seller: { select: { id: true, userId: true } },
           media: { where: { type: "IMAGE", status: "READY" }, orderBy: { sortOrder: "asc" }, select: { fileKey: true, thumbKey: true, mimeType: true } },
         },
       })
@@ -224,6 +225,14 @@ export async function createValuationDraft(input: CreateDraftInput): Promise<{ v
   });
 
   if (gemstone) {
+    // A valuation requested from a listing counts for that listing and its seller. The seller's own requests do not.
+    void trackServer({
+      kind: "VALUATION_REQUESTED",
+      gemstoneId: gemstone.id,
+      sellerId: gemstone.seller.id,
+      categoryId: gemstone.categoryId,
+      ownerUserId: gemstone.seller.userId,
+    });
     // Copy the listing's images into private valuation storage. The listing's own files are not shared.
     const storage = getStorageProvider();
     let sortOrder = 0;

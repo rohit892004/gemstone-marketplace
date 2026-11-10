@@ -20,8 +20,13 @@ vi.mock("@/lib/db/client", () => ({
   prisma: {
     user: { findUnique: db.userFindUnique },
     gemstone: { findFirst: db.gemstoneFindFirst },
-    wishlistItem: { upsert: db.wishlistUpsert, deleteMany: db.wishlistDeleteMany },
+    wishlistItem: { findUnique: vi.fn(async () => null), upsert: db.wishlistUpsert, deleteMany: db.wishlistDeleteMany },
   },
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  trackServer: vi.fn(async () => undefined),
+  trackServerForSellerUser: vi.fn(async () => undefined),
 }));
 
 vi.mock("next/server", () => ({

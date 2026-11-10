@@ -12,7 +12,10 @@ export function ListingCard({ listing, priority = false }: { listing: ListingCar
     .filter(Boolean)
     .join(" · ");
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition hover:border-ink-soft/50">
+    <article
+      data-impression-id={listing.id}
+      className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition hover:border-ink-soft/50"
+    >
       <Link href={`/gemstones/${listing.slug}`} className="block focus-visible:outline-none">
         <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-accent-soft">
           {listing.coverUrl ? (
