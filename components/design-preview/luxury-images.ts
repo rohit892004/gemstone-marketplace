@@ -1,7 +1,6 @@
 /**
- * Photo slots for the luxury preview. Each file lives in public/design-preview/luxury/ once the real photos are
- * supplied (WebP, cropped as noted in docs/design/IMAGE-CREDITS.md). Until a file exists the preview shows a
- * plain charcoal panel instead, so nothing illustrated or made-up is shown.
+ * Photo slots for the luxury preview. Files live in public/design-preview/luxury/, produced from the Pixabay
+ * photos listed in docs/design/IMAGE-CREDITS.md. Until a file exists the preview shows a plain charcoal panel.
  */
 const DIR = "/design-preview/luxury";
 
@@ -16,7 +15,7 @@ export const LUXURY_PHOTOS = {
     emerald: `${DIR}/category-emerald.webp`,
     ruby: `${DIR}/category-ruby.webp`,
     sapphire: `${DIR}/category-sapphire.webp`,
-    spinel: `${DIR}/category-spinel.webp`,
-    tourmaline: `${DIR}/category-tourmaline.webp`,
+    amethyst: `${DIR}/category-amethyst.webp`,
+    opal: `${DIR}/category-opal.webp`,
   },
 } as const;

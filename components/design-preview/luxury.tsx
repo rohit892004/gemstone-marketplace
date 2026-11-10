@@ -11,13 +11,13 @@ import { LUXURY_PHOTOS } from "./luxury-images";
  * Demo data. Every "Demo" tag is small and quiet. Motion is slow: fades and a gentle image zoom.
  */
 
-const STONES = [
-  { name: "Cornflower sapphire", spec: "3.39 ct · round · Sri Lanka", price: "₹1,52,550", verified: true },
-  { name: "Pigeon blood ruby", spec: "1.17 ct · cushion · Mozambique", price: "₹70,200", verified: true },
-  { name: "Vivid green emerald", spec: "1.54 ct · round · Colombia", price: "₹80,080", verified: false },
-  { name: "G colour diamond", spec: "2.65 ct · oval · Botswana", price: "₹3,18,000", verified: true },
-  { name: "Hot pink spinel", spec: "1.91 ct · emerald cut · Myanmar", price: "₹34,380", verified: false },
-  { name: "Watermelon tourmaline", spec: "2.28 ct · pear · Nigeria", price: "On request", verified: true },
+const STONES: { name: string; spec: string; price: string; verified: boolean; photo: string }[] = [
+  { name: "Cornflower sapphire", spec: "3.39 ct · round · Sri Lanka", price: "₹1,52,550", verified: true, photo: LUXURY_PHOTOS.stones[2] },
+  { name: "Pigeon blood ruby", spec: "1.17 ct · cushion · Mozambique", price: "₹70,200", verified: true, photo: LUXURY_PHOTOS.stones[0] },
+  { name: "Vivid green emerald", spec: "1.54 ct · round · Colombia", price: "₹80,080", verified: false, photo: LUXURY_PHOTOS.stones[1] },
+  { name: "Brilliant diamond", spec: "2.65 ct · round · Botswana", price: "₹3,18,000", verified: true, photo: LUXURY_PHOTOS.stones[3] },
+  { name: "Violet amethyst", spec: "2.10 ct · cluster · Brazil", price: "₹12,400", verified: false, photo: LUXURY_PHOTOS.stones[4] },
+  { name: "Fire opal", spec: "1.80 ct · cabochon · Australia", price: "On request", verified: true, photo: LUXURY_PHOTOS.stones[5] },
 ];
 
 const SELLERS = [
@@ -32,8 +32,8 @@ const CATEGORIES = [
   { key: "emerald", label: "Emerald" },
   { key: "ruby", label: "Ruby" },
   { key: "sapphire", label: "Sapphire" },
-  { key: "spinel", label: "Spinel" },
-  { key: "tourmaline", label: "Tourmaline" },
+  { key: "amethyst", label: "Amethyst" },
+  { key: "opal", label: "Opal" },
 ] as const;
 
 /** A photo, or a plain charcoal panel when the file is not there yet. Never an illustration. */
@@ -64,7 +64,8 @@ function Fade({ children, className }: { children: ReactNode; className?: string
   return (
     <motion.div
       className={className}
-      initial={reduce ? false : { opacity: 0 }}
+      // Never fully hidden: content starts almost opaque and settles in, so nothing is blank before it is scrolled to.
+      initial={reduce ? false : { opacity: 0.85 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 1.1, ease: "easeOut" }}
@@ -120,7 +121,7 @@ function Hero() {
           </button>
         </form>
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[12px] uppercase tracking-[0.18em] text-[#bdb4a3]">
-          {["Diamond", "Emerald", "Ruby", "Sapphire", "Spinel"].map((c) => (
+          {["Diamond", "Emerald", "Ruby", "Sapphire", "Amethyst", "Opal"].map((c) => (
             <a key={c} href="#categories" className="hover:text-[#e6d3a8]">
               {c}
             </a>
@@ -181,12 +182,12 @@ function SellerCarousel() {
   );
 }
 
-function StoneCard({ s, i }: { s: (typeof STONES)[number]; i: number }) {
+function StoneCard({ s }: { s: (typeof STONES)[number] }) {
   const [saved, setSaved] = useState(false);
   return (
     <article className="group w-[260px] shrink-0 sm:w-[300px]">
       <div className="relative aspect-square overflow-hidden bg-[#1a1917]">
-        <Photo src={LUXURY_PHOTOS.stones[i]} alt={s.name} className="absolute inset-0" />
+        <Photo src={s.photo} alt={s.name} className="absolute inset-0" />
         <button
           type="button"
           aria-pressed={saved}
@@ -220,7 +221,7 @@ function FeaturedCarousel() {
   return (
     <Carousel label="gemstones">
       {STONES.map((s, i) => (
-        <StoneCard key={s.name} s={s} i={i} />
+        <StoneCard key={s.name} s={s} />
       ))}
     </Carousel>
   );
@@ -246,8 +247,8 @@ function CategoryTiles() {
 function ProductGrid() {
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-      {STONES.slice(0, 6).map((s, i) => (
-        <StoneCard key={`grid-${s.name}`} s={s} i={(i + 2) % STONES.length} />
+      {STONES.map((s) => (
+        <StoneCard key={`grid-${s.name}`} s={s} />
       ))}
     </div>
   );
@@ -284,9 +285,9 @@ function ProductTop() {
             <motion.div
               key={index}
               className="absolute inset-0"
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 0.85 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0.85 }}
               transition={{ duration: 0.8 }}
               style={{ transformOrigin: "var(--ox, 50%) var(--oy, 50%)" }}
             >
