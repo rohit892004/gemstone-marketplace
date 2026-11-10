@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { RequirementForm } from "@/components/requirements/requirement-form";
@@ -32,13 +35,16 @@ async function EditRequirement({ params }: Props) {
 
   if (requirement.status !== "OPEN") {
     return (
-      <section className="mx-auto max-w-3xl space-y-4 px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-semibold text-ink">This requirement is closed</h1>
-        <p className="text-sm text-ink-soft">Closed requirements can&apos;t be edited. Post a new requirement instead.</p>
-        <Link href="/seller/requirements/mine" className="inline-block text-sm font-medium text-brand-strong underline underline-offset-4">
-          Back to your requirements
-        </Link>
-      </section>
+      <EmptyState
+        icon={ClipboardList}
+        title="This requirement is closed"
+        body="Closed requirements can't be edited. Post a new requirement instead."
+        action={
+          <ButtonLink href="/seller/requirements/mine" variant="secondary">
+            Back to your requirements
+          </ButtonLink>
+        }
+      />
     );
   }
 
@@ -48,15 +54,15 @@ async function EditRequirement({ params }: Props) {
   ]);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-8 px-4 py-10 sm:px-6">
-      <div className="space-y-2">
+    <div className="max-w-3xl space-y-10">
+      <div className="space-y-3">
         <p className="text-sm">
           <Link href="/seller/requirements/mine" className="text-ink-soft hover:text-ink">
             Your requirements
           </Link>{" "}
           <span className="text-ink-soft">/ Edit</span>
         </p>
-        <h1 className="text-2xl font-semibold text-ink">Edit requirement</h1>
+        <h1 className="font-heading text-4xl text-ink">Edit requirement</h1>
       </div>
       <RequirementForm
         mode="edit"
@@ -67,6 +73,6 @@ async function EditRequirement({ params }: Props) {
         gemstoneTypeOptions={facets.species}
         shapeOptions={facets.shapes}
       />
-    </section>
+    </div>
   );
 }

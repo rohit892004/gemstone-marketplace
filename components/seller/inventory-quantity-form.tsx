@@ -25,13 +25,13 @@ export function InventoryQuantityForm({ listingId, quantity, title }: { listingI
         step={1}
         defaultValue={quantity}
         aria-invalid={state.error ? true : undefined}
-        className="w-24 rounded-md border border-line bg-surface-raised px-2 py-1 text-sm text-ink"
+        className="w-24 border border-line bg-surface-raised px-2 py-1 text-sm text-ink"
       />
-      <button type="submit" disabled={pending} className="rounded-md border border-line px-3 py-1 text-xs font-medium text-ink disabled:opacity-60">
+      <button type="submit" disabled={pending} className=" border border-line px-3 py-1 text-xs font-medium text-ink disabled:opacity-60">
         Save
       </button>
       {state.error ? (
-        <span role="alert" className="text-xs text-red-700">
+        <span role="alert" className="text-xs text-danger">
           {state.error}
         </span>
       ) : state.message ? (

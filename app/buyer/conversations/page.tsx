@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { MessagesSquare } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ConversationRows } from "@/components/messaging/conversation-rows";
 import { listConversationsForUser } from "@/lib/messaging/service";
 import { requireBuyerPage } from "../guard";
@@ -28,17 +31,21 @@ async function Conversations() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">Messages stay on Gemstone Selections.</p>
-        <Link href="/conversations" className="text-sm font-medium text-brand-strong underline underline-offset-4">
+        <Link href="/conversations" className="inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4 hover:text-accent-text">
           Search all conversations
         </Link>
       </div>
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-          <h2 className="text-lg font-semibold text-ink">No conversations yet</h2>
-          <p className="mt-2 text-sm text-ink-soft">
-            Message a seller from their portfolio page, or post a requirement so sellers can respond.
-          </p>
-        </div>
+        <EmptyState
+          icon={MessagesSquare}
+          title="No conversations yet"
+          body="Message a seller from their portfolio page, or post a requirement so sellers can respond."
+          action={
+            <ButtonLink href="/buyer/requirements/new" variant="secondary">
+              Post a requirement
+            </ButtonLink>
+          }
+        />
       ) : (
         <ConversationRows items={items} />
       )}

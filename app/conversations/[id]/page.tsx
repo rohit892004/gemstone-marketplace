@@ -78,20 +78,20 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
       : null;
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <Link href="/conversations" className="text-sm text-brand hover:underline">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
+      <Link href="/conversations" className="text-sm text-ink underline underline-offset-4 hover:text-accent-text">
         ← All conversations
       </Link>
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-widest text-accent-text">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-accent-text">
             {conversation.kind === "ENQUIRY" ? "Enquiry" : conversation.kind === "REQUIREMENT" ? "Requirement" : "Conversation"}
             {conversation.isDemo && " · Demo"}
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">{counterpartLabel}</h1>
+          <h1 className="mt-2 font-heading text-4xl text-ink">{counterpartLabel}</h1>
           {subject && (
             <p className="mt-1 text-sm text-ink-soft">
-              {subject.href ? <Link href={subject.href} className="text-brand hover:underline">{subject.label}</Link> : subject.label}
+              {subject.href ? <Link href={subject.href} className="text-ink underline underline-offset-4 hover:text-accent-text">{subject.label}</Link> : subject.label}
             </p>
           )}
         </div>
@@ -108,6 +108,6 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
           context={context}
         />
       </div>
-    </section>
+    </div>
   );
 }

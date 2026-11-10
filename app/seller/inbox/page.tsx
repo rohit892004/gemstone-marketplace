@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Inbox as InboxIcon } from "lucide-react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
+import { Badge, DemoTag } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/field";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requireRole } from "@/lib/auth/require-role";
 import { listConversationsForUser, type ConversationListItem } from "@/lib/messaging/service";
 import { gateApprovedSeller } from "@/lib/seller/approved-gate";
@@ -76,49 +83,52 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
   const unreadTotal = items.reduce((sum, item) => sum + item.unreadCount, 0);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm uppercase tracking-widest text-accent-text">Inbox</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Conversations</h1>
-        </div>
-        {unreadTotal > 0 && (
-          <p className="rounded-full bg-brand px-3 py-1 text-sm font-medium text-white">{unreadTotal} unread</p>
-        )}
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Inbox"
+        title="Conversations"
+        lead="Enquiries, requirement responses and chats with buyers and sellers in one place."
+        actions={unreadTotal > 0 ? <Badge tone="accent">{unreadTotal} unread</Badge> : null}
+      />
 
       <form method="get" className="flex flex-col gap-3 sm:flex-row">
         {kind !== "all" && <input type="hidden" name="kind" value={kind} />}
         {side !== "all" && <input type="hidden" name="side" value={side} />}
         <label className="sr-only" htmlFor="inbox-q">Search conversations</label>
-        <input
+        <Input
           id="inbox-q"
           name="q"
           defaultValue={q}
           placeholder="Search by buyer, business or gemstone"
-          className="w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+          className="sm:flex-1"
         />
-        <button type="submit" className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface">
+        <Button type="submit" variant="secondary" className="min-h-11">
           Search
-        </button>
+        </Button>
       </form>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <FilterRow label="Side" tabs={sideTabs} active={side} hrefFor={(value) => inboxHref(kind, value)} />
         <FilterRow label="Type" tabs={kindTabs} active={kind} hrefFor={(value) => inboxHref(value, side)} />
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-          <h2 className="text-lg font-semibold text-ink">No conversations here yet</h2>
-          <p className="mt-2 text-sm text-ink-soft">
-            {side === "buying"
+        <EmptyState
+          icon={InboxIcon}
+          title="No conversations here yet"
+          body={
+            side === "buying"
               ? "Enquiries you make on other sellers' listings, requirements you post and responses to them appear here."
-              : "Buyers who enquire about your listings, and sellers you contact, appear here. Requirement responses also start here."}
-          </p>
-        </div>
+              : "Buyers who enquire about your listings, and sellers you contact, appear here. Requirement responses also start here."
+          }
+          action={
+            <ButtonLink href="/seller/listings" variant="secondary">
+              Review your listings
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised">
+        <ul className="divide-y divide-line border border-line bg-surface-raised">
           {items.map((item) => (
             <li key={item.id}>
               <InboxRow item={item} />
@@ -126,7 +136,7 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
           ))}
         </ul>
       )}
-    </section>
+    </div>
   );
 }
 
@@ -142,24 +152,10 @@ function FilterRow<T extends string>({
   hrefFor: (value: T) => string;
 }) {
   return (
-    <nav aria-label={`Filter by ${label.toLowerCase()}`} className="flex flex-wrap items-center gap-2">
-      <span className="w-12 text-xs uppercase tracking-widest text-ink-soft">{label}</span>
-      <ul className="flex flex-wrap gap-2">
-        {tabs.map((t) => (
-          <li key={t.value}>
-            <Link
-              href={hrefFor(t.value)}
-              aria-current={active === t.value ? "page" : undefined}
-              className={`rounded-full border px-3 py-1 text-sm ${
-                active === t.value ? "border-brand bg-brand text-white" : "border-line text-ink-soft"
-              }`}
-            >
-              {t.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <Tabs
+      label={`Filter by ${label.toLowerCase()}`}
+      items={tabs.map((t) => ({ href: hrefFor(t.value), label: t.label, active: active === t.value }))}
+    />
   );
 }
 
@@ -173,25 +169,24 @@ function InboxRow({ item }: { item: ConversationListItem }) {
   const title = item.counterpart.businessName ?? item.counterpart.name ?? "Member";
   const subject = item.gemstone?.title ?? (item.requirement ? `Requirement: ${item.requirement.gemstoneType}` : null);
   return (
-    <Link href={`/conversations/${item.id}`} className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-surface">
-      <div className="min-w-0">
-        <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-accent-text">
-          <span>{kindLabels[item.kind]}</span>
-          <span className="text-ink-soft">{item.side === "BUYING" ? "Buying" : "Selling"}</span>
-          {item.isDemo && <span className="rounded bg-accent-soft px-1.5 py-0.5 normal-case tracking-normal text-ink">Demo</span>}
+    <Link
+      href={`/conversations/${item.id}`}
+      className="flex min-h-[4.5rem] items-start justify-between gap-4 px-4 py-4 transition duration-300 hover:bg-accent-soft/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:px-5"
+    >
+      <div className="min-w-0 space-y-1.5">
+        <p className="flex flex-wrap items-center gap-2">
+          <Badge tone="accent">{kindLabels[item.kind]}</Badge>
+          <Badge>{item.side === "BUYING" ? "Buying" : "Selling"}</Badge>
+          {item.isDemo ? <DemoTag /> : null}
+          {item.blocked ? <Badge tone="danger">Blocked</Badge> : null}
         </p>
-        <p className="mt-1 flex items-center gap-2 font-medium text-ink">
-          <span className="truncate">{title}</span>
-          {item.blocked && <span className="text-xs font-normal text-ink-soft">Blocked</span>}
-        </p>
+        <p className="truncate font-heading text-xl text-ink">{title}</p>
         {subject && <p className="truncate text-sm text-ink-soft">{subject}</p>}
-        {item.lastMessage && <p className="mt-1 truncate text-sm text-ink-soft">{item.lastMessage.body}</p>}
+        {item.lastMessage && <p className="truncate text-sm text-ink-soft">{item.lastMessage.body}</p>}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1 text-xs text-ink-soft">
-        <span>{item.lastMessageAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
-        {item.unreadCount > 0 && (
-          <span className="rounded-full bg-brand px-2 py-0.5 font-medium text-white">{item.unreadCount} new</span>
-        )}
+      <div className="flex shrink-0 flex-col items-end gap-2 text-xs text-ink-soft">
+        <span className="tabular-nums">{item.lastMessageAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
+        {item.unreadCount > 0 && <Badge tone="accent">{item.unreadCount} new</Badge>}
       </div>
     </Link>
   );

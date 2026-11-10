@@ -20,7 +20,7 @@ export function InventoryBulkForm({ formId }: { formId: string }) {
         <label htmlFor="bulk-availability" className="block text-sm font-medium text-ink">
           Set availability for selected listings
         </label>
-        <select id="bulk-availability" name="availability" defaultValue="" className="block rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink">
+        <select id="bulk-availability" name="availability" defaultValue="" className="block border border-line bg-surface-raised px-3 py-2 text-sm text-ink">
           <option value="" disabled>
             Choose availability
           </option>
@@ -31,11 +31,11 @@ export function InventoryBulkForm({ formId }: { formId: string }) {
           ))}
         </select>
       </div>
-      <button type="submit" disabled={pending} className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60">
         Apply
       </button>
       {state.error ? (
-        <p role="alert" className="w-full text-sm text-red-700">
+        <p role="alert" className="w-full text-sm text-danger">
           {state.error}
         </p>
       ) : state.message ? (

@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Gem, Plus } from "lucide-react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requireRole } from "@/lib/auth/require-role";
 import { gateApprovedSeller } from "@/lib/seller/approved-gate";
 import { availabilityLabels, listingStatusLabels, priceLabel } from "@/lib/seller-catalogue/labels";
@@ -26,6 +33,12 @@ const filters: { value: ListingStatusFilter; label: string }[] = [
   { value: "ARCHIVED", label: "Archived" },
 ];
 
+const statusTone: Record<string, BadgeTone> = {
+  PUBLISHED: "success",
+  PENDING_REVIEW: "warning",
+  REJECTED: "danger",
+};
+
 async function SellerListingsView({ searchParams }: { searchParams: SearchParams }) {
   const state = await gateApprovedSeller();
   if (state !== "approved") return <AwaitingApprovalPage title="Listings" />;
@@ -35,77 +48,84 @@ async function SellerListingsView({ searchParams }: { searchParams: SearchParams
   const data = await loadSellerListings(user.id, query);
   const linkFor = (page: number) => `/seller/listings?status=${query.status}&page=${page}`;
 
-  return (
-    <section className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Listings</h1>
-        <Link href="/seller/listings/new" className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white">
-          New listing
+  const columns: Column<(typeof data.rows)[number]>[] = [
+    { key: "title", header: "Title", cell: (row) => <span className="font-heading text-lg text-ink">{row.title}</span> },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => <Badge tone={statusTone[row.status] ?? "neutral"}>{listingStatusLabels[row.status] ?? row.status}</Badge>,
+    },
+    { key: "availability", header: "Availability", hideOnMobile: true, cell: (row) => availabilityLabels[row.availability] ?? row.availability },
+    {
+      key: "price",
+      header: "Price",
+      hideOnMobile: true,
+      cell: (row) => priceLabel({ priceMinor: row.priceMinor, priceOnRequest: row.priceOnRequest, currency: row.currency }),
+    },
+    { key: "media", header: "Media", hideOnMobile: true, align: "right", cell: (row) => row._count.media },
+    { key: "documents", header: "Documents", hideOnMobile: true, align: "right", cell: (row) => row._count.documents },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      cell: (row) => (
+        <Link
+          href={`/seller/listings/${row.id}/edit`}
+          className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-ink underline underline-offset-4 hover:text-accent-text"
+        >
+          Edit<span className="sr-only"> {row.title}</span>
         </Link>
-      </div>
+      ),
+    },
+  ];
 
-      <nav aria-label="Filter by status">
-        <ul className="flex flex-wrap gap-2">
-          {filters.map((filter) => (
-            <li key={filter.value}>
-              <Link
-                href={`/seller/listings?status=${filter.value}`}
-                aria-current={query.status === filter.value ? "page" : undefined}
-                className={`rounded-full border px-3 py-1 text-sm ${
-                  query.status === filter.value ? "border-brand bg-brand text-white" : "border-line text-ink-soft"
-                }`}
-              >
-                {filter.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Catalogue"
+        title="Listings"
+        lead="Stones you offer to buyers. Drafts stay private until you submit them for review."
+        actions={
+          <ButtonLink href="/seller/listings/new" variant="gold">
+            <Plus className="h-4 w-4" strokeWidth={1.25} aria-hidden />
+            New listing
+          </ButtonLink>
+        }
+      />
 
-      {data.rows.length === 0 ? (
-        <p className="text-ink-soft">No listings match this filter.</p>
-      ) : (
-        <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <caption className="sr-only">Your listings</caption>
-            <thead className="border-b border-line text-ink-soft">
-              <tr>
-                <th scope="col" className="py-2 pr-4 font-medium">Title</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Status</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Availability</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Price</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Media</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Documents</th>
-                <th scope="col" className="py-2 font-medium"><span className="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {data.rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="py-3 pr-4 font-medium text-ink">{row.title}</td>
-                  <td className="py-3 pr-4 text-ink-soft">{listingStatusLabels[row.status] ?? row.status}</td>
-                  <td className="py-3 pr-4 text-ink-soft">{availabilityLabels[row.availability] ?? row.availability}</td>
-                  <td className="py-3 pr-4 text-ink-soft">
-                    {priceLabel({ priceMinor: row.priceMinor, priceOnRequest: row.priceOnRequest, currency: row.currency })}
-                  </td>
-                  <td className="py-3 pr-4 text-ink-soft">{row._count.media}</td>
-                  <td className="py-3 pr-4 text-ink-soft">{row._count.documents}</td>
-                  <td className="py-3">
-                    <Link href={`/seller/listings/${row.id}/edit`} className="font-medium text-brand underline">
-                      Edit<span className="sr-only"> {row.title}</span>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Tabs
+        label="Filter by status"
+        items={filters.map((filter) => ({
+          href: `/seller/listings?status=${filter.value}`,
+          label: filter.label,
+          active: query.status === filter.value,
+        }))}
+      />
+
+      <DataTable
+        caption="Your listings"
+        columns={columns}
+        rows={data.rows}
+        getRowKey={(row) => row.id}
+        empty={
+          <EmptyState
+            icon={Gem}
+            title="No listings match this filter"
+            body="Try another status, or add a new stone to start a listing."
+            action={
+              <ButtonLink href="/seller/listings/new" variant="secondary">
+                New listing
+              </ButtonLink>
+            }
+            className="border-0 p-6 text-left sm:p-8"
+          />
+        }
+      />
 
       {data.pages > 1 ? (
         <nav aria-label="Pagination" className="flex items-center justify-between text-sm">
           {data.page > 1 ? (
-            <Link href={linkFor(data.page - 1)} className="text-brand underline">
+            <Link href={linkFor(data.page - 1)} className="inline-flex min-h-11 items-center text-ink underline underline-offset-4">
               Previous
             </Link>
           ) : (
@@ -115,7 +135,7 @@ async function SellerListingsView({ searchParams }: { searchParams: SearchParams
             Page {data.page} of {pageCount(data.total)}
           </span>
           {data.page < data.pages ? (
-            <Link href={linkFor(data.page + 1)} className="text-brand underline">
+            <Link href={linkFor(data.page + 1)} className="inline-flex min-h-11 items-center text-ink underline underline-offset-4">
               Next
             </Link>
           ) : (
@@ -123,6 +143,6 @@ async function SellerListingsView({ searchParams }: { searchParams: SearchParams
           )}
         </nav>
       ) : null}
-    </section>
+    </div>
   );
 }

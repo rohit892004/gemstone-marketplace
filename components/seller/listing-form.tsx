@@ -41,18 +41,18 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
       {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
 
       {state.saved ?? savedNotice ? (
-        <p role="status" className="rounded-md border border-line bg-surface-raised px-4 py-3 text-sm text-ink">
+        <p role="status" className=" border border-line bg-surface-raised px-4 py-3 text-sm text-ink">
           {(state.saved ?? savedNotice) === "submit" ? "Submitted for review." : "Draft saved."}
         </p>
       ) : null}
       {state.formError ? (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className=" border border-danger/40 bg-surface-raised px-4 py-3 text-sm text-danger">
           {state.formError}
         </p>
       ) : null}
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Listing</legend>
+        <legend className="font-heading text-2xl text-ink">Listing</legend>
         <TextField name="title" label="Title" required error={errors.title} defaultValue={v("title")} hint="For example: 3.2 ct Blue Sapphire, Ceylon, unheated" />
         <SelectField
           name="categoryId"
@@ -78,7 +78,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Certificate</legend>
+        <legend className="font-heading text-2xl text-ink">Certificate</legend>
         <SelectField
           name="certificateLabId"
           label="Certificate lab"
@@ -91,7 +91,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Price and stock</legend>
+        <legend className="font-heading text-2xl text-ink">Price and stock</legend>
         <RadioGroup
           name="priceMode"
           legend="Pricing"
@@ -139,7 +139,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
 
       {featuredKnown ? (
         <fieldset className="space-y-3">
-          <legend className="text-lg font-semibold text-ink">Featured</legend>
+          <legend className="font-heading text-2xl text-ink">Featured</legend>
           <input type="hidden" name="sellerFeaturedSet" value="1" />
           <label className="flex items-start gap-3 text-sm text-ink">
             <input
@@ -161,7 +161,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
       ) : null}
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Description</legend>
+        <legend className="font-heading text-2xl text-ink">Description</legend>
         <TextAreaField name="description" label="Description" rows={6} maxLength={4000} error={errors.description} defaultValue={v("description")} />
       </fieldset>
 
@@ -171,7 +171,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
           name="intent"
           value="draft"
           disabled={pending}
-          className="rounded-md border border-line bg-surface-raised px-4 py-2 text-sm font-medium text-ink disabled:opacity-60"
+          className=" border border-line bg-surface-raised px-4 py-2 text-sm font-medium text-ink disabled:opacity-60"
         >
           Save draft
         </button>
@@ -180,7 +180,7 @@ export function ListingForm({ listingId, categories, labs, defaults, savedNotice
           name="intent"
           value="submit"
           disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60"
         >
           Submit for review
         </button>

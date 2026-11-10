@@ -19,7 +19,7 @@ export interface EditorMedia {
 }
 
 const buttonClass =
-  "rounded-md border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink disabled:opacity-40";
+  " border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink disabled:opacity-40";
 
 export function ListingMedia({ listingId, media }: { listingId: string; media: readonly EditorMedia[] }) {
   const ordered = sortMedia(media);
@@ -28,7 +28,7 @@ export function ListingMedia({ listingId, media }: { listingId: string; media: r
 
   return (
     <section aria-labelledby="media-heading" className="space-y-5">
-      <h2 id="media-heading" className="text-lg font-semibold text-ink">
+      <h2 id="media-heading" className="font-heading text-2xl text-ink">
         Photos and videos
       </h2>
       <p className="text-sm text-ink-soft">
@@ -44,8 +44,8 @@ export function ListingMedia({ listingId, media }: { listingId: string; media: r
           const isFirst = index === 0;
           const isLast = index === ordered.length - 1;
           return (
-            <li key={item.id} className="space-y-2 rounded-md border border-line bg-surface-raised p-3">
-              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded bg-accent-soft text-sm text-ink-soft">
+            <li key={item.id} className="space-y-2 border border-line bg-surface-raised p-3">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-accent-soft text-sm text-ink-soft">
                 {item.type === "IMAGE" && item.status === "READY" ? (
                   <Image src={mediaUrl(item.id, "thumb")} alt="" fill unoptimized sizes="240px" className="object-cover" />
                 ) : (
@@ -54,7 +54,7 @@ export function ListingMedia({ listingId, media }: { listingId: string; media: r
               </div>
               <p className="flex flex-wrap items-center gap-2 text-sm text-ink">
                 <span className="font-medium">{label}</span>
-                {item.isCover ? <span className="rounded bg-brand px-2 py-0.5 text-xs text-white">Cover</span> : null}
+                {item.isCover ? <span className=" bg-brand px-2 py-0.5 text-xs text-ivory">Cover</span> : null}
               </p>
               <div className="flex flex-wrap gap-2">
                 <form action={moveMediaAction}>

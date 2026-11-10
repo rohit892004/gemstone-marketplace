@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { HandCoins } from "lucide-react";
+import { Badge, DemoTag } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Suspense } from "react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { requireRole } from "@/lib/auth/require-role";
@@ -30,22 +34,28 @@ async function SellerOffers() {
   const offers = await listOffersForUser(user.id);
 
   return (
-    <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
+    <div className="max-w-4xl space-y-8">
       <div>
-        <p className="text-sm uppercase tracking-widest text-accent-text">Offers</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Offers and counter offers</h1>
+        <p className="text-[11px] uppercase tracking-[0.28em] text-accent-text">Offers</p>
+        <h1 className="mt-2 font-heading text-4xl text-ink">Offers and counter offers</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Offers are answered inside their conversation. Offers waiting for you are listed first.
         </p>
       </div>
 
       {offers.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-          <h2 className="text-lg font-semibold text-ink">No offers yet</h2>
-          <p className="mt-2 text-sm text-ink-soft">When a buyer makes an offer on one of your listings, it appears here.</p>
-        </div>
+        <EmptyState
+          icon={HandCoins}
+          title="No offers yet"
+          body="When a buyer makes an offer on one of your listings, it appears here."
+          action={
+            <ButtonLink href="/seller/listings" variant="secondary">
+              Review your listings
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised">
+        <ul className="divide-y divide-line border border-line bg-surface-raised">
           {[...offers]
             .sort((a, b) => Number(needsResponse(b, user.id)) - Number(needsResponse(a, user.id)))
             .map((offer) => {
@@ -53,14 +63,14 @@ async function SellerOffers() {
               const counterpart = other?.sellerProfile?.businessName ?? other?.name ?? "Member";
               const waiting = needsResponse(offer, user.id);
               return (
-                <li key={offer.id} className="space-y-2 px-4 py-4">
+                <li key={offer.id} className="space-y-3 px-4 py-5 sm:px-6">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-medium text-ink">
+                      <p className="font-heading text-xl text-ink">
                         {formatMoney(offer.amountMinor, offer.currency)}
-                        {offer.counterOfId && <span className="ml-2 text-sm font-normal text-ink-soft">counter</span>}
+                        {offer.counterOfId && <span className="ml-2 font-sans text-sm text-ink-soft">counter</span>}
                         {offer.conversation.isDemo && (
-                          <span className="ml-2 rounded bg-accent-soft px-1.5 py-0.5 text-xs font-normal text-ink">Demo</span>
+                          <DemoTag />
                         )}
                       </p>
                       <p className="text-sm text-ink-soft">
@@ -68,20 +78,16 @@ async function SellerOffers() {
                         {offer.conversation.gemstone ? ` · ${offer.conversation.gemstone.title}` : ""}
                       </p>
                     </div>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs ${
-                        waiting ? "bg-brand text-white" : "border border-line text-ink-soft"
-                      }`}
-                    >
+                    <Badge tone={waiting ? "warning" : offer.status === "ACCEPTED" ? "success" : "neutral"}>
                       {waiting ? "Needs your response" : statusLabels[offer.status] ?? offer.status}
-                    </span>
+                    </Badge>
                   </div>
                   {offer.note && <p className="whitespace-pre-wrap break-words text-sm text-ink-soft">{offer.note}</p>}
                   <p className="text-xs text-ink-soft">
                     {offer.proposerId === user.id ? "Sent by you" : "Received"} ·{" "}
                     {offer.createdAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}
                   </p>
-                  <Link href={`/conversations/${offer.conversationId}`} className="text-sm font-medium text-brand underline">
+                  <Link href={`/conversations/${offer.conversationId}`} className="text-sm font-medium text-ink underline underline-offset-4">
                     Open conversation
                   </Link>
                 </li>
@@ -89,7 +95,7 @@ async function SellerOffers() {
             })}
         </ul>
       )}
-    </section>
+    </div>
   );
 }
 

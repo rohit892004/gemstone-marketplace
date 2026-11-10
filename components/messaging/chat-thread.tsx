@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { markReadAction, sendMessageAction } from "@/app/conversations/actions";
+import { Button } from "@/components/ui/button";
 import { ComposerExtras } from "./composer-extras";
 import { MessageExtras } from "./message-extras";
 import type { OfferPayload, QuotationPayload, ThreadContext } from "./types";
@@ -142,26 +143,26 @@ export function ChatThread(props: ChatThreadProps) {
   const canSend = !props.disabledReason && !pending && (body.trim().length > 0 || files.length > 0);
 
   return (
-    <section aria-label={`Conversation with ${props.counterpartLabel}`} className="flex flex-col rounded-lg border border-line bg-surface-raised">
-      <div ref={listRef} className="flex max-h-[60vh] min-h-[16rem] flex-col gap-3 overflow-y-auto p-4" aria-live="polite">
-        {messages.length === 0 && <p className="m-auto text-sm text-ink-soft">No messages yet. Say hello to start the conversation.</p>}
+    <section aria-label={`Conversation with ${props.counterpartLabel}`} className="flex flex-col border border-line bg-surface-raised shadow-soft">
+      <div ref={listRef} className="flex max-h-[60vh] min-h-[16rem] flex-col gap-4 overflow-y-auto p-4 sm:p-6" aria-live="polite">
+        {messages.length === 0 && <p className="m-auto max-w-prose text-center text-sm text-ink-soft">No messages yet. Say hello to start the conversation.</p>}
         {messages.map((m) => {
           const read = m.mine && counterpartRead !== null && new Date(counterpartRead) >= new Date(m.createdAt);
           return (
             <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm sm:max-w-[70%] ${m.mine ? "bg-brand text-white" : "bg-surface text-ink"}`}>
+              <div className={`max-w-[85%] px-4 py-3 text-[15px] leading-relaxed sm:max-w-[70%] ${m.mine ? "bg-brand text-ivory" : "border border-line bg-surface text-ink"}`}>
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
                 <MessageExtras message={m} context={props.context} />
                 {m.attachments.map((a) => (
                   <a
                     key={a.id}
                     href={`/api/conversations/${props.conversationId}/attachments/${a.id}`}
-                    className={`mt-2 block break-all underline underline-offset-2 ${m.mine ? "text-white" : "text-brand"}`}
+                    className={`mt-2 block break-all underline underline-offset-2 ${m.mine ? "text-ivory" : "text-ink"}`}
                   >
                     {a.fileName} ({Math.max(1, Math.round(a.sizeBytes / 1024))} KB)
                   </a>
                 ))}
-                <p className={`mt-1 text-xs ${m.mine ? "text-white/80" : "text-ink-soft"}`}>
+                <p className={`mt-2 text-xs ${m.mine ? "text-ivory/80" : "text-ink-soft"}`}>
                   {new Date(m.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
                   {m.mine && <span> · {read ? "Read" : "Sent"}</span>}
                   {m.flagged && <span> · contact details hidden</span>}
@@ -175,12 +176,12 @@ export function ChatThread(props: ChatThreadProps) {
       {props.isDemo && (
         <p className="border-t border-line px-4 py-2 text-xs text-accent-text">Demo conversation: sample data for demonstration.</p>
       )}
-      {warning && <p role="status" className="border-t border-line bg-accent-soft px-4 py-2 text-sm text-ink">{warning}</p>}
+      {warning && <p role="status" className="border-t border-line bg-accent-soft px-4 py-3 text-sm text-ink">{warning}</p>}
 
       {props.disabledReason ? (
-        <p className="border-t border-line px-4 py-3 text-sm text-ink-soft">{props.disabledReason}</p>
+        <p className="border-t border-line px-4 py-4 text-sm text-ink-soft sm:px-6">{props.disabledReason}</p>
       ) : (
-        <div className="flex flex-col gap-2 border-t border-line p-4">
+        <div className="flex flex-col gap-3 border-t border-line p-4 sm:p-6">
           <ComposerExtras context={props.context} />
         <form
           className="flex flex-col gap-2"
@@ -200,7 +201,7 @@ export function ChatThread(props: ChatThreadProps) {
             maxLength={2000}
             rows={3}
             placeholder="Write a message. Phone numbers, emails and social handles are hidden automatically."
-            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink placeholder:text-ink-soft/70 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm text-ink-soft">
@@ -210,19 +211,15 @@ export function ChatThread(props: ChatThreadProps) {
                 multiple
                 accept={ACCEPT}
                 onChange={(e) => onFiles(e.target.files)}
-                className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-ink"
+                className="min-h-11 text-sm file:mr-3 file:border file:border-line file:bg-surface-raised file:px-4 file:py-2 file:text-ink"
               />
             </label>
             {files.length > 0 && <span className="text-xs text-ink-soft">{files.length} file(s) ready</span>}
-            <button
-              type="submit"
-              disabled={!canSend}
-              className="ml-auto rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
-            >
+            <Button type="submit" disabled={!canSend} className="ml-auto">
               {pending ? "Sending..." : "Send"}
-            </button>
+            </Button>
           </div>
-          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </form>
         </div>
       )}

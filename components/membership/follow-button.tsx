@@ -17,14 +17,14 @@ export function FollowButton({ sellerSlug, following }: { sellerSlug: string; fo
         disabled={pending}
         className={
           isFollowing
-            ? "w-full rounded-md border border-brand bg-accent-soft px-4 py-2.5 text-center text-sm font-medium text-brand-strong disabled:opacity-60"
-            : "w-full rounded-md bg-brand px-4 py-2.5 text-center text-sm font-medium text-white disabled:opacity-60"
+            ? "w-full min-h-11 border border-brand bg-accent-soft px-4 py-3 text-center text-sm font-medium text-ink disabled:opacity-60"
+            : "w-full min-h-11 bg-brand px-4 py-3 text-center text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-60"
         }
       >
         {isFollowing ? "Following" : "Follow seller"}
       </button>
       {state.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {state.error}
         </p>
       ) : null}

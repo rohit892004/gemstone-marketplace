@@ -8,15 +8,22 @@ import { requirePageRole } from "@/lib/auth/require-role";
  * requires the SELLER role. Navigation is shown to approved sellers only.
  */
 export default function SellerLayout({ children }: { children: ReactNode }) {
-  return <Suspense fallback={null}><SellerShell>{children}</SellerShell></Suspense>;
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-14">
+      <Suspense fallback={null}>
+        <SellerShell>{children}</SellerShell>
+      </Suspense>
+    </div>
+  );
 }
 
 async function SellerShell({ children }: { children: ReactNode }) {
   const user = await requirePageRole(["SELLER"]);
+  if (user.sellerApproval !== "APPROVED") return <>{children}</>;
   return (
-    <>
-      {user.sellerApproval === "APPROVED" ? <SellerNav /> : null}
-      {children}
-    </>
+    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-14">
+      <SellerNav />
+      <div className="min-w-0 pt-10 lg:pt-0">{children}</div>
+    </div>
   );
 }

@@ -82,7 +82,7 @@ export function StartConversationForm({
           rows={4}
           maxLength={2000}
           placeholder={placeholder}
-          className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+          className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">
@@ -94,13 +94,13 @@ export function StartConversationForm({
             multiple
             accept={ACCEPT}
             onChange={(e) => handleFiles(e.currentTarget.files)}
-            className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-ink"
+            className="text-sm file:mr-3 file: file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-ink"
           />
         </label>
         <button
           type="submit"
           disabled={pending || done !== null}
-          className="ml-auto rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+          className="ml-auto bg-brand px-4 py-2 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
         >
           {pending ? "Sending..." : submitLabel}
         </button>
@@ -109,19 +109,19 @@ export function StartConversationForm({
         Phone numbers, emails and social handles are hidden automatically. Keep the conversation on Gemstone Selections.
       </p>
       {fileError ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {fileError}
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       ) : null}
       {done ? (
-        <div role="status" className="space-y-2 rounded-md bg-accent-soft px-3 py-2 text-sm text-ink">
+        <div role="status" className="space-y-2 bg-accent-soft px-3 py-2 text-sm text-ink">
           <p>{done.warning}</p>
-          <Link href={`/conversations/${done.conversationId}`} className="font-medium text-brand-strong underline underline-offset-4">
+          <Link href={`/conversations/${done.conversationId}`} className="font-medium text-ink underline underline-offset-4 hover:text-accent-text">
             Open the conversation
           </Link>
         </div>

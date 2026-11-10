@@ -24,7 +24,7 @@ export interface RequirementFormProps {
 }
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none aria-[invalid=true]:border-red-700";
+  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
 
 export function RequirementForm(props: RequirementFormProps) {
   const router = useRouter();
@@ -70,21 +70,21 @@ export function RequirementForm(props: RequirementFormProps) {
   return (
     <form noValidate onSubmit={onSubmit} className="space-y-8" aria-label={props.mode === "create" ? "Post a requirement" : "Edit requirement"}>
       {error ? (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className=" border border-danger/40 bg-surface-raised px-4 py-3 text-sm text-danger">
           {error}
         </p>
       ) : null}
       {saved ? (
-        <div role="status" className="space-y-2 rounded-md border border-line bg-accent-soft px-4 py-3 text-sm text-ink">
+        <div role="status" className="space-y-2 border border-line bg-accent-soft px-4 py-3 text-sm text-ink">
           <p>{saved.warning}</p>
-          <Link href={`/buyer/requirements/${saved.requirementId}`} className="font-medium text-brand-strong underline underline-offset-4">
+          <Link href={`/buyer/requirements/${saved.requirementId}`} className="font-medium text-ink underline underline-offset-4 hover:text-accent-text">
             View your requirement
           </Link>
         </div>
       ) : null}
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">What you are looking for</legend>
+        <legend className="font-heading text-2xl text-ink">What you are looking for</legend>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field id={id("gemstoneType")} label="Gemstone type" required error={err("gemstoneType")} hint="For example: Sapphire, Ruby, Emerald">
             <input
@@ -149,7 +149,7 @@ export function RequirementForm(props: RequirementFormProps) {
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Budget and timing</legend>
+        <legend className="font-heading text-2xl text-ink">Budget and timing</legend>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field id={id("currency")} label="Currency" error={err("currency")}>
             <select id={id("currency")} name="currency" defaultValue={initial.currency || "INR"} className={inputClass} aria-invalid={err("currency") ? true : undefined}>
@@ -171,7 +171,7 @@ export function RequirementForm(props: RequirementFormProps) {
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Notes</legend>
+        <legend className="font-heading text-2xl text-ink">Notes</legend>
         <Field id={id("notes")} label="Notes for sellers" error={err("notes")} hint="Describe the stone you need. Phone numbers, emails and social handles are hidden automatically.">
           <textarea id={id("notes")} name="notes" rows={5} maxLength={REQUIREMENT_LIMITS.notesMax} defaultValue={initial.notes} className={inputClass} aria-invalid={err("notes") ? true : undefined} />
         </Field>
@@ -181,7 +181,7 @@ export function RequirementForm(props: RequirementFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+          className=" bg-brand px-5 py-2.5 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
         >
           {pending ? "Saving..." : props.mode === "create" ? "Post requirement" : "Save changes"}
         </button>
@@ -212,12 +212,12 @@ function Field({
     <div className="space-y-1">
       <label htmlFor={id} className="block text-sm font-medium text-ink">
         {label}
-        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </label>
       {children}
       {hint ? <p className="text-xs text-ink-soft">{hint}</p> : null}
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       ) : null}

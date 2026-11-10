@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Field helpers for the seller catalogue. M1 field components stay untouched; these add textarea and image inputs. */
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none aria-[invalid=true]:border-red-700";
+  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
 
 interface ShellProps {
   name: string;
@@ -19,7 +19,7 @@ export function FieldFrame({ name, label, error, hint, required, children }: She
     <div className="space-y-1">
       <label htmlFor={name} className="block text-sm font-medium text-ink">
         {label}
-        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </label>
       {children}
       {hint ? (
@@ -28,7 +28,7 @@ export function FieldFrame({ name, label, error, hint, required, children }: She
         </p>
       ) : null}
       {error ? (
-        <p id={`${name}-error`} role="alert" className="text-sm text-red-700">
+        <p id={`${name}-error`} role="alert" className="text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -86,7 +86,7 @@ export function ImageFileField({
         multiple={multiple}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(name, hint, error)}
-        className="mt-1 block w-full text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
+        className="mt-1 block w-full text-sm text-ink file:mr-3 file: file:border-0 file:bg-accent-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
       />
     </FieldFrame>
   );
@@ -118,7 +118,7 @@ export function RadioGroup({
         ))}
       </div>
       {error ? (
-        <p id={`${name}-error`} role="alert" className="text-sm text-red-700">
+        <p id={`${name}-error`} role="alert" className="text-sm text-danger">
           {error}
         </p>
       ) : null}

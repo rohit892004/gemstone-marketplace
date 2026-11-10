@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { CloseRequirementButton } from "@/components/requirements/close-requirement-button";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { formatBudgetRange, formatCaratRange } from "@/lib/requirements/format";
@@ -39,7 +41,7 @@ async function RequirementDetail({ params }: Props) {
   return (
     <div className="max-w-3xl space-y-8">
       <nav aria-label="Breadcrumb" className="text-sm text-ink-soft">
-        <Link href="/buyer/requirements" className="hover:text-ink">
+        <Link href="/buyer/requirements" className="underline underline-offset-4 hover:text-ink">
           Requirements
         </Link>{" "}
         / <span className="text-ink">{requirement.gemstoneType}</span>
@@ -47,35 +49,24 @@ async function RequirementDetail({ params }: Props) {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
-          <span
-            className={
-              open
-                ? "inline-block rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-brand-strong"
-                : "inline-block rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft"
-            }
-          >
-            {open ? "Open" : "Closed"}
-          </span>
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">{requirement.gemstoneType}</h2>
+          <Badge tone={open ? "success" : "neutral"}>{open ? "Open" : "Closed"}</Badge>
+          <h2 className="font-heading text-3xl text-ink sm:text-4xl">{requirement.gemstoneType}</h2>
         </div>
         {open ? (
           <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/buyer/requirements/${requirement.id}/edit`}
-              className="rounded-md border border-brand px-4 py-2 text-sm font-medium text-brand-strong hover:bg-accent-soft"
-            >
+            <ButtonLink href={`/buyer/requirements/${requirement.id}/edit`} variant="secondary">
               Edit
-            </Link>
+            </ButtonLink>
             <CloseRequirementButton requirementId={requirement.id} />
           </div>
         ) : null}
       </header>
 
-      <dl className="divide-y divide-line rounded-lg border border-line bg-surface-raised text-sm">
+      <dl className="divide-y divide-line border border-line bg-surface-raised text-[15px]">
         {facts
           .filter((row): row is [string, string] => !!row[1])
           .map(([label, value]) => (
-            <div key={label} className="grid grid-cols-3 gap-3 px-4 py-2.5">
+            <div key={label} className="grid grid-cols-3 gap-3 px-4 py-3.5 sm:px-6">
               <dt className="text-ink-soft">{label}</dt>
               <dd className="col-span-2 text-ink">{value}</dd>
             </div>
@@ -84,7 +75,7 @@ async function RequirementDetail({ params }: Props) {
 
       {requirement.notes ? (
         <section aria-labelledby="notes-heading" className="space-y-2">
-          <h3 id="notes-heading" className="text-lg font-semibold text-ink">
+          <h3 id="notes-heading" className="font-heading text-2xl text-ink">
             Notes
           </h3>
           <p className="whitespace-pre-line text-ink-soft">{requirement.notes}</p>
@@ -92,16 +83,16 @@ async function RequirementDetail({ params }: Props) {
       ) : null}
 
       <section aria-labelledby="responses-heading" className="space-y-3">
-        <h3 id="responses-heading" className="text-lg font-semibold text-ink">
+        <h3 id="responses-heading" className="font-heading text-2xl text-ink">
           Seller responses ({requirement._count.responses})
         </h3>
         {threads.length === 0 ? (
           <p className="text-sm text-ink-soft">No seller has responded yet. Sellers who reply open a conversation with you here.</p>
         ) : (
-          <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised">
+          <ul className="divide-y divide-line border border-line bg-surface-raised">
             {threads.map((thread) => (
               <li key={thread.id}>
-                <Link href={`/conversations/${thread.id}`} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface">
+                <Link href={`/conversations/${thread.id}`} className="flex min-h-11 items-center justify-between gap-4 px-4 py-3 transition duration-300 hover:bg-accent-soft/40">
                   <span className="font-medium text-ink">{thread.sellerName}</span>
                   <span className="text-xs text-ink-soft">{thread.lastMessageAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
                 </Link>

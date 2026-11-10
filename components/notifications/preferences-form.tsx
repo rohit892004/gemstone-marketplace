@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useActionState } from "react";
 import type { NotificationPrefs } from "@/lib/notifications/rules";
 import { savePreferences, type PreferencesActionState } from "@/app/notifications/actions";
@@ -18,15 +19,15 @@ export function PreferencesForm({ prefs }: { prefs: NotificationPrefs }) {
   const [state, formAction, pending] = useActionState<PreferencesActionState, FormData>(savePreferences, null);
 
   return (
-    <form action={formAction} className="space-y-6">
-      <fieldset className="space-y-4 rounded-lg border border-line bg-surface-raised p-4 sm:p-5">
-        <legend className="px-1 text-sm font-semibold text-ink">Email</legend>
-        <label className="flex items-start gap-3">
+    <form action={formAction} className="space-y-8">
+      <fieldset className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
+        <legend className="px-1 font-heading text-2xl text-ink">Email</legend>
+        <label className="flex min-h-11 items-start gap-3">
           <input
             type="checkbox"
             name="emailEnabled"
             defaultChecked={prefs.emailEnabled}
-            className="mt-1 h-4 w-4 accent-brand"
+            className="mt-1 h-5 w-5 accent-brand"
           />
           <span>
             <span className="block text-sm font-medium text-ink">Send me email notifications</span>
@@ -37,15 +38,15 @@ export function PreferencesForm({ prefs }: { prefs: NotificationPrefs }) {
         </label>
       </fieldset>
 
-      <fieldset className="space-y-4 rounded-lg border border-line bg-surface-raised p-4 sm:p-5">
-        <legend className="px-1 text-sm font-semibold text-ink">Email me about</legend>
+      <fieldset className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
+        <legend className="px-1 font-heading text-2xl text-ink">Email me about</legend>
         {ROWS.map((row) => (
-          <label key={row.name} className="flex items-start gap-3">
+          <label key={row.name} className="flex min-h-11 items-start gap-3">
             <input
               type="checkbox"
               name={row.name}
               defaultChecked={prefs[row.name]}
-              className="mt-1 h-4 w-4 accent-brand"
+              className="mt-1 h-5 w-5 accent-brand"
             />
             <span>
               <span className="block text-sm font-medium text-ink">{row.label}</span>
@@ -56,18 +57,14 @@ export function PreferencesForm({ prefs }: { prefs: NotificationPrefs }) {
       </fieldset>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
-        >
+        <Button type="submit" disabled={pending}>
           {pending ? "Saving..." : "Save preferences"}
-        </button>
+        </Button>
         {state?.ok ? (
           <p role="status" className="text-sm text-ink-soft">{state.message}</p>
         ) : null}
         {state && !state.ok ? (
-          <p role="alert" className="text-sm text-red-700">{state.error}</p>
+          <p role="alert" className="text-sm text-danger">{state.error}</p>
         ) : null}
       </div>
     </form>

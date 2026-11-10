@@ -38,8 +38,8 @@ export function LineChart({ times, series, height = 220, ariaLabel }: LineChartP
       cursor: { drag: { x: false, y: false } },
       scales: { x: { time: true } },
       axes: [
-        { stroke: "#6b6b6b", grid: { stroke: "#e7e5e0" } },
-        { stroke: "#6b6b6b", grid: { stroke: "#e7e5e0" }, size: 48 },
+        { stroke: "#5f5a50", grid: { stroke: "#e3ddd2" } },
+        { stroke: "#5f5a50", grid: { stroke: "#e3ddd2" }, size: 48 },
       ],
       series: [{}, ...series.map((s) => ({ label: s.label, stroke: s.color, width: 2, points: { show: false } }))],
     };
@@ -60,7 +60,7 @@ export function LineChart({ times, series, height = 220, ariaLabel }: LineChartP
       <ul className="mt-2 flex flex-wrap gap-4 text-xs text-ink-soft">
         {series.map((s) => (
           <li key={s.label} className="flex items-center gap-1.5">
-            <span aria-hidden className="inline-block h-2 w-4 rounded-sm" style={{ backgroundColor: s.color }} />
+            <span aria-hidden className="inline-block h-0.5 w-4" style={{ backgroundColor: s.color }} />
             {s.label}
           </li>
         ))}

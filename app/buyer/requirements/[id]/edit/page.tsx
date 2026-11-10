@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { RequirementForm } from "@/components/requirements/requirement-form";
@@ -26,13 +29,16 @@ async function EditRequirement({ params }: Props) {
 
   if (requirement.status !== "OPEN") {
     return (
-      <div className="max-w-3xl rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-        <h2 className="text-lg font-semibold text-ink">This requirement is closed</h2>
-        <p className="mt-2 text-sm text-ink-soft">Closed requirements can&apos;t be edited. Post a new requirement instead.</p>
-        <Link href={`/buyer/requirements/${id}`} className="mt-4 inline-block text-sm font-medium text-brand-strong underline underline-offset-4">
-          Back to the requirement
-        </Link>
-      </div>
+      <EmptyState
+        icon={ClipboardList}
+        title="This requirement is closed"
+        body="Closed requirements can't be edited. Post a new requirement instead."
+        action={
+          <ButtonLink href={`/buyer/requirements/${id}`} variant="secondary">
+            Back to the requirement
+          </ButtonLink>
+        }
+      />
     );
   }
 
@@ -42,15 +48,15 @@ async function EditRequirement({ params }: Props) {
   ]);
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <div className="space-y-2">
+    <div className="max-w-3xl space-y-10">
+      <div className="space-y-3">
         <p className="text-sm">
           <Link href={`/buyer/requirements/${id}`} className="text-ink-soft hover:text-ink">
             {requirement.gemstoneType}
           </Link>{" "}
           <span className="text-ink-soft">/ Edit</span>
         </p>
-        <h2 className="text-lg font-semibold text-ink">Edit requirement</h2>
+        <h2 className="font-heading text-3xl text-ink">Edit requirement</h2>
       </div>
       <RequirementForm
         mode="edit"

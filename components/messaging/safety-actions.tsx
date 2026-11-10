@@ -39,7 +39,7 @@ export function SafetyActions({ conversationId, blocked }: { conversationId: str
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md border border-line px-3 py-1.5 text-ink-soft hover:text-ink"
+          className=" border border-line min-h-11 px-4 py-2.5 text-ink-soft hover:text-ink"
           aria-expanded={open}
         >
           Report
@@ -49,7 +49,7 @@ export function SafetyActions({ conversationId, blocked }: { conversationId: str
             type="button"
             onClick={block}
             disabled={pending}
-            className="rounded-md border border-line px-3 py-1.5 text-ink-soft hover:text-ink disabled:opacity-50"
+            className=" border border-line min-h-11 px-4 py-2.5 text-ink-soft hover:text-ink disabled:opacity-50"
           >
             Block
           </button>
@@ -57,7 +57,7 @@ export function SafetyActions({ conversationId, blocked }: { conversationId: str
       </div>
       {message && <p role="status" className="text-ink-soft">{message}</p>}
       {open && (
-        <form action={report} className="w-72 rounded-lg border border-line bg-surface-raised p-3 text-left">
+        <form action={report} className="w-full max-w-xs border border-line bg-surface-raised p-4 text-left sm:w-72">
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 font-medium text-ink">Why are you reporting this?</legend>
             {REASONS.map((r) => (
@@ -69,9 +69,9 @@ export function SafetyActions({ conversationId, blocked }: { conversationId: str
           </fieldset>
           <label className="mt-3 block text-ink">
             <span className="text-ink-soft">Details (optional)</span>
-            <textarea name="details" maxLength={1000} rows={3} className="mt-1 w-full rounded-md border border-line bg-surface px-2 py-1" />
+            <textarea name="details" maxLength={1000} rows={3} className="mt-1 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] focus:border-accent focus:outline-none" />
           </label>
-          <button type="submit" disabled={pending} className="mt-3 rounded-md bg-ink px-3 py-1.5 text-white disabled:opacity-50">
+          <button type="submit" disabled={pending} className="mt-3 bg-brand min-h-11 px-4 py-2.5 text-ivory disabled:opacity-50">
             Send report
           </button>
         </form>

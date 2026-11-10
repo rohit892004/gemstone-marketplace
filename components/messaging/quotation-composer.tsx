@@ -38,7 +38,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
   }
 
   return (
-    <details className="rounded-md border border-line bg-surface px-3 py-2 text-ink">
+    <details className=" border border-line bg-surface px-3 py-2 text-ink">
       <summary className="cursor-pointer text-sm font-medium text-brand">Send a quotation</summary>
       <form onSubmit={onSubmit} className="mt-3 grid gap-3 sm:grid-cols-2">
         {context.gemstone && <input type="hidden" name="gemstoneId" value={context.gemstone.id} />}
@@ -53,7 +53,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             maxLength={ITEM_TITLE_MAX}
             defaultValue={context.gemstone?.title ?? ""}
             placeholder="Gemstone or custom item"
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
         </div>
         <div>
@@ -70,7 +70,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             step={1}
             defaultValue={1}
             required
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
         </div>
         <div>
@@ -83,7 +83,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
               name="currency"
               defaultValue="INR"
               aria-label="Currency"
-              className="rounded-md border border-line bg-surface-raised px-2 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+              className=" border border-line bg-surface-raised px-2 py-2 text-sm text-ink focus:border-accent focus:outline-none"
             >
               <option value="INR">INR</option>
               <option value="USD">USD</option>
@@ -94,7 +94,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
               inputMode="decimal"
               required
               placeholder="e.g. 125000.00"
-              className="w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+              className="w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             type="date"
             min={minDate}
             required
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
         </div>
         <div className="sm:col-span-2">
@@ -121,21 +121,21 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             rows={3}
             maxLength={TERMS_MAX}
             placeholder="Payment, delivery, certification or return terms. Contact details are hidden automatically."
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
         </div>
         <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+            className=" bg-brand px-4 py-2 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
           >
             {pending ? "Sending..." : "Send quotation"}
           </button>
           <p className="text-xs text-ink-soft">Payments are not taken on the platform. Agree payment with the buyer here.</p>
         </div>
         {notice && <p role="status" className="sm:col-span-2 text-sm text-ink">{notice}</p>}
-        {error && <p role="alert" className="sm:col-span-2 text-sm text-red-700">{error}</p>}
+        {error && <p role="alert" className="sm:col-span-2 text-sm text-danger">{error}</p>}
       </form>
     </details>
   );

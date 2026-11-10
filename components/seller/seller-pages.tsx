@@ -1,15 +1,8 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCard } from "./status-card";
-
-/** Placeholder body for approved-only seller areas that are built in later milestones. */
-export function ComingLaterPage({ title }: { title: string }) {
-  return (
-    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
-      <p className="mt-4 text-ink-soft">Coming in a later milestone.</p>
-    </section>
-  );
-}
 
 /**
  * Shown to PENDING and REJECTED sellers on approved-only areas. Deliberately generic:
@@ -17,18 +10,26 @@ export function ComingLaterPage({ title }: { title: string }) {
  */
 export function AwaitingApprovalPage({ title }: { title: string }) {
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
-      <div className="mt-6">
-        <StatusCard title="This area opens after approval">
-          <p>This section becomes available once your seller application has been approved.</p>
-          <p>
-            <Link href="/seller" className="font-medium text-brand underline">
-              Back to your seller account
-            </Link>
-          </p>
-        </StatusCard>
-      </div>
-    </section>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <h1 className="font-heading text-4xl text-ink">{title}</h1>
+      <EmptyState
+        icon={Lock}
+        title="This area opens after approval"
+        body="This section becomes available once your seller application has been approved. Your seller account is where you can check progress."
+        action={
+          <ButtonLink href="/seller" variant="secondary">
+            Back to your seller account
+          </ButtonLink>
+        }
+      />
+      <StatusCard title="Why you cannot open this yet">
+        <p>
+          <Link href="/seller" className="font-medium text-ink underline underline-offset-4 underline-offset-4">
+            Return to your seller account
+          </Link>{" "}
+          to see the current status of your application.
+        </p>
+      </StatusCard>
+    </div>
   );
 }

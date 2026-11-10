@@ -26,12 +26,12 @@ export function CopyLink({ id, label, value }: { id: string; label: string; valu
           readOnly
           value={value}
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
+          className="min-h-11 min-w-0 flex-1 border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink"
         />
         <button
           type="button"
           onClick={copy}
-          className="rounded-md border border-brand px-4 py-2 text-sm font-medium text-brand-strong hover:bg-accent-soft"
+          className="min-h-11 border border-brand px-5 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft"
         >
           Copy link
         </button>

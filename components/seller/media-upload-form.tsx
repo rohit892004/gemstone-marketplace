@@ -32,7 +32,7 @@ export function MediaUploadForm({ listingId, imageCount, videoCount }: { listing
       <button
         type="submit"
         disabled={pending || full}
-        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60"
       >
         {pending ? "Uploading..." : "Upload"}
       </button>
