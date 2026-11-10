@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth/auth";
+import { checkRole } from "@/lib/auth/require-role";
 import { renderValuationReport } from "@/lib/valuation/documents";
 
 /**
@@ -7,10 +8,13 @@ import { renderValuationReport } from "@/lib/valuation/documents";
  */
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  // Session alone is not enough: the account must still be ACTIVE and verified (checkRole reads the database).
   const session = await auth();
   if (!session?.user) return notFound();
+  const access = await checkRole(["BUYER", "SELLER", "ADMIN", "VALUATOR"]);
+  if (!access.ok) return notFound();
 
-  const report = await renderValuationReport(id, { id: session.user.id, role: session.user.role });
+  const report = await renderValuationReport(id, { id: access.user.id, role: access.user.role });
   if (!report) return notFound();
 
   return new Response(new Uint8Array(report.bytes), {

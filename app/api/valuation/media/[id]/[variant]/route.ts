@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth/auth";
+import { checkRole } from "@/lib/auth/require-role";
 import { loadValuationMediaForActor } from "@/lib/valuation/documents";
 
 /**
@@ -9,9 +10,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string; va
   const { id, variant } = await ctx.params;
   if (variant !== "thumb" && variant !== "full") return notFound();
 
+  // Session alone is not enough: the account must still be ACTIVE and verified (checkRole reads the database).
   const session = await auth();
   if (!session?.user) return notFound();
-  const actor = { id: session.user.id, role: session.user.role };
+  const access = await checkRole(["BUYER", "SELLER", "ADMIN", "VALUATOR"]);
+  if (!access.ok) return notFound();
+  const actor = { id: access.user.id, role: access.user.role };
 
   const file = await loadValuationMediaForActor(id, actor, variant);
   if (!file) return notFound();
