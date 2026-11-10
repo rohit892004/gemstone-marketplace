@@ -13,7 +13,7 @@ export function ThreadList({ thread }: { thread: ThreadEntry[] }) {
   return (
     <ol className="space-y-3">
       {entries.map((entry) => (
-        <li key={entry.id} className="rounded-md border border-line bg-surface px-4 py-3 text-sm">
+        <li key={entry.id} className="border border-line bg-surface px-4 py-3 text-sm">
           <p className="font-medium text-ink">{THREAD_LABEL[entry.kind]}</p>
           <p className="mt-1 whitespace-pre-line text-ink">{entry.body}</p>
           <p className="mt-2 text-xs text-ink-soft">

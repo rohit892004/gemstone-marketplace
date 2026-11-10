@@ -14,7 +14,7 @@ export function StartValuationButton({ gemstoneId, label = "Start a valuation" }
         {pending ? "Starting..." : label}
       </button>
       {state && !state.ok ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {state.error}
         </p>
       ) : null}

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { CatalogueFilters } from "@/components/catalogue/filters";
 import { CatalogueResults } from "@/components/catalogue/results";
 import { type RawSearchParams, parseCatalogueParams } from "@/components/catalogue/query-params";
+import { PageHeader } from "@/components/ui/page-header";
 import { prisma } from "@/lib/db/client";
 import { searchCatalogue } from "@/lib/listings/search";
 import { getCatalogueFacets } from "@/lib/seller-public/facets";
@@ -44,29 +45,20 @@ async function CategoryContent({ params, searchParams }: Props) {
   const basePath = `/categories/${category.slug}`;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-ink-soft">
-        <Link href="/gemstones" className="hover:text-ink">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+      <nav aria-label="Breadcrumb" className="mb-6 text-[12px] uppercase tracking-[0.18em] text-ink-soft">
+        <Link href="/gemstones" className="hover:text-accent-text">
           Gemstones
         </Link>{" "}
-        / <span className="text-ink">{category.name}</span>
+        / <span className="normal-case tracking-normal text-ink">{category.name}</span>
       </nav>
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">{category.name}</h1>
-        <p className="mt-2 max-w-3xl text-ink-soft">{categoryIntro(category.slug, category.name)}</p>
-      </header>
+      <PageHeader eyebrow="By gemstone" title={category.name} lead={categoryIntro(category.slug, category.name)} />
 
-      <div className="grid gap-8 lg:grid-cols-[18rem_1fr]">
-        <aside aria-label="Filters">
-          <CatalogueFilters
-            action={basePath}
-            query={query}
-            facets={facets}
-            showCategory={false}
-            clearHref={basePath}
-          />
+      <div className="grid gap-10 lg:grid-cols-[18rem_1fr]">
+        <aside aria-label="Filters" className="lg:sticky lg:top-10 lg:self-start">
+          <CatalogueFilters action={basePath} query={query} facets={facets} showCategory={false} clearHref={basePath} />
         </aside>
-        <div>
+        <div className="min-w-0">
           <CatalogueResults
             items={result.items}
             total={result.total}

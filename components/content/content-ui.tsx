@@ -7,7 +7,7 @@ import { NewsletterSignup } from "@/components/newsletter/newsletter-signup";
 export function DemoNotice({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border border-dashed border-ink-soft/50 bg-surface px-2.5 py-0.5 text-xs font-medium text-ink-soft ${className}`}
+      className={`inline-flex items-center border border-line px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-ink-soft ${className}`}
     >
       {DEMO_LABEL} – needs expert review
     </span>
@@ -19,7 +19,7 @@ export function ProseHtml({ html, label }: { html: string; label?: string }) {
   return (
     <div
       aria-label={label}
-      className="max-w-prose text-base leading-7 text-ink [&_a]:text-brand-strong [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-line [&_blockquote]:pl-4 [&_blockquote]:text-ink-soft [&_code]:rounded [&_code]:bg-surface-raised [&_code]:px-1 [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol>li]:list-decimal [&_p]:mt-4 [&_strong]:font-semibold [&_ol]:mt-4 [&_ul]:mt-4"
+      className="max-w-prose text-base leading-7 text-ink [&_a]:text-brand-strong [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-line [&_blockquote]:pl-4 [&_blockquote]:text-ink-soft [&_code]:bg-surface-raised [&_code]:px-1 [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-3xl [&_h2]:font-medium [&_h3]:mt-8 [&_h3]:font-heading [&_h3]:text-2xl [&_h3]:font-medium [&_li]:ml-5 [&_li]:list-disc [&_ol>li]:list-decimal [&_p]:mt-4 [&_strong]:font-medium [&_ol]:mt-4 [&_ul]:mt-4"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -30,7 +30,7 @@ export function CoverImage({ coverKey, alt, className = "" }: { coverKey: string
   // Alt text is required for covers. Empty alt is only used when the editor has not supplied any text.
   return (
     // eslint-disable-next-line @next/next/no-img-element -- served by our own route with no optimiser
-    <img src={coverUrl(coverKey)} alt={alt ?? ""} loading="lazy" className={`aspect-[16/9] w-full rounded-lg object-cover ${className}`} />
+    <img src={coverUrl(coverKey)} alt={alt ?? ""} loading="lazy" className={`aspect-[16/9] w-full object-cover ${className}`} />
   );
 }
 
@@ -62,7 +62,7 @@ export function Pagination({ basePath, params, page, pageCount }: PaginationProp
     const query = search.toString();
     return query ? `${basePath}?${query}` : basePath;
   };
-  const linkClass = "rounded-md border border-line bg-surface-raised px-4 py-2 text-sm font-medium text-ink hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
+  const linkClass = "inline-flex min-h-11 items-center border border-line bg-surface-raised px-6 text-[13px] tracking-wide text-ink transition duration-300 hover:border-accent hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
   return (
     <nav aria-label="Pagination" className="mt-10 flex items-center justify-between gap-4">
       {page > 1 ? (
@@ -89,9 +89,9 @@ export function Pagination({ basePath, params, page, pageCount }: PaginationProp
 /** Empty state for list pages. */
 export function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
-      <p className="mt-2 text-sm text-ink-soft">{body}</p>
+    <div className="border border-line bg-surface-raised p-8 text-center sm:p-12">
+      <h2 className="font-heading text-3xl text-ink">{title}</h2>
+      <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{body}</p>
     </div>
   );
 }

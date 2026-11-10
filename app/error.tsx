@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { reportClientError } from "@/lib/observability/report-client-error";
 
 /**
@@ -15,15 +16,18 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <section className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-24 text-center sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Something went wrong</p>
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">We hit a problem loading this page</h1>
-      <p className="text-ink-soft">Please try again. If it keeps happening, come back later.</p>
-      <div className="mt-2 flex flex-wrap justify-center gap-4 text-sm font-medium">
-        <button type="button" onClick={() => reset()} className="rounded-md bg-brand px-4 py-2 text-surface-raised hover:bg-brand-strong">
+    <section className="mx-auto flex max-w-2xl flex-col items-center gap-5 px-4 py-28 text-center sm:px-6">
+      <p className="text-[11px] uppercase tracking-[0.28em] text-accent-text">Something went wrong</p>
+      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">We hit a problem loading this page</h1>
+      <p className="max-w-prose text-[15px] leading-relaxed text-ink-soft">Please try again. If it keeps happening, come back later.</p>
+      <div className="mt-2 flex flex-wrap justify-center gap-4">
+        <Button onClick={() => reset()} size="lg">
           Try again
-        </button>
-        <Link href="/" className="rounded-md border border-line px-4 py-2 text-brand-strong hover:bg-surface">
+        </Button>
+        <Link
+          href="/"
+          className={buttonClasses({ variant: "secondary", size: "lg" })}
+        >
           Back to home
         </Link>
       </div>

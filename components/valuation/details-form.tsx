@@ -81,7 +81,7 @@ export function DetailsForm(props: DetailsFormProps) {
       <input type="hidden" name="continueTo" value={props.continueTo} />
 
       {props.fromListing ? (
-        <p className="rounded-md border border-line bg-accent-soft px-4 py-3 text-sm text-ink">
+        <p className="border border-line bg-accent-soft px-4 py-3 text-sm text-ink">
           These details and photos were copied from the listing. Check them, and change anything that is not right for this request.
         </p>
       ) : null}
@@ -193,7 +193,7 @@ export function DetailsForm(props: DetailsFormProps) {
               className={inputClass}
             />
           </Field>
-          <p id={`${id("notes")}-count`} className={`mt-1 text-xs ${notesOver ? "text-red-700" : "text-ink-soft"}`}>
+          <p id={`${id("notes")}-count`} className={`mt-1 text-xs ${notesOver ? "text-danger" : "text-ink-soft"}`}>
             {notesCountLabel(notesLength)}
           </p>
         </div>

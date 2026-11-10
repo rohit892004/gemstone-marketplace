@@ -20,7 +20,7 @@ export function DetailsSummary({ view }: { view: ValuationView }) {
     ["Notes", view.notes],
   ];
   return (
-    <dl className="divide-y divide-line rounded-lg border border-line bg-surface-raised text-sm">
+    <dl className="divide-y divide-line border border-line bg-surface-raised text-sm">
       {rows
         .filter((row): row is [string, string] => !!row[1])
         .map(([label, value]) => (

@@ -16,7 +16,7 @@ export function NewsletterSettings({ current }: { current: AccountNewsletterStat
 
   return (
     <section aria-labelledby="newsletter-settings-heading" className="mt-10 space-y-5 border-t border-line pt-8">
-      <h2 id="newsletter-settings-heading" className="text-xl font-semibold text-ink">Newsletter</h2>
+      <h2 id="newsletter-settings-heading" className="font-heading text-2xl text-ink">Newsletter</h2>
       <p className="text-sm text-ink-soft">
         {subscribed
           ? `You receive the newsletter on: ${(current?.topics ?? []).map((t) => TOPIC_LABELS[t]).join(", ") || "no topics"}.`
@@ -30,7 +30,7 @@ export function NewsletterSettings({ current }: { current: AccountNewsletterStat
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-brand-strong px-5 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Saving..." : subscribed ? "Save topics" : "Subscribe"}
         </button>
@@ -42,7 +42,7 @@ export function NewsletterSettings({ current }: { current: AccountNewsletterStat
           <button
             type="submit"
             disabled={unsubscribing}
-            className="rounded-md border border-line px-5 py-2.5 font-medium text-ink hover:border-ink-soft disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="border border-line px-5 py-2.5 font-medium text-ink hover:border-ink-soft disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             {unsubscribing ? "Working..." : "Unsubscribe from the newsletter"}
           </button>

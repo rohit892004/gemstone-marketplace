@@ -27,7 +27,7 @@ async function UnsubscribeView({ searchParams }: { searchParams: Promise<{ token
 
   return (
     <section className="mx-auto max-w-xl space-y-6 px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">Unsubscribe</h1>
+      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Unsubscribe</h1>
       {!token || !subscriber ? (
         <p role="status" className="text-ink-soft">{INVALID_PREFERENCES_LINK}</p>
       ) : subscriber.status === "UNSUBSCRIBED" ? (

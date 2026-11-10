@@ -47,7 +47,7 @@ async function EducationList({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
       <header className="max-w-3xl space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Education and research</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Education and research</h1>
         <p className="text-ink-soft">
           Guides on grading, treatments and care, and research notes on the gemstone market. Everything here is written to
           help you ask better questions when you buy or value a stone.
@@ -63,7 +63,7 @@ async function EducationList({ searchParams }: { searchParams: SearchParams }) {
               key={option.id}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+              className={`border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                 active ? "border-ink bg-ink text-surface-raised" : "border-line bg-surface-raised text-ink hover:border-ink-soft"
               }`}
             >
@@ -86,11 +86,11 @@ async function EducationList({ searchParams }: { searchParams: SearchParams }) {
             name="q"
             maxLength={120}
             defaultValue={q}
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft"
             placeholder="Search by title, topic or word"
           />
         </div>
-        <button type="submit" className="rounded-md bg-ink px-5 py-2.5 text-sm font-medium text-surface-raised hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <button type="submit" className="bg-ink px-5 py-2.5 text-sm font-medium text-surface-raised hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
           Search
         </button>
       </form>

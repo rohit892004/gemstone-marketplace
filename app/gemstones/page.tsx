@@ -4,6 +4,7 @@ import { TrackSearch } from "@/components/analytics/track";
 import { CatalogueFilters } from "@/components/catalogue/filters";
 import { CatalogueResults } from "@/components/catalogue/results";
 import { type RawSearchParams, parseCatalogueParams } from "@/components/catalogue/query-params";
+import { PageHeader } from "@/components/ui/page-header";
 import { searchCatalogue } from "@/lib/listings/search";
 import { getCatalogueFacets } from "@/lib/seller-public/facets";
 
@@ -14,11 +15,12 @@ export const metadata: Metadata = {
 
 export default function GemstonesPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Gemstones</h1>
-        <p className="mt-2 text-ink-soft">Stones listed by approved sellers. Filter by type, carat, price and certification.</p>
-      </header>
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+      <PageHeader
+        eyebrow="The collection"
+        title="Gemstones"
+        lead="Stones listed by approved sellers. Filter by type, carat, price and certification."
+      />
       <Suspense fallback={null}>
         <GemstonesResults searchParams={searchParams} />
       </Suspense>
@@ -31,18 +33,12 @@ async function GemstonesResults({ searchParams }: { searchParams: Promise<RawSea
   const [result, facets] = await Promise.all([searchCatalogue(query), getCatalogueFacets()]);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[18rem_1fr]">
+    <div className="grid gap-10 lg:grid-cols-[18rem_1fr]">
       <TrackSearch term={query.q} />
-      <aside aria-label="Filters">
-        <CatalogueFilters
-          action="/gemstones"
-          query={query}
-          facets={facets}
-          showCategory
-          clearHref="/gemstones"
-        />
+      <aside aria-label="Filters" className="lg:sticky lg:top-10 lg:self-start">
+        <CatalogueFilters action="/gemstones" query={query} facets={facets} showCategory clearHref="/gemstones" />
       </aside>
-      <div>
+      <div className="min-w-0">
         <CatalogueResults
           items={result.items}
           total={result.total}

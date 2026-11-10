@@ -29,14 +29,14 @@ async function ConfirmView({ searchParams }: { searchParams: Promise<{ token?: s
 
   return (
     <section className="mx-auto max-w-xl space-y-6 px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">Confirm your subscription</h1>
+      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Confirm your subscription</h1>
       {token && outcome === "CONFIRMED" ? (
         <>
           <p className="text-ink-soft">Select the button below to confirm your address and start receiving the newsletter.</p>
           <TokenActionForm action={confirmSubscriptionAction} token={token} label="Confirm my subscription" />
         </>
       ) : (
-        <p role="status" className={CONFIRM_OUTCOME_COPY[outcome].ok ? "text-ink-soft" : "text-red-700"}>
+        <p role="status" className={CONFIRM_OUTCOME_COPY[outcome].ok ? "text-ink-soft" : "text-danger"}>
           {CONFIRM_OUTCOME_COPY[outcome].message}
         </p>
       )}

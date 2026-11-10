@@ -1,17 +1,20 @@
 import type { ReactNode } from "react";
+import { DemoTag as UiDemoTag } from "@/components/ui/badge";
 
 /** Shared form and layout pieces for the valuation pages. Server-safe: no hooks. */
 
 export const inputClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none aria-[invalid=true]:border-red-700";
+  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink transition duration-300 placeholder:text-ink-soft/70 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
 
-export const primaryButtonClass =
-  "rounded-md bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50";
+const buttonBase =
+  "inline-flex min-h-11 items-center justify-center gap-2 px-6 py-3 text-sm tracking-wide transition duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
 
-export const secondaryButtonClass =
-  "rounded-md border border-brand px-5 py-2.5 text-sm font-medium text-brand-strong hover:bg-accent-soft disabled:opacity-50";
+export const primaryButtonClass = `${buttonBase} bg-brand text-ivory hover:bg-brand/90`;
 
-export const linkClass = "font-medium text-brand-strong underline underline-offset-4";
+export const secondaryButtonClass = `${buttonBase} border border-brand text-brand hover:bg-brand/5`;
+
+export const linkClass =
+  "inline-flex min-h-11 items-center text-[14px] text-ink underline underline-offset-4 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 export function Field({
   id,
@@ -30,14 +33,14 @@ export function Field({
 }) {
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
+      <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
         {label}
-        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </label>
       {children}
-      {hint ? <p className="text-xs text-ink-soft">{hint}</p> : null}
+      {hint ? <p className="text-[12px] text-ink-soft">{hint}</p> : null}
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-[13px] text-danger">
           {error}
         </p>
       ) : null}
@@ -49,9 +52,9 @@ export function Field({
 export function ErrorSummary({ messages, title = "Please check the form" }: { messages: string[]; title?: string }) {
   if (messages.length === 0) return null;
   return (
-    <div role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+    <div role="alert" className="border border-danger/40 px-5 py-4 text-[14px] text-danger">
       <p className="font-medium">{title}</p>
-      <ul className="mt-1 list-disc pl-5">
+      <ul className="mt-2 list-disc space-y-1 pl-5">
         {messages.map((m) => (
           <li key={m}>{m}</li>
         ))}
@@ -62,7 +65,7 @@ export function ErrorSummary({ messages, title = "Please check the form" }: { me
 
 export function StatusMessage({ children }: { children: ReactNode }) {
   return (
-    <p role="status" className="rounded-md border border-line bg-accent-soft px-4 py-3 text-sm text-ink">
+    <p role="status" className="border border-accent/40 bg-accent-soft px-5 py-4 text-[14px] text-ink">
       {children}
     </p>
   );
@@ -71,8 +74,8 @@ export function StatusMessage({ children }: { children: ReactNode }) {
 /** A quiet panel for the result page and the dashboards. */
 export function Panel({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return (
-    <section aria-labelledby={id} className="space-y-3 rounded-lg border border-line bg-surface-raised p-5">
-      <h2 id={id} className="text-lg font-semibold text-ink">
+    <section aria-labelledby={id} className="space-y-4 border border-line bg-surface-raised p-6 shadow-soft sm:p-8">
+      <h2 id={id} className="font-heading text-2xl text-ink">
         {title}
       </h2>
       {children}
@@ -83,24 +86,28 @@ export function Panel({ title, children, id }: { title: string; children: ReactN
 /** The site-wide indicative-only notice. Always shown with any number from the engine. */
 export function Disclaimer({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
+    <div className="border-l-2 border-accent bg-surface-raised px-5 py-4 text-[14px] text-ink-soft">
       <p className="font-medium text-ink">{title}</p>
-      <p className="mt-1">{text}</p>
+      <p className="mt-1 leading-relaxed">{text}</p>
     </div>
   );
 }
 
 export function DemoTag({ label }: { label: string }) {
-  return <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">{label}</span>;
+  return (
+    <span className="inline-flex items-center text-[10px] uppercase tracking-[0.22em] text-ink-soft">
+      {label === "Demo" ? <UiDemoTag /> : label}
+    </span>
+  );
 }
 
 /** Plain access message for pages a visitor cannot use yet. */
 export function AccessMessage({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
-      <div className="mt-2 text-sm text-ink-soft">{children}</div>
-      {action ? <div className="mt-5">{action}</div> : null}
+    <div className="border border-line bg-surface-raised p-8 text-center sm:p-12">
+      <h2 className="font-heading text-2xl text-ink">{title}</h2>
+      <div className="mx-auto mt-3 max-w-prose text-[15px] leading-relaxed text-ink-soft">{children}</div>
+      {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
     </div>
   );
 }

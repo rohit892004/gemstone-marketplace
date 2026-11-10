@@ -24,12 +24,12 @@ export function RemoveWishlistButton({ listingId }: { listingId: string }) {
             else setError(result.error);
           })
         }
-        className="text-sm text-ink-soft underline underline-offset-4 hover:text-ink disabled:opacity-60"
+        className="inline-flex min-h-11 items-center text-[13px] text-ink-soft underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
       >
         Remove from wishlist
       </button>
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-[13px] text-danger">
           {error}
         </p>
       ) : null}

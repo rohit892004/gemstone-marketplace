@@ -44,7 +44,7 @@ export function ReviewForm({ valuationId, photoCount, initialRequestExpert }: Re
 
       <ErrorSummary messages={summary} title="The request was not sent" />
 
-      <div className="space-y-3 rounded-lg border border-line bg-surface-raised p-5">
+      <div className="space-y-3 border border-line bg-surface-raised p-5">
         <label htmlFor={`${ids}-expert`} className="flex items-start gap-3 text-sm text-ink">
           <input
             id={`${ids}-expert`}
@@ -62,14 +62,14 @@ export function ReviewForm({ valuationId, photoCount, initialRequestExpert }: Re
         </label>
       </div>
 
-      <div className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
+      <div className="border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
         <p>
           The automatic estimate uses reference prices and the details you entered. It does not look at your photos. Photos are for the expert valuer.
         </p>
       </div>
 
       {blockReason ? (
-        <p id={`${ids}-block`} className="text-sm text-red-700">
+        <p id={`${ids}-block`} className="text-sm text-danger">
           {blockReason}
         </p>
       ) : null}

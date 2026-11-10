@@ -72,7 +72,7 @@ async function EducationArticle({ params }: Props) {
 
       <header className="space-y-4">
         <p className="text-xs font-medium uppercase tracking-wider text-accent-text">{TYPE_LABELS[article.type] ?? "Article"}</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{article.title}</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">{article.title}</h1>
         {article.summary ? <p className="text-lg text-ink-soft">{article.summary}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-soft">
           {published ? <time dateTime={article.publishedAt?.toISOString()}>Published {published}</time> : null}
@@ -91,7 +91,7 @@ async function EducationArticle({ params }: Props) {
             <li key={tag}>
               <Link
                 href={`/education?tag=${encodeURIComponent(tag)}`}
-                className="rounded-full border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink-soft hover:border-ink-soft hover:text-ink"
+                className="border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink-soft hover:border-ink-soft hover:text-ink"
               >
                 #{tag}
               </Link>
@@ -104,7 +104,7 @@ async function EducationArticle({ params }: Props) {
 
       {related.length > 0 ? (
         <section aria-labelledby="related-heading" className="space-y-4 border-t border-line pt-10">
-          <h2 id="related-heading" className="text-xl font-semibold text-ink">
+          <h2 id="related-heading" className="font-heading text-2xl text-ink">
             Related reading
           </h2>
           <ul className="grid gap-5 md:grid-cols-3">

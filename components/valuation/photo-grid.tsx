@@ -13,7 +13,7 @@ export function PhotoGrid({ media }: { media: { id: string; kind: "IMAGE" | "VID
       {photos.length > 0 ? (
         <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {photos.map((photo, index) => (
-            <li key={photo.id} className="relative aspect-square overflow-hidden rounded-md border border-line bg-surface">
+            <li key={photo.id} className="relative aspect-square overflow-hidden border border-line bg-surface">
               <Image
                 src={REQUESTER_PATHS.media(photo.id, "thumb")}
                 alt={`Photo ${index + 1} of ${photos.length}`}
@@ -27,7 +27,7 @@ export function PhotoGrid({ media }: { media: { id: string; kind: "IMAGE" | "VID
         </ul>
       ) : null}
       {videos.map((video) => (
-        <video key={video.id} controls preload="metadata" src={REQUESTER_PATHS.media(video.id, "full")} className="max-h-64 w-full rounded-md border border-line bg-black" aria-label="Video of the stone" />
+        <video key={video.id} controls preload="metadata" src={REQUESTER_PATHS.media(video.id, "full")} className="max-h-64 w-full border border-line bg-night" aria-label="Video of the stone" />
       ))}
     </div>
   );

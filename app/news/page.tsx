@@ -47,7 +47,7 @@ async function NewsList({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
       <header className="max-w-3xl space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Market news</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Market news</h1>
         <p className="text-ink-soft">
           Short summaries of gemstone market news. Each item names its source and links to the original report, which is
           the place to read the full story.
@@ -58,7 +58,7 @@ async function NewsList({ searchParams }: { searchParams: SearchParams }) {
         <Link
           href="/news"
           aria-current={!category ? "page" : undefined}
-          className={`rounded-full border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+          className={`border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
             !category ? "border-ink bg-ink text-surface-raised" : "border-line bg-surface-raised text-ink hover:border-ink-soft"
           }`}
         >
@@ -72,7 +72,7 @@ async function NewsList({ searchParams }: { searchParams: SearchParams }) {
               key={option}
               href={`/news?${params.toString()}`}
               aria-current={active ? "page" : undefined}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+              className={`border px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                 active ? "border-ink bg-ink text-surface-raised" : "border-line bg-surface-raised text-ink hover:border-ink-soft"
               }`}
             >
@@ -94,11 +94,11 @@ async function NewsList({ searchParams }: { searchParams: SearchParams }) {
             name="q"
             maxLength={120}
             defaultValue={q}
-            className="mt-1 w-full rounded-md border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft"
+            className="mt-1 w-full border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft"
             placeholder="Search by title or word"
           />
         </div>
-        <button type="submit" className="rounded-md bg-ink px-5 py-2.5 text-sm font-medium text-surface-raised hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+        <button type="submit" className="bg-ink px-5 py-2.5 text-sm font-medium text-surface-raised hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
           Search
         </button>
       </form>
