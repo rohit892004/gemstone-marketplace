@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { RulesForm } from "@/components/membership/admin-forms";
+import { PageHeader } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { loadTierRules } from "@/lib/membership/service";
 import { PENDING_CONFIRMATION } from "@/lib/membership/defaults";
@@ -17,17 +18,15 @@ async function RulesView() {
   await requirePageRole(["ADMIN"]);
   const rules = await loadTierRules();
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Tier rules</h1>
-        <p className="rounded border border-amber-700 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Placeholder rules, pending client confirmation. {PENDING_CONFIRMATION}.
-        </p>
-        <p className="text-sm text-stone-600">
-          Leave a listing limit blank for unlimited. Unlock values apply to Premium and Elite only; Free has none.
-          A seller unlocks a tier with enough referrals or followers (either one), plus the response rate and any minimum rating.
-        </p>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Memberships"
+        title="Tier rules"
+        lead="Leave a listing limit blank for unlimited. Unlock values apply to Premium and Elite only; Free has none. A seller unlocks a tier with enough referrals or followers (either one), plus the response rate and any minimum rating."
+      />
+      <p className="border-l-2 border-accent bg-accent-soft/50 px-5 py-4 text-sm leading-relaxed text-ink">
+        Placeholder rules, pending client confirmation. {PENDING_CONFIRMATION}.
+      </p>
       <RulesForm rules={rules} />
     </div>
   );

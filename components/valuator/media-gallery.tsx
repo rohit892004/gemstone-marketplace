@@ -6,15 +6,15 @@ import type { MediaEntry } from "@/lib/valuation/view";
  */
 export function MediaGallery({ media }: { media: MediaEntry[] }) {
   if (media.length === 0) {
-    return <p className="rounded border border-dashed border-stone-300 p-4 text-sm text-stone-600">No photos or video were added.</p>;
+    return <p className="border border-dashed border-line p-4 text-sm text-ink-soft">No photos or video were added.</p>;
   }
   const sorted = [...media].sort((a, b) => a.sortOrder - b.sortOrder);
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" aria-label="Photos and video">
       {sorted.map((item, index) => (
-        <li key={item.id} className="overflow-hidden rounded border border-stone-300 bg-white">
+        <li key={item.id} className="overflow-hidden border border-line bg-surface-raised">
           {item.kind === "VIDEO" ? (
-            <video controls preload="metadata" className="aspect-video w-full bg-black" src={`/api/valuation/media/${item.id}/full`} aria-label={`Video of the stone`}>
+            <video controls preload="metadata" className="aspect-video w-full bg-night" src={`/api/valuation/media/${item.id}/full`} aria-label={`Video of the stone`}>
               <track kind="captions" />
             </video>
           ) : (

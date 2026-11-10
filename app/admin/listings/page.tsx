@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { DemoBadge } from "@/components/catalogue/badges";
-import { formatDate } from "@/components/admin/admin-ui";
+import { ClipboardCheck } from "lucide-react";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { formatMoney } from "@/lib/money/money";
@@ -39,65 +44,82 @@ async function Queue() {
     },
   });
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Listing review queue</h1>
-        <Link href="/admin/listings/all" className="text-sm underline">
-          All listings
+  type Row = (typeof listings)[number];
+  const columns: Column<Row>[] = [
+    { key: "submitted", header: "Submitted", cell: (listing) => <span className="whitespace-nowrap">{formatDate(listing.submittedAt)}</span> },
+    {
+      key: "listing",
+      header: "Listing",
+      cell: (listing) => (
+        <div className="space-y-1">
+          <span className="flex flex-wrap items-center gap-2 font-heading text-lg text-ink">
+            {listing.title}
+            {listing.isDemo ? <AdminDemoTag /> : null}
+          </span>
+          <p className="text-[12px] text-ink-soft">
+            {[listing.species, listing.caratWeight ? `${listing.caratWeight.toString()} ct` : null].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "seller",
+      header: "Seller",
+      hideOnMobile: true,
+      cell: (listing) => (
+        <div className="space-y-1">
+          <span>{listing.seller.businessName}</span>
+          <p className="text-[12px] text-ink-soft">
+            {listing.seller.city}, {listing.seller.state}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "price",
+      header: "Price",
+      hideOnMobile: true,
+      cell: (listing) => (listing.priceOnRequest ? "On request" : formatMoney(listing.priceMinor, listing.currency) ?? "-"),
+    },
+    {
+      key: "review",
+      header: "Review",
+      align: "right",
+      cell: (listing) => (
+        <Link
+          href={`/admin/listings/${listing.id}`}
+          className="inline-flex min-h-11 items-center text-sm text-ink underline underline-offset-4 hover:text-accent-text"
+        >
+          Review<span className="sr-only"> {listing.title}</span>
         </Link>
-      </div>
-      <p className="text-sm text-stone-600">
-        {listings.length} listing{listings.length === 1 ? "" : "s"} waiting for review, oldest first.
-      </p>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Queue"
+        title="Listing review queue"
+        lead={`${listings.length} listing${listings.length === 1 ? "" : "s"} waiting for review, oldest first.`}
+        actions={<ButtonLink href="/admin/listings/all" variant="secondary">All listings</ButtonLink>}
+      />
 
       {listings.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">
-          The queue is empty.
-        </p>
+        <EmptyState
+          icon={ClipboardCheck}
+          title="The queue is empty"
+          body="New listings from sellers appear here for review."
+          action={
+            <ButtonLink href="/admin/listings/all" variant="secondary">
+              Browse all listings
+            </ButtonLink>
+          }
+        />
       ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-stone-300 bg-stone-50 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th className="px-3 py-2">Submitted</th>
-                <th className="px-3 py-2">Listing</th>
-                <th className="px-3 py-2">Seller</th>
-                <th className="px-3 py-2">Price</th>
-                <th className="px-3 py-2">Review</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.map((listing) => (
-                <tr key={listing.id} className="border-b border-stone-200 last:border-0">
-                  <td className="px-3 py-2 whitespace-nowrap">{formatDate(listing.submittedAt)}</td>
-                  <td className="px-3 py-2">
-                    <span className="font-medium">{listing.title}</span>{" "}
-                    {listing.isDemo ? <DemoBadge /> : null}
-                    <p className="text-xs text-stone-600">
-                      {[listing.species, listing.caratWeight ? `${listing.caratWeight.toString()} ct` : null]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </td>
-                  <td className="px-3 py-2">
-                    {listing.seller.businessName}
-                    <p className="text-xs text-stone-600">
-                      {listing.seller.city}, {listing.seller.state}
-                    </p>
-                  </td>
-                  <td className="px-3 py-2">
-                    {listing.priceOnRequest ? "On request" : formatMoney(listing.priceMinor, listing.currency) ?? "-"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <Link href={`/admin/listings/${listing.id}`} className="underline">
-                      Review
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          <Badge tone="warning">Waiting for review</Badge>
+          <DataTable caption="Listings waiting for review" columns={columns} rows={listings} getRowKey={(listing) => listing.id} />
         </div>
       )}
     </div>

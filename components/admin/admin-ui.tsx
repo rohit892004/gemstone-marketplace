@@ -1,18 +1,26 @@
 import type { ApprovalStatus, DocumentType } from "@/app/generated/prisma/client";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { DEMO_LABEL } from "@/lib/demo/guard";
 
 /** Shared display helpers for admin pages. Server-safe (no client hooks). */
 
-const STATUS_STYLES: Record<ApprovalStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-900",
-  APPROVED: "bg-green-100 text-green-900",
-  REJECTED: "bg-red-100 text-red-900",
-  SUSPENDED: "bg-stone-300 text-stone-900",
+const STATUS_TONES: Record<ApprovalStatus, BadgeTone> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  REJECTED: "danger",
+  SUSPENDED: "neutral",
 };
 
+/** Status is always shown as a word inside the badge. The tone only supports the text. */
 export function StatusBadge({ status }: { status: ApprovalStatus }) {
+  return <Badge tone={STATUS_TONES[status]}>{status.charAt(0) + status.slice(1).toLowerCase()}</Badge>;
+}
+
+/** Marks seeded sample records in admin lists. Same text as the catalogue demo label. */
+export function AdminDemoTag() {
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}>
-      {status.charAt(0) + status.slice(1).toLowerCase()}
+    <span className="ml-2 inline-flex items-center border border-dashed border-ink-soft/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-ink-soft">
+      {DEMO_LABEL}
     </span>
   );
 }

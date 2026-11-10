@@ -7,14 +7,14 @@ import type { ThreadEntry } from "@/lib/valuation/view";
  */
 export function ThreadList({ thread }: { thread: ThreadEntry[] }) {
   if (thread.length === 0) {
-    return <p className="rounded border border-dashed border-stone-300 p-4 text-sm text-stone-600">No messages yet.</p>;
+    return <p className="border border-dashed border-line p-4 text-sm text-ink-soft">No messages yet.</p>;
   }
   return (
     <ol className="space-y-3">
       {thread.map((entry) => (
-        <li key={entry.id} className="rounded border border-stone-200 bg-white p-3 text-sm">
-          <p className="flex flex-wrap items-center gap-x-2 text-xs text-stone-600">
-            <span className="font-medium text-stone-900">{THREAD_FROM_LABELS[entry.from]}</span>
+        <li key={entry.id} className="border border-line bg-surface-raised p-3 text-sm">
+          <p className="flex flex-wrap items-center gap-x-2 text-[12px] text-ink-soft">
+            <span className="font-medium text-ink">{THREAD_FROM_LABELS[entry.from]}</span>
             <span>{THREAD_KIND_LABELS[entry.kind] ?? entry.kind}</span>
             <time dateTime={entry.createdAt.toISOString()}>{formatDate(entry.createdAt)}</time>
           </p>

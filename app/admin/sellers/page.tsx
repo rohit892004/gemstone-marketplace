@@ -1,10 +1,15 @@
 import Link from "next/link";
-import { DemoBadge } from "@/components/catalogue/badges";
 import { Suspense } from "react";
+import { Users } from "lucide-react";
 import { SELLER_PAGE_SIZE, SELLER_STATUS_FILTERS, parseSellerListParams, sellerWhere } from "@/lib/admin/seller-list";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
-import { formatDate, StatusBadge } from "@/components/admin/admin-ui";
+import { AdminDemoTag, formatDate, StatusBadge } from "@/components/admin/admin-ui";
+import { ButtonLink } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -55,93 +60,86 @@ async function SellersList({ searchParams }: { searchParams: SearchParams }) {
     },
   });
 
+  const columns: Column<(typeof sellers)[number]>[] = [
+    {
+      key: "business",
+      header: "Business",
+      cell: (seller) => (
+        <span className="font-heading text-lg text-ink">
+          {seller.businessName}
+          {seller.isDemo ? <AdminDemoTag /> : null}
+        </span>
+      ),
+    },
+    { key: "place", header: "City, state", hideOnMobile: true, cell: (seller) => <span>{seller.city}, {seller.state}</span> },
+    { key: "specialties", header: "Specialties", hideOnMobile: true, cell: (seller) => <span className="tabular-nums">{seller.specialties.length}</span> },
+    { key: "status", header: "Status", cell: (seller) => <StatusBadge status={seller.approvalStatus} /> },
+    { key: "submitted", header: "Submitted", hideOnMobile: true, cell: (seller) => <span className="whitespace-nowrap">{formatDate(seller.createdAt)}</span> },
+    {
+      key: "review",
+      header: "Actions",
+      align: "right",
+      cell: (seller) => (
+        <Link
+          href={`/admin/sellers/${seller.id}`}
+          className="inline-flex min-h-11 items-center text-sm text-ink underline underline-offset-4 hover:text-accent-text"
+        >
+          Review<span className="sr-only"> {seller.businessName}</span>
+        </Link>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Sellers</h1>
+    <div className="space-y-8">
+      <PageHeader eyebrow="Admin" title="Sellers" lead={`${total} seller${total === 1 ? "" : "s"}`} />
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-2 text-sm">
-        {SELLER_STATUS_FILTERS.map((status) => (
-          <Link
-            key={status}
-            href={listHref(status, 1)}
-            aria-current={status === params.status ? "page" : undefined}
-            className={`rounded border px-3 py-1 ${
-              status === params.status ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"
-            }`}
-          >
-            {FILTER_LABELS[status]}
-          </Link>
-        ))}
-      </nav>
+      <Tabs
+        label="Filter by status"
+        items={SELLER_STATUS_FILTERS.map((status) => ({
+          href: listHref(status, 1),
+          label: FILTER_LABELS[status],
+          active: status === params.status,
+        }))}
+      />
 
-      <p className="text-sm text-stone-600">
-        {total} seller{total === 1 ? "" : "s"}
-      </p>
-
-      {sellers.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">
-          No sellers match this filter.
-        </p>
-      ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th className="px-3 py-2">Business</th>
-                <th className="px-3 py-2">City, state</th>
-                <th className="px-3 py-2">Specialties</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Submitted</th>
-                <th className="px-3 py-2">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sellers.map((seller) => (
-                <tr key={seller.id} className="border-t border-stone-200">
-                  <td className="px-3 py-2 font-medium">
-                    {seller.businessName}{" "}
-                    {seller.isDemo ? <DemoBadge /> : null}
-                  </td>
-                  <td className="px-3 py-2">
-                    {seller.city}, {seller.state}
-                  </td>
-                  <td className="px-3 py-2">{seller.specialties.length}</td>
-                  <td className="px-3 py-2">
-                    <StatusBadge status={seller.approvalStatus} />
-                  </td>
-                  <td className="px-3 py-2">{formatDate(seller.createdAt)}</td>
-                  <td className="px-3 py-2 text-right">
-                    <Link href={`/admin/sellers/${seller.id}`} className="underline">
-                      Review
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        caption="Sellers"
+        columns={columns}
+        rows={sellers}
+        getRowKey={(seller) => seller.id}
+        empty={
+          <EmptyState
+            icon={Users}
+            title="No sellers match this filter"
+            body="Try another status, or check back once new seller applications come in."
+            action={
+              <ButtonLink href="/admin/sellers" variant="secondary">
+                Show all sellers
+              </ButtonLink>
+            }
+          />
+        }
+      />
 
       {pageCount > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center gap-4 text-sm">
+        <nav aria-label="Pagination" className="flex flex-wrap items-center gap-6 text-sm">
           {page > 1 ? (
-            <Link href={listHref(params.status, page - 1)} className="underline">
+            <Link href={listHref(params.status, page - 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Previous
             </Link>
           ) : (
-            <span className="text-stone-400">Previous</span>
+            <span className="text-ink-soft">Previous</span>
           )}
-          <span>
+          <span className="text-ink-soft">
             Page {page} of {pageCount}
           </span>
           {page < pageCount ? (
-            <Link href={listHref(params.status, page + 1)} className="underline">
+            <Link href={listHref(params.status, page + 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Next
             </Link>
           ) : (
-            <span className="text-stone-400">Next</span>
+            <span className="text-ink-soft">Next</span>
           )}
         </nav>
       ) : null}

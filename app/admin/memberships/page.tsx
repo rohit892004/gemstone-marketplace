@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { BadgeCheck } from "lucide-react";
 import type { Prisma } from "@/app/generated/prisma/client";
-import { DemoBadge } from "@/components/catalogue/badges";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
 import { ClearOverrideForm, TierOverrideForm } from "@/components/membership/admin-forms";
-import { formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink, buttonClasses } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { TIERS, type Tier } from "@/lib/membership/tiers";
@@ -17,6 +23,9 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const PAGE_SIZE = 25;
 const TIER_LABEL: Record<Tier, string> = { FREE: "Free", PREMIUM: "Premium", ELITE: "Elite" };
+
+const LABEL = "text-[11px] uppercase tracking-[0.18em] text-ink-soft";
+const SUBHEAD = "font-heading text-lg text-ink";
 
 function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
@@ -83,102 +92,103 @@ async function MembershipList({ searchParams }: { searchParams: SearchParams }) 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Memberships</h1>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <Link href="/admin/memberships/rules" className="underline">
-            Tier rules
-          </Link>
-          <Link href="/admin/referrals" className="underline">
-            Referrals
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Business"
+        title="Memberships"
+        actions={
+          <>
+            <ButtonLink href="/admin/memberships/rules" variant="secondary">
+              Tier rules
+            </ButtonLink>
+            <ButtonLink href="/admin/referrals" variant="secondary">
+              Referrals
+            </ButtonLink>
+          </>
+        }
+      />
 
-      <nav aria-label="Filter by tier" className="flex flex-wrap gap-2 text-sm">
-        {["", ...TIERS].map((value) => {
-          const active = value === tierFilter;
-          const label = value === "" ? "All" : TIER_LABEL[value as Tier];
-          const href = value === "" ? "/admin/memberships" : `/admin/memberships?tier=${value}`;
-          return (
-            <Link
-              key={value || "all"}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={`rounded border px-3 py-1 ${active ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"}`}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      <Tabs
+        label="Filter by tier"
+        items={["", ...TIERS].map((value) => ({
+          href: value === "" ? "/admin/memberships" : `/admin/memberships?tier=${value}`,
+          label: value === "" ? "All" : TIER_LABEL[value as Tier],
+          active: value === tierFilter,
+        }))}
+      />
 
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-ink-soft">
         {total} approved seller{total === 1 ? "" : "s"}. Progress figures are from the last membership review.
       </p>
 
       {sellers.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No sellers match this filter.</p>
+        <EmptyState
+          icon={BadgeCheck}
+          title="No sellers match this filter"
+          body="Approved sellers appear here with their tier and progress figures."
+          action={
+            <Link href="/admin/memberships" className={buttonClasses({ variant: "secondary" })}>
+              Show all memberships
+            </Link>
+          }
+        />
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {sellers.map((seller) => {
             const m = seller.membership;
             const tier: Tier = m?.tier ?? "FREE";
             return (
-              <li key={seller.id} className="space-y-4 rounded border border-stone-300 bg-white p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-medium">{seller.businessName}</h2>
-                  {seller.isDemo ? <DemoBadge /> : null}
-                  <span className="rounded border border-stone-300 px-2 py-0.5 text-xs">Tier: {TIER_LABEL[tier]}</span>
-                  {m?.manualOverride ? (
-                    <span className="rounded border border-amber-700 px-2 py-0.5 text-xs text-amber-900">Manual override</span>
-                  ) : (
-                    <span className="text-xs text-stone-600">Set by the rules</span>
-                  )}
-                </div>
-                <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
-                  <div>
-                    <dt className="text-stone-600">Qualified referrals</dt>
-                    <dd>{m?.qualifiedReferrals ?? 0}</dd>
+              <li key={seller.id}>
+                <Card className="space-y-6 p-5 sm:p-8">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="font-heading text-2xl text-ink">{seller.businessName}</h2>
+                    {seller.isDemo ? <AdminDemoTag /> : null}
+                    <Badge tone="accent">Tier: {TIER_LABEL[tier]}</Badge>
+                    {m?.manualOverride ? <Badge tone="warning">Manual override</Badge> : <span className="text-[12px] text-ink-soft">Set by the rules</span>}
                   </div>
-                  <div>
-                    <dt className="text-stone-600">Followers</dt>
-                    <dd>{m?.followerCount ?? 0}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-stone-600">Response rate</dt>
-                    <dd>{m?.responseRate === null || m?.responseRate === undefined ? "No conversations yet" : `${m.responseRate}%`}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-stone-600">Average rating</dt>
-                    <dd>{m?.averageRating === null || m?.averageRating === undefined ? "No reviews yet" : m.averageRating.toString()}</dd>
-                  </div>
-                </dl>
-                {m?.manualOverride && m.overrideReason ? (
-                  <p className="text-sm text-stone-700">
-                    Override reason: {m.overrideReason}. Since {formatDate(m.tierSince)}.
-                  </p>
-                ) : null}
-                {m?.graceUntil ? (
-                  <p className="text-sm text-stone-700">
-                    Review pending: {TIER_LABEL[m.graceTier ?? tier]} from {formatDate(m.graceUntil)} unless the seller qualifies again.
-                  </p>
-                ) : null}
-                <p className="text-xs text-stone-600">Last reviewed: {m?.evaluatedAt ? formatDate(m.evaluatedAt) : "not yet"}</p>
-
-                <div className="grid gap-4 border-t border-stone-200 pt-4 md:grid-cols-2">
-                  <div>
-                    <h3 className="mb-2 text-sm font-medium">Manual tier override</h3>
-                    <TierOverrideForm sellerId={seller.id} currentTier={tier} />
-                  </div>
-                  {m?.manualOverride ? (
-                    <div>
-                      <h3 className="mb-2 text-sm font-medium">Clear override</h3>
-                      <ClearOverrideForm sellerId={seller.id} />
+                  <dl className="grid gap-6 sm:grid-cols-4">
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Qualified referrals</dt>
+                      <dd className="text-[15px] text-ink tabular-nums">{m?.qualifiedReferrals ?? 0}</dd>
                     </div>
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Followers</dt>
+                      <dd className="text-[15px] text-ink tabular-nums">{m?.followerCount ?? 0}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Response rate</dt>
+                      <dd className="text-[15px] text-ink">{m?.responseRate === null || m?.responseRate === undefined ? "No conversations yet" : `${m.responseRate}%`}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Average rating</dt>
+                      <dd className="text-[15px] text-ink">{m?.averageRating === null || m?.averageRating === undefined ? "No reviews yet" : m.averageRating.toString()}</dd>
+                    </div>
+                  </dl>
+                  {m?.manualOverride && m.overrideReason ? (
+                    <p className="text-sm leading-relaxed text-ink">
+                      Override reason: {m.overrideReason}. Since {formatDate(m.tierSince)}.
+                    </p>
                   ) : null}
-                </div>
+                  {m?.graceUntil ? (
+                    <p className="text-sm leading-relaxed text-ink">
+                      Review pending: {TIER_LABEL[m.graceTier ?? tier]} from {formatDate(m.graceUntil)} unless the seller qualifies again.
+                    </p>
+                  ) : null}
+                  <p className="text-[12px] text-ink-soft">Last reviewed: {m?.evaluatedAt ? formatDate(m.evaluatedAt) : "not yet"}</p>
+
+                  <div className="grid gap-6 border-t border-line pt-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <h3 className={SUBHEAD}>Manual tier override</h3>
+                      <TierOverrideForm sellerId={seller.id} currentTier={tier} />
+                    </div>
+                    {m?.manualOverride ? (
+                      <div className="space-y-4">
+                        <h3 className={SUBHEAD}>Clear override</h3>
+                        <ClearOverrideForm sellerId={seller.id} />
+                      </div>
+                    ) : null}
+                  </div>
+                </Card>
               </li>
             );
           })}
@@ -186,27 +196,26 @@ async function MembershipList({ searchParams }: { searchParams: SearchParams }) 
       )}
 
       {pageCount > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center gap-4 text-sm">
+        <nav aria-label="Pagination" className="flex flex-wrap items-center gap-6 text-sm">
           {page > 1 ? (
-            <Link href={hrefFor(page - 1)} className="underline">
+            <Link href={hrefFor(page - 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Previous
             </Link>
           ) : (
-            <span className="text-stone-400">Previous</span>
+            <span className="text-ink-soft">Previous</span>
           )}
-          <span>
+          <span className="text-ink-soft">
             Page {page} of {pageCount}
           </span>
           {page < pageCount ? (
-            <Link href={hrefFor(page + 1)} className="underline">
+            <Link href={hrefFor(page + 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Next
             </Link>
           ) : (
-            <span className="text-stone-400">Next</span>
+            <span className="text-ink-soft">Next</span>
           )}
         </nav>
       ) : null}
     </div>
   );
 }
-

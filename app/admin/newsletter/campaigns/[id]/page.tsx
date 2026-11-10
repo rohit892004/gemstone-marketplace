@@ -16,7 +16,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   return (
     <div className="space-y-8">
       <NewsletterNav />
-      <Suspense fallback={<p className="text-sm text-stone-600">Loading campaign...</p>}>
+      <Suspense fallback={<p className="text-sm text-ink-soft">Loading campaign...</p>}>
         <Detail id={id} />
       </Suspense>
     </div>
@@ -56,16 +56,16 @@ async function Detail({ id }: { id: string }) {
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">{campaign.subject}</h1>
-        <p className="text-sm text-stone-700">
+        <h1 className="font-heading text-4xl font-medium text-ink">{campaign.subject}</h1>
+        <p className="text-sm text-ink-soft">
           Status: <strong>{campaign.status.toLowerCase()}</strong>. Topics: {topicLabels}.
         </p>
-        {campaign.scheduledFor ? <p className="text-sm text-stone-700">Scheduled for {campaign.scheduledFor.toISOString()} (UTC).</p> : null}
-        {campaign.testSentAt ? <p className="text-sm text-stone-700">Last test sent {campaign.testSentAt.toISOString()}.</p> : null}
+        {campaign.scheduledFor ? <p className="text-sm text-ink-soft">Scheduled for {campaign.scheduledFor.toISOString()} (UTC).</p> : null}
+        {campaign.testSentAt ? <p className="text-sm text-ink-soft">Last test sent {campaign.testSentAt.toISOString()}.</p> : null}
       </header>
 
       <section aria-labelledby="stats-heading" className="space-y-3">
-        <h2 id="stats-heading" className="text-lg font-semibold">Send stats</h2>
+        <h2 id="stats-heading" className="font-heading text-2xl text-ink">Send stats</h2>
         <dl className="grid gap-3 sm:grid-cols-5">
           <Stat label="Queued" value={count("QUEUED")} />
           <Stat label="Sent" value={count("SENT")} />
@@ -74,23 +74,23 @@ async function Detail({ id }: { id: string }) {
           <Stat label="Recipients" value={campaign.recipientCount} />
         </dl>
         {campaign.sentAt ? (
-          <p className="text-sm text-stone-700">Finished {campaign.sentAt.toISOString()}. Final counts: {campaign.sentCount} sent, {campaign.failedCount} failed, {campaign.skippedCount} skipped.</p>
+          <p className="text-sm text-ink-soft">Finished {campaign.sentAt.toISOString()}. Final counts: {campaign.sentCount} sent, {campaign.failedCount} failed, {campaign.skippedCount} skipped.</p>
         ) : campaign.startedAt ? (
-          <p className="text-sm text-stone-700">Sending started {campaign.startedAt.toISOString()}.</p>
+          <p className="text-sm text-ink-soft">Sending started {campaign.startedAt.toISOString()}.</p>
         ) : null}
       </section>
 
       <section aria-labelledby="preview-heading" className="space-y-3">
-        <h2 id="preview-heading" className="text-lg font-semibold">Preview</h2>
-        <p className="text-sm text-stone-700">Preheader: {campaign.preheader ?? "none"}</p>
+        <h2 id="preview-heading" className="font-heading text-2xl text-ink">Preview</h2>
+        <p className="text-sm text-ink-soft">Preheader: {campaign.preheader ?? "none"}</p>
         {/* Output of renderMarkdown: the strict sanitiser in lib/content/markdown.ts. Never raw input. */}
-        <div className="prose max-w-none rounded border border-stone-300 bg-white p-4" dangerouslySetInnerHTML={{ __html: renderMarkdown(campaign.body) }} />
-        <p className="text-xs text-stone-600">The footer with the preferences and unsubscribe links is added to every email at send time.</p>
+        <div className="prose max-w-none border border-line bg-surface-raised p-4" dangerouslySetInnerHTML={{ __html: renderMarkdown(campaign.body) }} />
+        <p className="text-[12px] text-ink-soft">The footer with the preferences and unsubscribe links is added to every email at send time.</p>
       </section>
 
       {editable ? (
         <section aria-labelledby="edit-heading" className="space-y-3">
-          <h2 id="edit-heading" className="text-lg font-semibold">Edit</h2>
+          <h2 id="edit-heading" className="font-heading text-2xl text-ink">Edit</h2>
           <CampaignForm
             action={updateCampaignAction}
             submitLabel="Save changes"
@@ -106,7 +106,7 @@ async function Detail({ id }: { id: string }) {
       ) : null}
 
       <section aria-labelledby="test-heading" className="space-y-3">
-        <h2 id="test-heading" className="text-lg font-semibold">Test</h2>
+        <h2 id="test-heading" className="font-heading text-2xl text-ink">Test</h2>
         <ActionForm
           action={sendTestCampaignAction}
           title="Send a test to me"
@@ -118,7 +118,7 @@ async function Detail({ id }: { id: string }) {
 
       {editable ? (
         <section aria-labelledby="schedule-heading" className="space-y-3">
-          <h2 id="schedule-heading" className="text-lg font-semibold">Schedule</h2>
+          <h2 id="schedule-heading" className="font-heading text-2xl text-ink">Schedule</h2>
           <ActionForm
             action={scheduleCampaignAction}
             title="Schedule the send"
@@ -151,9 +151,9 @@ async function Detail({ id }: { id: string }) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded border border-stone-300 bg-white p-4">
-      <dt className="text-sm text-stone-600">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+    <div className="border border-line bg-surface-raised p-4">
+      <dt className="text-sm text-ink-soft">{label}</dt>
+      <dd className="font-heading text-4xl font-medium text-ink tabular-nums">{value}</dd>
     </div>
   );
 }

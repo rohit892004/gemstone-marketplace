@@ -9,9 +9,9 @@ export default async function NewCampaignPage() {
   await requirePageRole(["ADMIN"]);
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">New campaign</h1>
+      <h1 className="font-heading text-4xl font-medium text-ink">New campaign</h1>
       <NewsletterNav />
-      <p className="max-w-2xl text-sm text-stone-700">
+      <p className="max-w-2xl text-sm text-ink-soft">
         Saved as a draft. You can preview the rendered message, send yourself a test, then schedule it on the campaign page.
       </p>
       <CampaignForm action={createCampaignAction} defaults={{}} submitLabel="Save draft" />

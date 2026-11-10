@@ -7,6 +7,7 @@ import { listValuators, openRequestsFor } from "@/lib/valuation/admin-valuators"
 import { statusLabel } from "@/lib/valuation/display";
 import { VALUATION_ROUTES } from "@/lib/valuation/routes";
 import { createValuatorAction, resendSetPasswordAction, setActiveAction } from "./actions";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Valuers" };
 
@@ -29,8 +30,8 @@ async function ValuatorAccounts() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Valuers</h1>
-        <p className="text-sm text-stone-600">
+        <h1 className="font-heading text-4xl font-medium text-ink">Valuers</h1>
+        <p className="text-sm text-ink-soft">
           Valuers are internal staff. Only an admin can create one. There is no public sign-up for this role.
         </p>
       </div>
@@ -48,24 +49,24 @@ async function ValuatorAccounts() {
       />
 
       {valuators.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No valuers yet.</p>
+        <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No valuers yet.</p>
       ) : (
         <ul className="space-y-4">
           {valuators.map((valuator) => {
             const open = openByValuator.get(valuator.id) ?? [];
             return (
-              <li key={valuator.id} className="space-y-3 rounded border border-stone-300 bg-white p-4 text-sm">
+              <li key={valuator.id} className="space-y-3 border border-line bg-surface-raised p-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-medium">{valuator.name ?? "No name"}</p>
-                    <p className="break-all text-stone-600">{valuator.email}</p>
-                    {valuator.mobile ? <p className="text-stone-600">{valuator.mobile}</p> : null}
+                    <p className="break-all text-ink-soft">{valuator.email}</p>
+                    {valuator.mobile ? <p className="text-ink-soft">{valuator.mobile}</p> : null}
                   </div>
                   <div className="text-right">
-                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${valuator.active ? "bg-green-100 text-green-900" : "bg-stone-300 text-stone-900"}`}>
+                    <Badge tone={valuator.active ? "success" : "neutral"}>
                       {valuator.active ? "Active" : "Deactivated"}
-                    </span>
-                    <p className="mt-1 text-xs text-stone-600">Added {formatDate(valuator.createdAt)}</p>
+                    </Badge>
+                    <p className="mt-1 text-[12px] text-ink-soft">Added {formatDate(valuator.createdAt)}</p>
                   </div>
                 </div>
 
@@ -79,7 +80,7 @@ async function ValuatorAccounts() {
                 </p>
 
                 {!valuator.active && valuator.openAssignments > 0 ? (
-                  <p className="rounded border border-amber-300 bg-amber-50 p-2 text-amber-900">
+                  <p className="border border-accent bg-accent-soft p-2 text-accent-text">
                     This valuer is deactivated but still holds {valuator.openAssignments} open request
                     {valuator.openAssignments === 1 ? "" : "s"}. Reassign {valuator.openAssignments === 1 ? "it" : "them"} from the request page.
                   </p>
@@ -94,7 +95,7 @@ async function ValuatorAccounts() {
                           <Link href={VALUATION_ROUTES.adminDetail(request.id)} className="font-mono underline">
                             {request.reference}
                           </Link>{" "}
-                          <span className="text-stone-600">
+                          <span className="text-ink-soft">
                             {request.gemstoneType}, {statusLabel(request.status)}
                           </span>
                         </li>

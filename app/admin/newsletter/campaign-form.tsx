@@ -24,33 +24,33 @@ export function CampaignForm({
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   return (
-    <form action={formAction} className="space-y-5 rounded border border-stone-300 bg-white p-4" aria-label="Campaign">
+    <form action={formAction} className="space-y-5 border border-line bg-surface-raised p-4" aria-label="Campaign">
       {defaults.id ? <input type="hidden" name="id" value={defaults.id} /> : null}
 
       <div className="space-y-1">
-        <label htmlFor="campaign-subject" className="block text-sm font-medium text-stone-800">Subject</label>
-        <input id="campaign-subject" name="subject" required maxLength={150} defaultValue={defaults.subject ?? ""} className="w-full rounded border border-stone-300 px-3 py-2" />
+        <label htmlFor="campaign-subject" className="block text-sm font-medium text-ink">Subject</label>
+        <input id="campaign-subject" name="subject" required maxLength={150} defaultValue={defaults.subject ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink" />
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="campaign-preheader" className="block text-sm font-medium text-stone-800">Preheader (optional)</label>
-        <input id="campaign-preheader" name="preheader" maxLength={200} defaultValue={defaults.preheader ?? ""} className="w-full rounded border border-stone-300 px-3 py-2" />
-        <p className="text-xs text-stone-600">Short preview line shown by some mail apps.</p>
+        <label htmlFor="campaign-preheader" className="block text-sm font-medium text-ink">Preheader (optional)</label>
+        <input id="campaign-preheader" name="preheader" maxLength={200} defaultValue={defaults.preheader ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink" />
+        <p className="text-[12px] text-ink-soft">Short preview line shown by some mail apps.</p>
       </div>
 
       <TopicFieldset selected={defaults.topics ?? []} legend="Send to subscribers who chose" idPrefix="campaign-topic" />
 
       <div className="space-y-1">
-        <label htmlFor="campaign-body" className="block text-sm font-medium text-stone-800">Body (Markdown)</label>
-        <textarea id="campaign-body" name="body" required rows={16} defaultValue={defaults.body ?? ""} className="w-full rounded border border-stone-300 px-3 py-2 font-mono text-sm" />
-        <p className="text-xs text-stone-600">Raw HTML is not allowed. Links must be https, http, mailto or site paths. The footer with the unsubscribe link is added automatically.</p>
+        <label htmlFor="campaign-body" className="block text-sm font-medium text-ink">Body (Markdown)</label>
+        <textarea id="campaign-body" name="body" required rows={16} defaultValue={defaults.body ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 font-mono text-[14px] text-ink" />
+        <p className="text-[12px] text-ink-soft">Raw HTML is not allowed. Links must be https, http, mailto or site paths. The footer with the unsubscribe link is added automatically.</p>
       </div>
 
-      <button type="submit" disabled={pending} className="rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50">
+      <button type="submit" disabled={pending} className="bg-brand px-4 py-2 text-ivory disabled:opacity-50">
         {pending ? "Saving..." : submitLabel}
       </button>
 
-      <p role="status" aria-live="polite" className={state?.ok === false ? "text-sm text-red-700" : "text-sm text-stone-800"}>
+      <p role="status" aria-live="polite" className={state?.ok === false ? "text-sm text-danger" : "text-sm text-ink"}>
         {state === null ? "" : state.ok ? state.message : state.error}
       </p>
     </form>

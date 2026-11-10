@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
 import { MediaGallery } from "@/components/valuator/media-gallery";
 import { ThreadList } from "@/components/valuator/thread-list";
 import { ValuationForm } from "@/components/valuator/valuation-form";
@@ -26,7 +27,7 @@ export default function ValuatorValuationPage({ params }: { params: Params }) {
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-stone-600">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">{label}</dt>
       <dd className="text-sm break-words">{value || "-"}</dd>
     </div>
   );
@@ -57,20 +58,20 @@ async function ValuatorDetail({ params }: { params: Params }) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Link href={VALUATION_ROUTES.valuatorQueue} className="text-sm underline">
+        <Link href={VALUATION_ROUTES.valuatorQueue} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
           Back to my queue
         </Link>
-        <h1 className="font-mono text-xl font-semibold">{view.reference}</h1>
+        <h1 className="font-mono font-heading text-3xl text-ink">{view.reference}</h1>
         <p className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded bg-stone-200 px-2 py-0.5 text-xs font-medium">{statusLabel(view.status)}</span>
-          {view.withdrawn ? <span className="rounded bg-stone-300 px-2 py-0.5 text-xs">Withdrawn</span> : null}
-          <span className="text-stone-600">Submitted {formatDate(view.submittedAt)}</span>
+          <Badge tone="accent">{statusLabel(view.status)}</Badge>
+          {view.withdrawn ? <Badge tone="danger">Withdrawn</Badge> : null}
+          <span className="text-ink-soft">Submitted {formatDate(view.submittedAt)}</span>
         </p>
       </div>
 
       <section aria-labelledby="stone-heading" className="space-y-3">
-        <h2 id="stone-heading" className="text-lg font-medium">Stone</h2>
-        <dl className="grid grid-cols-1 gap-3 rounded border border-stone-300 bg-white p-4 sm:grid-cols-2 md:grid-cols-3">
+        <h2 id="stone-heading" className="font-heading text-2xl text-ink">Stone</h2>
+        <dl className="grid grid-cols-1 gap-3 border border-line bg-surface-raised p-4 sm:grid-cols-2 md:grid-cols-3">
           <Field label="Gemstone" value={view.gemstoneType} />
           <Field label="Category" value={view.categoryName} />
           <Field label="Carat" value={formatCarat(view.caratMilli)} />
@@ -90,21 +91,21 @@ async function ValuatorDetail({ params }: { params: Params }) {
       </section>
 
       <section aria-labelledby="media-heading" className="space-y-3">
-        <h2 id="media-heading" className="text-lg font-medium">Photos and video</h2>
+        <h2 id="media-heading" className="font-heading text-2xl text-ink">Photos and video</h2>
         <MediaGallery media={view.media} />
       </section>
 
       <section aria-labelledby="engine-heading" className="space-y-3">
-        <h2 id="engine-heading" className="text-lg font-medium">Automatic suggestion</h2>
-        <div className="rounded border border-stone-300 bg-white p-4 text-sm">
+        <h2 id="engine-heading" className="font-heading text-2xl text-ink">Automatic suggestion</h2>
+        <div className="border border-line bg-surface-raised p-4 text-sm">
           {view.autoSuggestion ? (
             <>
               <p>
-                Estimate <span className="font-semibold">{money(view.autoSuggestion.estimateMinor, currency)}</span>, range{" "}
+                Estimate <span className="font-medium text-ink">{money(view.autoSuggestion.estimateMinor, currency)}</span>, range{" "}
                 {money(view.autoSuggestion.lowMinor, currency)} to {money(view.autoSuggestion.highMinor, currency)}. Confidence:{" "}
                 {CONFIDENCE_LABELS[view.autoSuggestion.confidence] ?? view.autoSuggestion.confidence}.
               </p>
-              <p className="mt-1 text-xs text-stone-600">Indicative only. Reference prices may still be demo data.</p>
+              <p className="mt-1 text-[12px] text-ink-soft">Indicative only. Reference prices may still be demo data.</p>
             </>
           ) : (
             <p>The engine gave no estimate for this stone.</p>
@@ -133,12 +134,12 @@ async function ValuatorDetail({ params }: { params: Params }) {
       </section>
 
       <section aria-labelledby="thread-heading" className="space-y-3">
-        <h2 id="thread-heading" className="text-lg font-medium">Conversation</h2>
+        <h2 id="thread-heading" className="font-heading text-2xl text-ink">Conversation</h2>
         <ThreadList thread={view.thread} />
       </section>
 
       {view.status === "COMPLETED" && view.result ? (
-        <section aria-labelledby="outcome-heading" className="rounded border border-green-300 bg-green-50 p-4 text-sm">
+        <section aria-labelledby="outcome-heading" className="border-l-2 border-success bg-surface-raised p-5 text-sm">
           <h2 id="outcome-heading" className="font-medium">Signed off</h2>
           <p>
             Estimate {money(view.result.estimateMinor, currency)}, range {money(view.result.lowMinor, currency)} to{" "}
@@ -148,7 +149,7 @@ async function ValuatorDetail({ params }: { params: Params }) {
       ) : null}
 
       {view.status === "REJECTED" ? (
-        <section aria-labelledby="rejected-heading" className="rounded border border-red-300 bg-red-50 p-4 text-sm">
+        <section aria-labelledby="rejected-heading" className="border-l-2 border-danger bg-surface-raised p-5 text-sm">
           <h2 id="rejected-heading" className="font-medium">Rejected</h2>
           <p>{view.rejectionReason ?? "No reason recorded."}</p>
         </section>
@@ -156,9 +157,9 @@ async function ValuatorDetail({ params }: { params: Params }) {
 
       {canDecide ? (
         <section aria-labelledby="decide-heading" className="space-y-4">
-          <h2 id="decide-heading" className="text-lg font-medium">Your decision</h2>
+          <h2 id="decide-heading" className="font-heading text-2xl text-ink">Your decision</h2>
           {waiting ? (
-            <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+            <p className="border-l-2 border-accent bg-accent-soft px-5 py-4 text-sm">
               Waiting for the requester to reply to your question. The request returns to review when they reply. You can still reject it.
             </p>
           ) : null}

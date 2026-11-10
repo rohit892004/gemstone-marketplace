@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { ClipboardList } from "lucide-react";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { formatDate } from "@/components/admin/admin-ui";
+import { Button, buttonClasses } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input, Select } from "@/components/ui/field";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   ADMIN_VALUATION_PAGE_SIZE,
   ADMIN_VALUATION_STATUS_LABELS,
@@ -39,6 +45,9 @@ const SELECT = {
   assignedValuator: { select: { name: true, email: true } },
 } as const;
 
+const LABEL = "block text-[13px] tracking-wide text-ink";
+const FIELDSET_LEGEND = "text-[13px] tracking-wide text-ink";
+
 async function ValuationQueue({ searchParams }: { searchParams: SearchParams }) {
   await requirePageRole(["ADMIN"]);
   const { filters, errors } = parseAdminValuationFilters(await searchParams);
@@ -65,12 +74,57 @@ async function ValuationQueue({ searchParams }: { searchParams: SearchParams }) 
   const errorList = Object.values(errors);
   const hasErrors = errorList.length > 0;
 
+  type Row = (typeof rows)[number];
+  const columns: Column<Row>[] = [
+    { key: "reference", header: "Reference", cell: (row) => <span className="font-mono text-[13px]">{row.reference}</span> },
+    {
+      key: "gemstone",
+      header: "Gemstone",
+      cell: (row) => (
+        <span className="space-y-1">
+          <span className="block text-ink">{row.gemstoneType}</span>
+          <span className="block text-[12px] text-ink-soft">{formatCarat(row.caratMilli)}</span>
+        </span>
+      ),
+    },
+    { key: "status", header: "Status", cell: (row) => statusLabel(row.status) },
+    {
+      key: "requester",
+      header: "Requester",
+      hideOnMobile: true,
+      cell: (row) => (
+        <span className="space-y-1">
+          <span className="block">{row.requester.name ?? "-"}</span>
+          <span className="block text-[12px] text-ink-soft">{row.requester.email}</span>
+        </span>
+      ),
+    },
+    {
+      key: "valuer",
+      header: "Valuer",
+      hideOnMobile: true,
+      cell: (row) => (row.assignedValuator ? (row.assignedValuator.name ?? row.assignedValuator.email) : "Unassigned"),
+    },
+    { key: "source", header: "Source", hideOnMobile: true, cell: (row) => (row.source === "LISTING" ? "Listing" : "Standalone") },
+    { key: "submitted", header: "Submitted", hideOnMobile: true, cell: (row) => <span className="whitespace-nowrap">{formatDate(row.submittedAt)}</span> },
+    {
+      key: "open",
+      header: "Open",
+      align: "right",
+      cell: (row) => (
+        <Link href={VALUATION_ROUTES.adminDetail(row.id)} className="inline-flex min-h-11 items-center text-ink underline underline-offset-4 hover:text-accent-text">
+          Open<span className="sr-only"> {row.reference}</span>
+        </Link>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Valuations</h1>
+    <div className="space-y-8">
+      <PageHeader eyebrow="Admin" title="Valuations" />
 
       {hasErrors ? (
-        <div role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div role="alert" className="border-l-2 border-danger bg-surface-raised px-5 py-4 text-sm text-danger">
           <p className="font-medium">Please fix the following:</p>
           <ul className="list-disc pl-5">
             {errorList.map((message) => (
@@ -80,23 +134,23 @@ async function ValuationQueue({ searchParams }: { searchParams: SearchParams }) 
         </div>
       ) : null}
 
-      <form method="get" action={VALUATION_ROUTES.adminQueue} className="grid grid-cols-1 gap-4 rounded border border-stone-300 bg-white p-4 text-sm md:grid-cols-3">
-        <fieldset className="space-y-1">
-          <legend className="font-medium">Status</legend>
-          <div className="grid grid-cols-2 gap-1">
+      <form method="get" action={VALUATION_ROUTES.adminQueue} className="grid gap-6 border border-line bg-surface-raised p-5 sm:p-6 md:grid-cols-3">
+        <fieldset className="space-y-3">
+          <legend className={FIELDSET_LEGEND}>Status</legend>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {ADMIN_VALUATION_STATUSES.map((status) => (
-              <label key={status} className="flex items-center gap-2">
-                <input type="checkbox" name="status" value={status} defaultChecked={filters.statuses.includes(status)} />
+              <label key={status} className="flex min-h-11 items-center gap-3 text-sm text-ink">
+                <input type="checkbox" name="status" value={status} defaultChecked={filters.statuses.includes(status)} className="h-4 w-4 accent-brand" />
                 {ADMIN_VALUATION_STATUS_LABELS[status]}
               </label>
             ))}
           </div>
         </fieldset>
 
-        <div className="space-y-3">
-          <label className="block space-y-1">
-            <span className="font-medium">Assignment</span>
-            <select name="assignment" defaultValue={filters.assignment} className="w-full rounded border border-stone-300 p-2">
+        <div className="space-y-5">
+          <label className="block space-y-2">
+            <span className={LABEL}>Assignment</span>
+            <Select name="assignment" defaultValue={filters.assignment}>
               <option value="all">All</option>
               <option value="unassigned">Unassigned</option>
               {valuators.map((v) => (
@@ -104,113 +158,78 @@ async function ValuationQueue({ searchParams }: { searchParams: SearchParams }) 
                   {(v.name ?? v.email) + (v.status === "ACTIVE" ? "" : " (deactivated)")}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
-          <label className="block space-y-1">
-            <span className="font-medium">Source</span>
-            <select name="source" defaultValue={filters.source} className="w-full rounded border border-stone-300 p-2">
+          <label className="block space-y-2">
+            <span className={LABEL}>Source</span>
+            <Select name="source" defaultValue={filters.source}>
               <option value="all">All</option>
               <option value="LISTING">From a listing</option>
               <option value="STANDALONE">Standalone</option>
-            </select>
+            </Select>
           </label>
-          <label className="block space-y-1">
-            <span className="font-medium">Exact reference</span>
-            <span className="block text-stone-600">For example GSV-26-K7Q2M9.</span>
-            <input name="ref" defaultValue={filters.reference ?? ""} maxLength={20} className="w-full rounded border border-stone-300 p-2 font-mono" />
+          <label className="block space-y-2">
+            <span className={LABEL}>Exact reference</span>
+            <span className="block text-[12px] text-ink-soft">For example GSV-26-K7Q2M9.</span>
+            <Input name="ref" defaultValue={filters.reference ?? ""} maxLength={20} className="font-mono" />
           </label>
         </div>
 
-        <div className="space-y-3">
-          <label className="block space-y-1">
-            <span className="font-medium">Submitted from</span>
-            <input type="date" name="from" defaultValue={filters.fromText} aria-invalid={errors.from ? true : undefined} className="w-full rounded border border-stone-300 p-2" />
+        <div className="space-y-5">
+          <label className="block space-y-2">
+            <span className={LABEL}>Submitted from</span>
+            <Input type="date" name="from" defaultValue={filters.fromText} aria-invalid={errors.from ? true : undefined} />
           </label>
-          <label className="block space-y-1">
-            <span className="font-medium">Submitted to (inclusive)</span>
-            <input type="date" name="to" defaultValue={filters.toText} aria-invalid={errors.to ? true : undefined} className="w-full rounded border border-stone-300 p-2" />
+          <label className="block space-y-2">
+            <span className={LABEL}>Submitted to (inclusive)</span>
+            <Input type="date" name="to" defaultValue={filters.toText} aria-invalid={errors.to ? true : undefined} />
           </label>
-          <div className="flex gap-3 pt-2">
-            <button type="submit" className="min-h-11 rounded bg-stone-900 px-4 py-2 text-white">
-              Apply filters
-            </button>
-            <Link href={VALUATION_ROUTES.adminQueue} className="min-h-11 rounded border border-stone-300 px-4 py-2">
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Button type="submit">Apply filters</Button>
+            <Link href={VALUATION_ROUTES.adminQueue} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
               Clear
             </Link>
           </div>
         </div>
       </form>
 
-      <p className="text-sm text-stone-600" aria-live="polite">
+      <p className="text-sm text-ink-soft" aria-live="polite">
         {total} valuation{total === 1 ? "" : "s"}
       </p>
 
       {rows.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No valuations match these filters.</p>
+        <EmptyState
+          icon={ClipboardList}
+          title="No valuations match these filters"
+          body="Clear the filters to see every valuation request."
+          action={
+            <Link href={VALUATION_ROUTES.adminQueue} className={buttonClasses({ variant: "secondary" })}>
+              Clear filters
+            </Link>
+          }
+        />
       ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <caption className="sr-only">Valuation requests</caption>
-            <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th scope="col" className="px-3 py-2">Reference</th>
-                <th scope="col" className="px-3 py-2">Gemstone</th>
-                <th scope="col" className="px-3 py-2">Status</th>
-                <th scope="col" className="px-3 py-2">Requester</th>
-                <th scope="col" className="px-3 py-2">Valuer</th>
-                <th scope="col" className="px-3 py-2">Source</th>
-                <th scope="col" className="px-3 py-2">Submitted</th>
-                <th scope="col" className="px-3 py-2">
-                  <span className="sr-only">Open</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t border-stone-200 align-top">
-                  <td className="px-3 py-2 font-mono text-xs">{row.reference}</td>
-                  <td className="px-3 py-2">
-                    {row.gemstoneType}
-                    <span className="block text-xs text-stone-600">{formatCarat(row.caratMilli)}</span>
-                  </td>
-                  <td className="px-3 py-2">{statusLabel(row.status)}</td>
-                  <td className="px-3 py-2">
-                    {row.requester.name ?? "-"}
-                    <span className="block text-xs text-stone-600">{row.requester.email}</span>
-                  </td>
-                  <td className="px-3 py-2">{row.assignedValuator ? (row.assignedValuator.name ?? row.assignedValuator.email) : "Unassigned"}</td>
-                  <td className="px-3 py-2">{row.source === "LISTING" ? "Listing" : "Standalone"}</td>
-                  <td className="px-3 py-2">{formatDate(row.submittedAt)}</td>
-                  <td className="px-3 py-2 text-right">
-                    <Link href={VALUATION_ROUTES.adminDetail(row.id)} className="underline">
-                      Open<span className="sr-only"> {row.reference}</span>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable caption="Valuation requests" columns={columns} rows={rows} getRowKey={(row) => row.id} />
       )}
 
       {pageCount > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center gap-4 text-sm">
+        <nav aria-label="Pagination" className="flex flex-wrap items-center gap-6 text-sm">
           {page > 1 ? (
-            <Link href={adminValuationQuery(filters, page - 1)} className="underline">
+            <Link href={adminValuationQuery(filters, page - 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Previous
             </Link>
           ) : (
-            <span className="text-stone-400">Previous</span>
+            <span className="text-ink-soft">Previous</span>
           )}
-          <span>
+          <span className="text-ink-soft">
             Page {page} of {pageCount}
           </span>
           {page < pageCount ? (
-            <Link href={adminValuationQuery(filters, page + 1)} className="underline">
+            <Link href={adminValuationQuery(filters, page + 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
               Next
             </Link>
           ) : (
-            <span className="text-stone-400">Next</span>
+            <span className="text-ink-soft">Next</span>
           )}
         </nav>
       ) : null}

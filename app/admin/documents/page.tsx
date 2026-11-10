@@ -1,6 +1,11 @@
 import { Suspense } from "react";
+import { Download, FileCheck } from "lucide-react";
 import { ActionForm } from "@/components/admin/action-form";
-import { formatBytes, formatDate } from "@/components/admin/admin-ui";
+import { AdminDemoTag, formatBytes, formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { listingDocumentUrl } from "@/lib/media/urls";
@@ -42,52 +47,75 @@ async function DocumentQueue() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Document verification</h1>
-      <p className="text-sm text-stone-600">
-        Verifying a document marks it as checked. It does not make it public: the seller chooses whether to show it on
-        the listing. {docs.length} waiting, oldest first.
-      </p>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Queue"
+        title="Document verification"
+        lead={
+          <>
+            Verifying a document marks it as checked. It does not make it public: the seller chooses whether to show it on the listing.{" "}
+            {docs.length} waiting, oldest first.
+          </>
+        }
+      />
 
       {docs.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No documents are waiting for verification.</p>
+        <EmptyState
+          icon={FileCheck}
+          title="No documents are waiting for verification"
+          body="New certificates and reports appear here when a seller uploads them."
+        />
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {docs.map((doc) => (
-            <li key={doc.id} className="space-y-3 rounded border border-stone-300 bg-white p-4 text-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="font-medium">{doc.gemstone.title}</p>
-                  <p className="text-stone-600">Seller: {doc.gemstone.seller.businessName}</p>
-                  <p>
-                    {doc.title} · {TYPE_LABELS[doc.type] ?? doc.type} · {doc.certificateLab?.name ?? "No lab"} · {formatBytes(doc.sizeBytes)}
-                  </p>
-                  <p className="text-stone-600">File: {doc.fileName} · uploaded {formatDate(doc.createdAt)}</p>
+            <li key={doc.id}>
+              <Card className="space-y-6 p-5 text-sm sm:p-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <p className="flex flex-wrap items-center gap-2 font-heading text-xl text-ink">
+                      {doc.gemstone.title}
+                      {doc.gemstone.isDemo ? <AdminDemoTag /> : null}
+                    </p>
+                    <p className="text-ink-soft">Seller: {doc.gemstone.seller.businessName}</p>
+                    <p className="flex flex-wrap items-center gap-2 text-ink">
+                      <span>{doc.title}</span>
+                      <Badge tone="neutral">{TYPE_LABELS[doc.type] ?? doc.type}</Badge>
+                      <span>{doc.certificateLab?.name ?? "No lab"}</span>
+                      <span className="text-ink-soft">{formatBytes(doc.sizeBytes)}</span>
+                    </p>
+                    <p className="text-ink-soft">
+                      File: {doc.fileName} · uploaded {formatDate(doc.createdAt)}
+                    </p>
+                  </div>
+                  <a
+                    href={listingDocumentUrl(doc.id)}
+                    className="inline-flex min-h-11 items-center gap-2 border border-line px-4 py-2 text-sm text-ink transition duration-300 hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    <Download className="h-4 w-4" strokeWidth={1.25} aria-hidden />
+                    Download
+                  </a>
                 </div>
-                <a href={listingDocumentUrl(doc.id)} className="rounded border border-stone-300 px-3 py-1 underline">
-                  Download
-                </a>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <ActionForm
-                  action={verifyListingDocument}
-                  hidden={{ documentId: doc.id }}
-                  title="Verify"
-                  description="Marks the document as verified. The seller is emailed. It stays private until they show it."
-                  submitLabel="Verify document"
-                />
-                <ActionForm
-                  action={rejectListingDocument}
-                  hidden={{ documentId: doc.id }}
-                  title="Reject"
-                  description="The seller is emailed the reason."
-                  submitLabel="Reject document"
-                  tone="danger"
-                  fields={[
-                    { name: "reason", label: "Reason (at least 10 characters)", kind: "textarea", required: true, maxLength: 1000 },
-                  ]}
-                />
-              </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <ActionForm
+                    action={verifyListingDocument}
+                    hidden={{ documentId: doc.id }}
+                    title="Verify"
+                    description="Marks the document as verified. The seller is emailed. It stays private until they show it."
+                    submitLabel="Verify document"
+                  />
+                  <ActionForm
+                    action={rejectListingDocument}
+                    hidden={{ documentId: doc.id }}
+                    title="Reject"
+                    description="The seller is emailed the reason."
+                    submitLabel="Reject document"
+                    tone="danger"
+                    fields={[
+                      { name: "reason", label: "Reason (at least 10 characters)", kind: "textarea", required: true, maxLength: 1000 },
+                    ]}
+                  />
+                </div>
+              </Card>
             </li>
           ))}
         </ul>

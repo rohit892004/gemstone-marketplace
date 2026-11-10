@@ -39,8 +39,8 @@ async function ArticleEditor({ params }: { params: Promise<{ id: string }> }) {
       </nav>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">{article.title}</h1>
-          <p className="flex flex-wrap items-center gap-3 text-sm text-stone-600">
+          <h1 className="font-heading text-4xl font-medium text-ink">{article.title}</h1>
+          <p className="flex flex-wrap items-center gap-3 text-sm text-ink-soft">
             <span>Slug: {article.slug}</span>
             {article.isDemo ? <DemoNotice /> : null}
           </p>
@@ -50,7 +50,7 @@ async function ArticleEditor({ params }: { params: Promise<{ id: string }> }) {
             View on site<span className="sr-only"> (opens in a new tab)</span>
           </Link>
         ) : (
-          <p className="text-sm text-stone-600">Not visible on the site yet.</p>
+          <p className="text-sm text-ink-soft">Not visible on the site yet.</p>
         )}
       </header>
 

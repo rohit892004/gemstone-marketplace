@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import type { AdminActionState } from "@/lib/admin/action-state";
+import { adminButtonClass } from "@/components/admin/button-classes";
+import { Textarea } from "@/components/ui/field";
 
 interface DecisionFormProps {
   action: (prev: AdminActionState, formData: FormData) => Promise<AdminActionState>;
@@ -25,42 +27,33 @@ export function DecisionForm({
   tone = "primary",
 }: DecisionFormProps) {
   const [state, formAction, pending] = useActionState(action, null);
-
-  const buttonClass =
-    tone === "danger"
-      ? "rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50"
-      : "rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50";
+  const reasonId = useId();
 
   return (
-    <form action={formAction} className="space-y-3 rounded border border-stone-300 bg-white p-4">
-      <div>
-        <h3 className="font-medium">{title}</h3>
-        <p className="text-sm text-stone-600">{description}</p>
+    <form action={formAction} className="space-y-4 border border-line bg-surface-raised p-5 sm:p-6">
+      <div className="space-y-2">
+        <h3 className="font-heading text-xl text-ink">{title}</h3>
+        <p className="text-sm leading-relaxed text-ink-soft">{description}</p>
       </div>
       <input type="hidden" name="sellerId" value={sellerId} />
       {reasonLabel ? (
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium">{reasonLabel}</span>
-          <textarea
-            name="reason"
-            required
-            minLength={10}
-            maxLength={1000}
-            rows={3}
-            className="w-full rounded border border-stone-300 p-2"
-          />
-        </label>
+        <div className="space-y-2">
+          <label htmlFor={reasonId} className="block text-[13px] tracking-wide text-ink">
+            {reasonLabel}
+          </label>
+          <Textarea id={reasonId} name="reason" required minLength={10} maxLength={1000} rows={3} />
+        </div>
       ) : null}
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} className={adminButtonClass(tone === "danger")}>
         {pending ? "Saving..." : submitLabel}
       </button>
       {state && !state.ok ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {state.error}
         </p>
       ) : null}
       {state && state.ok ? (
-        <p role="status" className="text-sm text-green-800">
+        <p role="status" className="text-sm text-success">
           {state.message}
         </p>
       ) : null}

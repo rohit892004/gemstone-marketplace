@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ActionForm, type ActionField } from "@/components/admin/action-form";
+import { PageHeader } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { HOMEPAGE_BLOCK_KEYS, loadHomepageBlocks, type HomepageBlockKey } from "@/lib/homepage/blocks";
 import { saveHomepageBlock } from "./actions";
@@ -59,26 +60,28 @@ async function BlockEditors() {
   const blocks = await loadHomepageBlocks();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Homepage</h1>
-      <p className="text-sm text-stone-600">
-        Edit the text shown on the homepage. Text is shown as plain text. Links must be relative paths starting with /.
-        Each block is saved on its own.
-      </p>
-      {HOMEPAGE_BLOCK_KEYS.map((key) => {
-        const content = blocks[key] as unknown as Record<string, string>;
-        const fields = BLOCK_FIELDS[key].map((field) => ({ ...field, defaultValue: content[field.name] ?? "" }));
-        return (
-          <ActionForm
-            key={key}
-            action={saveHomepageBlock}
-            hidden={{ blockKey: key }}
-            title={BLOCK_TITLES[key]}
-            submitLabel="Save block"
-            fields={fields}
-          />
-        );
-      })}
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Site"
+        title="Homepage"
+        lead="Edit the text shown on the homepage. Text is shown as plain text. Links must be relative paths starting with /. Each block is saved on its own."
+      />
+      <div className="space-y-6">
+        {HOMEPAGE_BLOCK_KEYS.map((key) => {
+          const content = blocks[key] as unknown as Record<string, string>;
+          const fields = BLOCK_FIELDS[key].map((field) => ({ ...field, defaultValue: content[field.name] ?? "" }));
+          return (
+            <ActionForm
+              key={key}
+              action={saveHomepageBlock}
+              hidden={{ blockKey: key }}
+              title={BLOCK_TITLES[key]}
+              submitLabel="Save block"
+              fields={fields}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

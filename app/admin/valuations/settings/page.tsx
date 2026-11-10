@@ -23,8 +23,8 @@ async function ThresholdForm() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Expert threshold</h1>
-        <p className="text-sm text-stone-600">
+        <h1 className="font-heading text-4xl font-medium text-ink">Expert threshold</h1>
+        <p className="text-sm text-ink-soft">
           A request whose automatic estimate is above this amount goes to a valuer. Blank means no threshold. A category
           override replaces the global value for that gemstone; a blank override inherits the global value.
         </p>

@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { DemoBadge } from "@/components/catalogue/badges";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { ArrowLeft, Download } from "lucide-react";
 import { DecisionForm } from "@/components/admin/decision-form";
 import { SellerCategoriesForm } from "@/components/admin/seller-categories-form";
-import { DOCUMENT_TYPE_LABELS, StatusBadge, formatBytes, formatDate } from "@/components/admin/admin-ui";
+import { AdminDemoTag, DOCUMENT_TYPE_LABELS, StatusBadge, formatBytes, formatDate } from "@/components/admin/admin-ui";
+import { Card } from "@/components/ui/card";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { loadSellerCategories } from "@/lib/seller/categories";
@@ -23,9 +26,9 @@ export default function AdminSellerDetailPage({ params }: { params: Params }) {
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-stone-600">{label}</dt>
-      <dd className="text-sm">{value || "-"}</dd>
+    <div className="space-y-1">
+      <dt className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">{label}</dt>
+      <dd className="text-[15px] text-ink">{value || "-"}</dd>
     </div>
   );
 }
@@ -76,27 +79,55 @@ async function SellerDetail({ params }: { params: Params }) {
   const status = seller.approvalStatus;
   const categoryOptions = await loadSellerCategories();
 
+  type DocRow = (typeof seller.documents)[number];
+  const documentColumns: Column<DocRow>[] = [
+    { key: "type", header: "Type", cell: (doc) => DOCUMENT_TYPE_LABELS[doc.type] },
+    { key: "file", header: "File", cell: (doc) => <span className="break-all">{doc.fileName}</span> },
+    { key: "size", header: "Size", hideOnMobile: true, cell: (doc) => formatBytes(doc.sizeBytes) },
+    {
+      key: "lab",
+      header: "Certificate lab",
+      hideOnMobile: true,
+      cell: (doc) => doc.certificateLab?.name ?? (doc.certificateLabOther ? `Other: ${doc.certificateLabOther}` : "-"),
+    },
+    { key: "status", header: "Status", cell: (doc) => doc.status.toLowerCase() },
+    {
+      key: "download",
+      header: "Download",
+      cell: (doc) => (
+        <a
+          href={`/api/admin/documents/${doc.id}`}
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-ink underline underline-offset-4 hover:text-accent-text"
+        >
+          <Download className="h-4 w-4" strokeWidth={1.25} aria-hidden />
+          Download
+        </a>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-3">
-        <Link href="/admin/sellers" className="text-sm underline">
-          Back to sellers
-        </Link>
-      </div>
+    <div className="space-y-12">
+      <Link href="/admin/sellers" className="inline-flex min-h-11 items-center gap-2 text-sm text-ink-soft underline underline-offset-4 hover:text-ink">
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.25} aria-hidden />
+        Back to sellers
+      </Link>
 
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
-          {seller.businessName} {seller.isDemo ? <DemoBadge /> : null}
-        </h1>
-        <StatusBadge status={status} />
-      </header>
+      <PageHeader
+        eyebrow="Seller application"
+        title={seller.businessName}
+        lead={
+          <span className="flex flex-wrap items-center gap-3">
+            <StatusBadge status={status} />
+            {seller.isDemo ? <AdminDemoTag /> : null}
+          </span>
+        }
+      />
 
-      <section aria-labelledby="actions-heading" className="space-y-4">
-        <h2 id="actions-heading" className="text-lg font-semibold">
-          Decision
-        </h2>
+      <section className="space-y-6">
+        <SectionHeading title="Decision" />
         {status === "PENDING" ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
             <DecisionForm
               action={approveSeller}
               sellerId={seller.id}
@@ -146,23 +177,23 @@ async function SellerDetail({ params }: { params: Params }) {
         ) : null}
       </section>
 
-      <section aria-labelledby="business-heading" className="space-y-3">
-        <h2 id="business-heading" className="text-lg font-semibold">
-          Business
-        </h2>
-        <dl className="grid gap-4 rounded border border-stone-300 bg-white p-4 md:grid-cols-3">
-          <Field label="Business type" value={seller.businessType.replace(/_/g, " ").toLowerCase()} />
-          <Field label="GST number" value={seller.gstNumber} />
-          <Field label="Years in business" value={seller.yearsInBusiness} />
-          <Field label="Address" value={seller.addressLine} />
-          <Field label="City" value={seller.city} />
-          <Field label="State" value={seller.state} />
-          <Field label="Country" value={seller.country} />
-          <Field label="PIN code" value={seller.pincode} />
-          <Field label="Specialties" value={seller.specialties.join(", ")} />
-          <Field label="Gemstone categories" value={seller.categories.map((c) => c.name).join(", ")} />
-          <Field label="Submitted" value={formatDate(seller.createdAt)} />
-        </dl>
+      <section className="space-y-6">
+        <SectionHeading title="Business" />
+        <Card className="p-5 sm:p-8">
+          <dl className="grid gap-6 md:grid-cols-3">
+            <Field label="Business type" value={seller.businessType.replace(/_/g, " ").toLowerCase()} />
+            <Field label="GST number" value={seller.gstNumber} />
+            <Field label="Years in business" value={seller.yearsInBusiness} />
+            <Field label="Address" value={seller.addressLine} />
+            <Field label="City" value={seller.city} />
+            <Field label="State" value={seller.state} />
+            <Field label="Country" value={seller.country} />
+            <Field label="PIN code" value={seller.pincode} />
+            <Field label="Specialties" value={seller.specialties.join(", ")} />
+            <Field label="Gemstone categories" value={seller.categories.map((c) => c.name).join(", ")} />
+            <Field label="Submitted" value={formatDate(seller.createdAt)} />
+          </dl>
+        </Card>
         <SellerCategoriesForm
           action={updateSellerCategories}
           sellerId={seller.id}
@@ -171,64 +202,29 @@ async function SellerDetail({ params }: { params: Params }) {
         />
       </section>
 
-      <section aria-labelledby="account-heading" className="space-y-3">
-        <h2 id="account-heading" className="text-lg font-semibold">
-          Account
-        </h2>
-        <dl className="grid gap-4 rounded border border-stone-300 bg-white p-4 md:grid-cols-3">
-          <Field label="Contact name" value={seller.user.name} />
-          <Field label="Email" value={seller.user.email} />
-          <Field label="Mobile" value={seller.user.mobile} />
-          <Field label="Email verified" value={seller.user.emailVerifiedAt ? "Yes" : "No"} />
-          <Field label="Account status" value={seller.user.status} />
-          <Field label="Approval status" value={status} />
-          <Field label="Reviewed" value={formatDate(seller.reviewedAt)} />
-          <Field label="Approved" value={formatDate(seller.approvedAt)} />
-          {seller.rejectionReason ? (
-            <Field label="Rejection reason" value={seller.rejectionReason} />
-          ) : null}
-        </dl>
+      <section className="space-y-6">
+        <SectionHeading title="Account" />
+        <Card className="p-5 sm:p-8">
+          <dl className="grid gap-6 md:grid-cols-3">
+            <Field label="Contact name" value={seller.user.name} />
+            <Field label="Email" value={seller.user.email} />
+            <Field label="Mobile" value={seller.user.mobile} />
+            <Field label="Email verified" value={seller.user.emailVerifiedAt ? "Yes" : "No"} />
+            <Field label="Account status" value={seller.user.status} />
+            <Field label="Approval status" value={status} />
+            <Field label="Reviewed" value={formatDate(seller.reviewedAt)} />
+            <Field label="Approved" value={formatDate(seller.approvedAt)} />
+            {seller.rejectionReason ? <Field label="Rejection reason" value={seller.rejectionReason} /> : null}
+          </dl>
+        </Card>
       </section>
 
-      <section aria-labelledby="documents-heading" className="space-y-3">
-        <h2 id="documents-heading" className="text-lg font-semibold">
-          Documents
-        </h2>
+      <section className="space-y-6">
+        <SectionHeading title="Documents" />
         {seller.documents.length === 0 ? (
-          <p className="text-sm text-stone-600">No documents uploaded.</p>
+          <p className="text-sm text-ink-soft">No documents uploaded.</p>
         ) : (
-          <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
-                <tr>
-                  <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">File</th>
-                  <th className="px-3 py-2">Size</th>
-                  <th className="px-3 py-2">Certificate lab</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Download</th>
-                </tr>
-              </thead>
-              <tbody>
-                {seller.documents.map((doc) => (
-                  <tr key={doc.id} className="border-t border-stone-200">
-                    <td className="px-3 py-2">{DOCUMENT_TYPE_LABELS[doc.type]}</td>
-                    <td className="px-3 py-2 break-all">{doc.fileName}</td>
-                    <td className="px-3 py-2">{formatBytes(doc.sizeBytes)}</td>
-                    <td className="px-3 py-2">
-                      {doc.certificateLab?.name ?? (doc.certificateLabOther ? `Other: ${doc.certificateLabOther}` : "-")}
-                    </td>
-                    <td className="px-3 py-2">{doc.status.toLowerCase()}</td>
-                    <td className="px-3 py-2">
-                      <a href={`/api/admin/documents/${doc.id}`} className="underline">
-                        Download
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable caption="Seller documents" columns={documentColumns} rows={seller.documents} getRowKey={(doc) => doc.id} />
         )}
       </section>
     </div>

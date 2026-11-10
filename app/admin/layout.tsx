@@ -1,31 +1,48 @@
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
+import {
+  BadgeCheck,
+  ChartColumn,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  Flag,
+  Gem,
+  Gift,
+  House,
+  LayoutDashboard,
+  ListChecks,
+  Mail,
+  MessageSquare,
+  Calculator,
+  Settings,
+  Star,
+  Users,
+} from "lucide-react";
+import { AdminNav, type AdminNavItem } from "@/components/admin/admin-nav";
 import { requirePageRole } from "@/lib/auth/require-role";
 
 /** Admin pages are never indexed. */
 export const metadata = { robots: { index: false, follow: false } };
 
-const NAV = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/sellers", label: "Sellers" },
-  { href: "/admin/listings", label: "Listing queue" },
-  { href: "/admin/listings/all", label: "All listings" },
-  { href: "/admin/documents", label: "Documents" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/moderation", label: "Flagged messages" },
-  { href: "/admin/reports", label: "Reports" },
-  { href: "/admin/requirements", label: "Requirements" },
-  { href: "/admin/homepage", label: "Homepage" },
-  { href: "/admin/content", label: "Content" },
-  { href: "/admin/newsletter", label: "Newsletter" },
-  { href: "/admin/valuations", label: "Valuations" },
-  { href: "/admin/analytics", label: "Analytics" },
-  { href: "/admin/memberships", label: "Memberships" },
-  { href: "/admin/referrals", label: "Referrals" },
-  { href: "/admin/settings", label: "Settings" },
+const NAV: AdminNavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+  { href: "/admin/sellers", label: "Sellers", icon: Users, group: "Marketplace" },
+  { href: "/admin/listings", label: "Listing queue", icon: ClipboardList, group: "Marketplace" },
+  { href: "/admin/listings/all", label: "All listings", icon: Gem, group: "Marketplace" },
+  { href: "/admin/documents", label: "Documents", icon: FileText, group: "Marketplace" },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, group: "Marketplace" },
+  { href: "/admin/moderation", label: "Flagged messages", icon: MessageSquare, group: "Marketplace" },
+  { href: "/admin/reports", label: "Reports", icon: Flag, group: "Marketplace" },
+  { href: "/admin/requirements", label: "Requirements", icon: ListChecks, group: "Marketplace" },
+  { href: "/admin/homepage", label: "Homepage", icon: House, group: "Content" },
+  { href: "/admin/content", label: "Content", icon: BadgeCheck, group: "Content" },
+  { href: "/admin/newsletter", label: "Newsletter", icon: Mail, group: "Content" },
+  { href: "/admin/valuations", label: "Valuations", icon: Calculator, group: "Business" },
+  { href: "/admin/analytics", label: "Analytics", icon: ChartColumn, group: "Business" },
+  { href: "/admin/memberships", label: "Memberships", icon: CreditCard, group: "Business" },
+  { href: "/admin/referrals", label: "Referrals", icon: Gift, group: "Business" },
+  { href: "/admin/settings", label: "Settings", icon: Settings, group: "Business" },
 ];
-
-const COMING_LATER = ["Buyers", "Audit log"];
 
 /**
  * Admin shell. The session check lives in an async child inside <Suspense>
@@ -43,27 +60,16 @@ async function AdminShell({ children }: { children: ReactNode }) {
   const admin = await requirePageRole(["ADMIN"]);
 
   return (
-    // Stacked on phones (nav above content), side by side from md up.
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:flex-row">
-      <aside className="w-full space-y-6 text-sm md:w-56 md:shrink-0">
-        <div>
-          <p className="font-semibold">Admin</p>
-          <p className="truncate text-xs text-stone-600">{admin.email}</p>
+    // Stacked on phones (nav scroller above content), two columns from lg up.
+    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:py-12">
+      <aside className="min-w-0 space-y-6">
+        <div className="space-y-1 border-b border-line pb-5">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-accent-text">Admin</p>
+          <p className="truncate text-sm text-ink-soft">{admin.email}</p>
         </div>
-        <nav aria-label="Admin" className="flex flex-wrap gap-1 md:block md:space-y-1">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="block rounded px-2 py-1 hover:bg-stone-100">
-              {item.label}
-            </Link>
-          ))}
-          {COMING_LATER.map((label) => (
-            <span key={label} aria-disabled="true" className="block px-2 py-1 text-stone-400">
-              {label} <span className="text-xs">(coming later)</span>
-            </span>
-          ))}
-        </nav>
+        <AdminNav items={NAV} label="Admin" />
       </aside>
-      <main className="min-w-0 flex-1 w-full">{children}</main>
+      <main className="min-w-0">{children}</main>
     </div>
   );
 }

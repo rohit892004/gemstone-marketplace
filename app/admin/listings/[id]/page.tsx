@@ -2,9 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { ArrowLeft, Download } from "lucide-react";
 import { ActionForm } from "@/components/admin/action-form";
-import { formatBytes, formatDate } from "@/components/admin/admin-ui";
-import { DemoBadge, VerifiedBadge } from "@/components/catalogue/badges";
+import { AdminDemoTag, formatBytes, formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { listingDocumentUrl, mediaUrl } from "@/lib/media/urls";
@@ -30,9 +33,9 @@ export default function AdminListingPreviewPage({ params }: { params: Params }) 
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-stone-600">{label}</dt>
-      <dd className="text-sm">{value || "-"}</dd>
+    <div className="space-y-1">
+      <dt className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">{label}</dt>
+      <dd className="text-[15px] text-ink">{value || "-"}</dd>
     </div>
   );
 }
@@ -94,36 +97,43 @@ async function Preview({ params }: { params: Params }) {
   if (!listing) notFound();
 
   const pending = listing.status === "PENDING_REVIEW";
+  const statusWord = listing.status.replace(/_/g, " ").toLowerCase();
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <Link href="/admin/listings" className="underline">
-          Back to review queue
-        </Link>
-        <span className="text-stone-400">|</span>
-        <span>Status: {listing.status.replace(/_/g, " ").toLowerCase()}</span>
-        <span className="text-stone-400">|</span>
-        <span>Public page: {listing.status === "PUBLISHED" ? <Link href={`/gemstones/${listing.slug}`} className="underline">open</Link> : "not public until published"}</span>
-      </div>
+    <div className="space-y-12">
+      <Link href="/admin/listings" className="inline-flex min-h-11 items-center gap-2 text-sm text-ink-soft underline underline-offset-4 hover:text-ink">
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.25} aria-hidden />
+        Back to review queue
+      </Link>
 
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">{listing.title}</h1>
-        {listing.isDemo ? <DemoBadge /> : null}
-      </header>
+      <PageHeader
+        eyebrow="Listing review"
+        title={listing.title}
+        lead={
+          <span className="flex flex-wrap items-center gap-3">
+            <Badge tone={pending ? "warning" : listing.status === "PUBLISHED" ? "success" : "neutral"}>Status: {statusWord}</Badge>
+            {listing.isDemo ? <AdminDemoTag /> : null}
+            {listing.status === "PUBLISHED" ? (
+              <Link href={`/gemstones/${listing.slug}`} className="text-sm text-ink underline underline-offset-4 hover:text-accent-text">
+                Open the public page
+              </Link>
+            ) : (
+              <span className="text-sm text-ink-soft">Not public until published</span>
+            )}
+          </span>
+        }
+      />
 
       {listing.rejectionReason ? (
-        <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+        <p className="border-l-2 border-danger bg-surface-raised px-5 py-4 text-sm leading-relaxed text-ink">
           Last rejection reason: {listing.rejectionReason}
         </p>
       ) : null}
 
-      <section aria-labelledby="decision-heading" className="space-y-4">
-        <h2 id="decision-heading" className="text-lg font-semibold">
-          Decision
-        </h2>
+      <section className="space-y-6">
+        <SectionHeading title="Decision" />
         {pending ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
             <ActionForm
               action={approveListing}
               hidden={{ listingId: listing.id }}
@@ -150,8 +160,8 @@ async function Preview({ params }: { params: Params }) {
             />
           </div>
         ) : (
-          <p className="text-sm text-stone-600">
-            This listing is {listing.status.replace(/_/g, " ").toLowerCase()}. Decisions apply only to listings waiting for review.
+          <p className="text-[15px] text-ink-soft">
+            This listing is {statusWord}. Decisions apply only to listings waiting for review.
           </p>
         )}
         {listing.status === "PUBLISHED" ? (
@@ -165,18 +175,16 @@ async function Preview({ params }: { params: Params }) {
         ) : null}
       </section>
 
-      <section aria-labelledby="media-heading" className="space-y-3">
-        <h2 id="media-heading" className="text-lg font-semibold">
-          Media
-        </h2>
+      <section className="space-y-6">
+        <SectionHeading title="Media" />
         {listing.media.length === 0 ? (
-          <p className="text-sm text-stone-600">No media uploaded.</p>
+          <p className="text-[15px] text-ink-soft">No media uploaded.</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {listing.media.map((m) => (
-              <li key={m.id} className="space-y-1">
+              <li key={m.id} className="space-y-2">
                 {m.type === "IMAGE" && m.status === "READY" ? (
-                  <div className="relative aspect-[4/3] overflow-hidden rounded border border-stone-300 bg-stone-100">
+                  <div className="relative aspect-[4/3] overflow-hidden border border-line bg-panel">
                     <Image
                       src={mediaUrl(m.id, "thumb")}
                       alt={m.alt ?? listing.title}
@@ -187,7 +195,7 @@ async function Preview({ params }: { params: Params }) {
                     />
                   </div>
                 ) : (
-                  <p className="text-sm text-stone-600">
+                  <p className="text-sm text-ink-soft">
                     {m.type.toLowerCase()} ({m.status.toLowerCase()})
                   </p>
                 )}
@@ -197,56 +205,55 @@ async function Preview({ params }: { params: Params }) {
         )}
       </section>
 
-      <section aria-labelledby="details-heading" className="space-y-3">
-        <h2 id="details-heading" className="text-lg font-semibold">
-          Details
-        </h2>
-        <dl className="grid gap-4 rounded border border-stone-300 bg-white p-4 md:grid-cols-3">
-          <Field label="Seller" value={`${listing.seller.businessName} (${listing.seller.approvalStatus.toLowerCase()})`} />
-          <Field label="Location" value={`${listing.seller.city}, ${listing.seller.state}`} />
-          <Field label="Submitted" value={formatDate(listing.submittedAt)} />
-          <Field label="Published" value={formatDate(listing.publishedAt)} />
-          <Field label="Type" value={listing.species} />
-          <Field label="Variety" value={listing.variety} />
-          <Field label="Shape" value={listing.shape} />
-          <Field label="Cut" value={listing.cut} />
-          <Field label="Carat" value={listing.caratWeight ? `${listing.caratWeight.toString()} ct` : null} />
-          <Field label="Dimensions" value={listing.dimensions} />
-          <Field label="Colour" value={listing.colour} />
-          <Field label="Clarity" value={listing.clarity} />
-          <Field label="Origin" value={listing.origin} />
-          <Field label="Treatment" value={listing.treatment} />
-          <Field label="Certificate lab" value={listing.certificateLab?.name} />
-          <Field label="Certificate no." value={listing.certificateNo} />
-          <Field label="Quantity" value={listing.quantity} />
-          <Field
-            label="Price"
-            value={listing.priceOnRequest ? "On request" : formatMoney(listing.priceMinor, listing.currency)}
-          />
-          <Field label="Availability" value={listing.availability.toLowerCase()} />
-          <Field label="Featured" value={listing.featured ? "Yes" : "No"} />
-        </dl>
+      <section className="space-y-6">
+        <SectionHeading title="Details" />
+        <Card className="p-5 sm:p-8">
+          <dl className="grid gap-6 md:grid-cols-3">
+            <Field label="Seller" value={`${listing.seller.businessName} (${listing.seller.approvalStatus.toLowerCase()})`} />
+            <Field label="Location" value={`${listing.seller.city}, ${listing.seller.state}`} />
+            <Field label="Submitted" value={formatDate(listing.submittedAt)} />
+            <Field label="Published" value={formatDate(listing.publishedAt)} />
+            <Field label="Type" value={listing.species} />
+            <Field label="Variety" value={listing.variety} />
+            <Field label="Shape" value={listing.shape} />
+            <Field label="Cut" value={listing.cut} />
+            <Field label="Carat" value={listing.caratWeight ? `${listing.caratWeight.toString()} ct` : null} />
+            <Field label="Dimensions" value={listing.dimensions} />
+            <Field label="Colour" value={listing.colour} />
+            <Field label="Clarity" value={listing.clarity} />
+            <Field label="Origin" value={listing.origin} />
+            <Field label="Treatment" value={listing.treatment} />
+            <Field label="Certificate lab" value={listing.certificateLab?.name} />
+            <Field label="Certificate no." value={listing.certificateNo} />
+            <Field label="Quantity" value={listing.quantity} />
+            <Field label="Price" value={listing.priceOnRequest ? "On request" : formatMoney(listing.priceMinor, listing.currency)} />
+            <Field label="Availability" value={listing.availability.toLowerCase()} />
+            <Field label="Featured" value={listing.featured ? "Yes" : "No"} />
+          </dl>
+        </Card>
         {listing.description ? (
-          <p className="whitespace-pre-line rounded border border-stone-300 bg-white p-4 text-sm">{listing.description}</p>
+          <p className="whitespace-pre-line border border-line bg-surface-raised p-5 text-[15px] leading-relaxed text-ink">{listing.description}</p>
         ) : null}
       </section>
 
-      <section aria-labelledby="docs-heading" className="space-y-3">
-        <h2 id="docs-heading" className="text-lg font-semibold">
-          Documents
-        </h2>
+      <section className="space-y-6">
+        <SectionHeading title="Documents" />
         {listing.documents.length === 0 ? (
-          <p className="text-sm text-stone-600">No documents attached.</p>
+          <p className="text-[15px] text-ink-soft">No documents attached.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {listing.documents.map((doc) => (
-              <li key={doc.id} className="flex flex-wrap items-center gap-3 rounded border border-stone-300 bg-white p-3 text-sm">
-                <span className="font-medium">{doc.title}</span>
-                {doc.verificationStatus === "VERIFIED" ? <VerifiedBadge /> : null}
-                <span className="text-stone-600">
+              <li key={doc.id} className="flex flex-wrap items-center gap-3 border border-line bg-surface-raised p-4 text-sm">
+                <span className="font-medium text-ink">{doc.title}</span>
+                {doc.verificationStatus === "VERIFIED" ? <Badge tone="verified">Verified</Badge> : null}
+                <span className="text-ink-soft">
                   {doc.verificationStatus.toLowerCase()} · {doc.isPublic ? "shown publicly" : "private"} · {formatBytes(doc.sizeBytes)}
                 </span>
-                <a href={listingDocumentUrl(doc.id)} className="underline">
+                <a
+                  href={listingDocumentUrl(doc.id)}
+                  className="inline-flex min-h-11 items-center gap-2 text-ink underline underline-offset-4 hover:text-accent-text"
+                >
+                  <Download className="h-4 w-4" strokeWidth={1.25} aria-hidden />
                   Download {doc.fileName}
                 </a>
               </li>

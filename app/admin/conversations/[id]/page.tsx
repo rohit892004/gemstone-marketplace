@@ -2,9 +2,13 @@ import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ShieldAlert } from "lucide-react";
 import { ActionForm } from "@/components/admin/action-form";
-import { formatDate } from "@/components/admin/admin-ui";
-import { DemoBadge } from "@/components/catalogue/badges";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { decodeViewReason, viewCookieName } from "@/lib/admin-moderation/conversation-view";
 import {
   CONVERSATION_KIND_LABELS,
@@ -64,16 +68,15 @@ async function Viewer({ params }: { params: Params }) {
 
 function ReasonGate({ conversationId, message }: { conversationId: string; message?: string }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <BackLink />
-      <h1 className="text-2xl font-semibold">Conversation</h1>
-      <p className="max-w-2xl text-sm text-stone-700">
-        Reading a private conversation needs a reason. The reason and your account are logged. Each time the
-        conversation loads, including refreshes, another audit entry is written. The view stays open for 30
-        minutes after you enter a reason.
-      </p>
+      <PageHeader
+        eyebrow="Audited view"
+        title="Conversation"
+        lead="Reading a private conversation needs a reason. The reason and your account are logged. Each time the conversation loads, including refreshes, another audit entry is written. The view stays open for 30 minutes after you enter a reason."
+      />
       {message ? (
-        <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="border-l-2 border-danger bg-surface-raised px-5 py-4 text-sm leading-relaxed text-danger">
           {message}
         </p>
       ) : null}
@@ -101,16 +104,18 @@ function ReasonGate({ conversationId, message }: { conversationId: string; messa
 
 function BackLink() {
   return (
-    <div className="flex flex-wrap gap-4 text-sm">
-      <Link href="/admin/moderation" className="underline">
+    <div className="flex flex-wrap gap-6 text-sm">
+      <Link href="/admin/moderation" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-accent-text">
         Flagged messages
       </Link>
-      <Link href="/admin/reports" className="underline">
+      <Link href="/admin/reports" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-accent-text">
         Reports
       </Link>
     </div>
   );
 }
+
+const LABEL = "text-[11px] uppercase tracking-[0.18em] text-ink-soft";
 
 function Transcript({
   conversationId,
@@ -127,107 +132,101 @@ function Transcript({
   const showingLimit = conversation.messages.length >= 200;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <BackLink />
 
-      <header className="space-y-2">
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
-          Conversation {conversation.isDemo ? <DemoBadge /> : null}
-        </h1>
-        <p className="text-sm text-stone-600">{CONVERSATION_KIND_LABELS[conversation.kind]}</p>
-      </header>
+      <PageHeader
+        eyebrow={CONVERSATION_KIND_LABELS[conversation.kind]}
+        title="Conversation"
+        lead={conversation.isDemo ? <AdminDemoTag /> : undefined}
+      />
 
-      <section aria-label="Audit" className="space-y-3 rounded border border-amber-300 bg-amber-50 p-4 text-sm">
-        <p>
-          Viewing as <span className="font-medium">{adminEmail}</span>. This view is logged with the reason below.
-          Refreshing the page logs another view.
+      <section aria-label="Audit" className="space-y-4 border-l-2 border-accent bg-surface-raised p-5 text-sm sm:p-6">
+        <p className="flex flex-wrap items-center gap-3 leading-relaxed text-ink">
+          <ShieldAlert className="h-4 w-4 text-accent" strokeWidth={1.25} aria-hidden />
+          Viewing as <span className="font-medium">{adminEmail}</span>. This view is logged with the reason below. Refreshing the page logs another view.
         </p>
-        <p className="whitespace-pre-wrap break-words">
+        <p className="whitespace-pre-wrap break-words text-ink">
           <span className="font-medium">Reason:</span> {reason}
         </p>
         <form action={endConversationView}>
           <input type="hidden" name="conversationId" value={conversationId} />
-          <button type="submit" className="rounded border border-stone-400 bg-white px-3 py-1 hover:bg-stone-100">
+          <Button type="submit" variant="secondary">
             End view
-          </button>
+          </Button>
         </form>
       </section>
 
-      <section aria-labelledby="context-heading" className="space-y-3">
-        <h2 id="context-heading" className="text-lg font-semibold">
-          Context
-        </h2>
-        <dl className="grid gap-4 rounded border border-stone-300 bg-white p-4 md:grid-cols-3">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-stone-600">Listing</dt>
-            <dd className="text-sm">{conversation.gemstone?.title ?? "-"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-stone-600">Requirement</dt>
-            <dd className="text-sm">{conversation.requirement?.gemstoneType ?? "-"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-stone-600">Started</dt>
-            <dd className="text-sm">{formatDate(conversation.createdAt)}</dd>
-          </div>
-          <div className="md:col-span-3">
-            <dt className="text-xs uppercase tracking-wide text-stone-600">Participants</dt>
-            <dd className="mt-1 space-y-1 text-sm">
-              {conversation.participants.map((p) => (
-                <p key={p.userId}>
-                  {p.user.name ?? "Unnamed user"} ({p.user.role.toLowerCase()})
-                  {p.user.sellerProfile ? `, ${p.user.sellerProfile.businessName}` : null}
-                </p>
-              ))}
-            </dd>
-          </div>
-        </dl>
+      <section className="space-y-6">
+        <SectionHeading title="Context" />
+        <Card className="p-5 sm:p-8">
+          <dl className="grid gap-6 md:grid-cols-3">
+            <div className="space-y-1">
+              <dt className={LABEL}>Listing</dt>
+              <dd className="text-[15px] text-ink">{conversation.gemstone?.title ?? "-"}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className={LABEL}>Requirement</dt>
+              <dd className="text-[15px] text-ink">{conversation.requirement?.gemstoneType ?? "-"}</dd>
+            </div>
+            <div className="space-y-1">
+              <dt className={LABEL}>Started</dt>
+              <dd className="text-[15px] text-ink">{formatDate(conversation.createdAt)}</dd>
+            </div>
+            <div className="space-y-2 md:col-span-3">
+              <dt className={LABEL}>Participants</dt>
+              <dd className="space-y-1 text-[15px] text-ink">
+                {conversation.participants.map((p) => (
+                  <p key={p.userId}>
+                    {p.user.name ?? "Unnamed user"} ({p.user.role.toLowerCase()})
+                    {p.user.sellerProfile ? `, ${p.user.sellerProfile.businessName}` : null}
+                  </p>
+                ))}
+              </dd>
+            </div>
+          </dl>
+        </Card>
       </section>
 
       {conversation.reports.length > 0 ? (
-        <section aria-labelledby="reports-heading" className="space-y-3">
-          <h2 id="reports-heading" className="text-lg font-semibold">
-            Reports about this conversation
-          </h2>
-          <ul className="space-y-2 text-sm">
+        <section className="space-y-6">
+          <SectionHeading title="Reports about this conversation" />
+          <ul className="space-y-3 text-sm">
             {conversation.reports.map((report) => (
-              <li key={report.id} className="rounded border border-stone-300 bg-white p-3">
-                <p className="font-medium">
-                  {REPORT_REASON_LABELS[report.reason]} · {REPORT_STATUS_LABELS[report.status]} ·{" "}
-                  {formatDate(report.createdAt)}
+              <li key={report.id} className="border border-line bg-surface-raised p-4">
+                <p className="flex flex-wrap items-center gap-2 font-medium text-ink">
+                  {REPORT_REASON_LABELS[report.reason]}
+                  <Badge tone={report.status === "OPEN" ? "warning" : "neutral"}>{REPORT_STATUS_LABELS[report.status]}</Badge>
+                  <span className="font-normal text-ink-soft">{formatDate(report.createdAt)}</span>
                 </p>
-                {report.details ? <p className="mt-1 whitespace-pre-wrap break-words text-stone-700">{report.details}</p> : null}
+                {report.details ? <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed text-ink-soft">{report.details}</p> : null}
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      <section aria-labelledby="messages-heading" className="space-y-3">
-        <h2 id="messages-heading" className="text-lg font-semibold">
-          Messages
-        </h2>
-        <p className="text-xs text-stone-600">
-          Text is shown as stored, with contact details already masked. Attachments are listed by name only.
-        </p>
+      <section className="space-y-6">
+        <SectionHeading title="Messages" />
+        <p className="text-[12px] text-ink-soft">Text is shown as stored, with contact details already masked. Attachments are listed by name only.</p>
         {conversation.messages.length === 0 ? (
-          <p className="text-sm text-stone-600">No messages yet.</p>
+          <p className="text-[15px] text-ink-soft">No messages yet.</p>
         ) : (
-          <ol className="space-y-3">
+          <ol className="space-y-4">
             {conversation.messages.map((message) => (
-              <li key={message.id} className="rounded border border-stone-300 bg-white p-3 text-sm">
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600">
-                  <span className="font-medium text-stone-900">
+              <li key={message.id} className="border border-line bg-surface-raised p-5 text-sm">
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-ink-soft">
+                  <span className="font-medium text-ink">
                     {names.get(message.senderId) ?? "Unknown user"}
                     {roleOf.get(message.senderId) ? ` (${roleOf.get(message.senderId)?.toLowerCase()})` : ""}
                   </span>
                   <span>{MESSAGE_KIND_LABELS[message.kind]}</span>
                   <span>{formatDate(message.createdAt)}</span>
-                  {message.flagged ? <span className="text-amber-800">Contact details masked</span> : null}
+                  {message.flagged ? <Badge tone="warning">Contact details masked</Badge> : null}
                 </p>
-                <p className="mt-2 whitespace-pre-wrap break-words">{message.body}</p>
+                <p className="mt-3 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-ink">{message.body}</p>
                 {message.attachments.length > 0 ? (
-                  <ul className="mt-2 space-y-1 text-xs text-stone-600">
+                  <ul className="mt-3 space-y-1 text-[12px] text-ink-soft">
                     {message.attachments.map((file) => (
                       <li key={file.id} className="break-all">
                         Attachment: {file.fileName} ({Math.ceil(file.sizeBytes / 1024)} KB)
@@ -239,7 +238,7 @@ function Transcript({
             ))}
           </ol>
         )}
-        {showingLimit ? <p className="text-xs text-stone-600">Showing the first 200 messages.</p> : null}
+        {showingLimit ? <p className="text-[12px] text-ink-soft">Showing the first 200 messages.</p> : null}
       </section>
     </div>
   );
