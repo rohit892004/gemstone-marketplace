@@ -37,13 +37,24 @@ Branch: `m4-valuation`. The owner's full M4 instructions are in `docs/milestones
 - Requester agent: worktree `R:\Demo\m4-wt-requester`, branch `m4-requester`.
 - Expert and admin agent: worktree `R:\Demo\m4-wt-expert`, branch `m4-expert`.
 
-## Not done (in order)
+## Phase B, D and E (done)
 
-1. Phase B: both branches to be merged into `m4-valuation`, then typecheck, lint, tests and build.
-2. Phase D: a fresh read-only reviewer. IDOR on valuations, media and reports. The seller of a listing cannot see a buyer's valuation. The verification page leaks nothing. Valuators see only assigned requests. Engine edge cases (zero, huge carat, missing data, currency). The disclaimer is on the results page and in the PDF.
-3. Phase E: Playwright journeys (buyer valuation with PDF and verify; low-confidence, assign, needs-info, sign-off, notified; seller publishes own listing; the listing seller cannot see a buyer's valuation; seller requirement edit). Screenshots at 390px and 1440px. Fix problems.
-4. Remove the Phase B worktrees safely: rmdir the node_modules junction (no `/s`), then `git worktree remove` and `git worktree prune`.
-5. README M4 section, final commit, stop the database and servers.
+- Phase B: requester pages and dashboards (`m4-requester`), and valuator, admin, prices, CSV, settings, stats and demo seed (`m4-expert`). Both merged. Worktrees removed and pruned.
+- Phase D: read-only review. Findings fixed in `1e120fc`: demo labelling of results, prototype-key lookups in the engine, zero estimates, money precision above 2^53, contact moderation on all free-text fields, rate limits on drafts and uploads. Deferred: the admin service functions do not re-check the role themselves (all callers go through `requireRole`).
+- Phase E: Playwright journeys in `e2e/m4-valuation.spec.ts`: buyer automatic result, PDF and verify; low-confidence, assign, needs-info, sign-off, notifications; seller publishes own listing; listing seller cannot see a buyer's valuation; seller requirement edit. Full Playwright set 27 of 27. Screenshots at 390px and 1440px in `screenshots/m4/`. Fixed: details form selects reset after Save draft, PDF rupee sign, queue and table overflow at 390px.
+- Requirement notes are masked, not refused, as in the buyer flow (the M3 decision). The brief had assumed refusal.
+
+## Not verified
+
+- Visual review of the 1440px set and of the verify, expert-review result and valuator detail screenshots. Only the 390px set for upload, result, queue and prices was checked by eye.
+- The PDF first page was not rendered (no PDF renderer installed). The PDF was checked as bytes and text.
+- Some screenshots are 413px wide. Likely a full-page capture artifact (the homepage document width is 390px), not proven.
+- Headless Chromium only.
+- The default Turbopack build fails only inside a worktree with a `node_modules` junction. The main repo builds.
+
+## Next milestone
+
+M5: seller analytics and membership.
 
 ## Notes for the next session
 
@@ -53,5 +64,7 @@ Branch: `m4-valuation`. The owner's full M4 instructions are in `docs/milestones
 
 ## Open questions
 
-- Should a published listing report show the estimate and range, or only the reference, date and method? The current build plan shows the estimate and range, because the seller chose to publish the report.
+- Should a published listing report show the estimate and range, or only the reference, date and method? Currently the estimate and range are shown, because the seller chose to publish the report.
 - Client-supplied reference figures: who owns them and when do they arrive?
+- Reactivated valuers: confirm they should keep their open assignments.
+- Should the PDF disclaimer match the on-page wording exactly?
