@@ -14,6 +14,8 @@ export interface PlatformRow {
   day: string;
   kind: string;
   count: number;
+  /** True for rows seeded as demo history. */
+  isDemo?: boolean;
 }
 
 /** The business counts shown as KPI tiles, with the rollup kind each one sums. */

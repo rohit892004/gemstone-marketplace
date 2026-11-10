@@ -27,7 +27,7 @@ export async function registerSellerAction(
   if (result.ok) {
     // Referral attribution is best-effort and never changes the outcome the applicant sees.
     const ref = formData.get("ref");
-    await attributeSellerReferral({ email: input.email, ref: typeof ref === "string" ? ref : null });
+    if (result.userId) await attributeSellerReferral({ userId: result.userId, ref: typeof ref === "string" ? ref : null });
     redirect("/check-email");
   }
 

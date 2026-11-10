@@ -4,6 +4,7 @@ import { formatCount, KpiTile, RangeNav, RollupNote } from "@/components/analyti
 import { requirePageRole } from "@/lib/auth/require-role";
 import { loadPlatformDashboard, type PlatformDashboard } from "@/lib/analytics/platform-dashboard";
 import type { PlatformKpiKey } from "@/lib/analytics/platform-summary";
+import { DemoBadge } from "@/components/catalogue/badges";
 import { dayToUnixSeconds, parseRange } from "@/lib/analytics/seller-trends";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -31,6 +32,11 @@ async function AdminAnalyticsView({ searchParams }: { searchParams: SearchParams
       <div className="space-y-3">
         <RangeNav basePath="/admin/analytics" selected={requested} capDays={requested} />
         <RollupNote lastFigureDay={data.lastFigureDay} today={data.today} behind={data.behind} />
+        {data.hasDemo ? (
+          <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <DemoBadge /> The totals in this window include demo history. Demo rows are labelled and are not real activity.
+          </p>
+        ) : null}
         {data.lastFigureDay !== null ? (
           <p>
             <a href={`/admin/analytics/export?range=${requested}`} className="font-medium underline underline-offset-4">

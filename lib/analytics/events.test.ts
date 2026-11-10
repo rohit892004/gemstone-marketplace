@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   dayKey,
+  looksLikeContactDetail,
   dedupeKeyFor,
   isBotUserAgent,
   normaliseTerm,
@@ -28,9 +29,10 @@ describe("dedupeKeyFor", () => {
     expect(dedupeKeyFor("LISTING_VIEW", "2026-11-10", "h", "g1")).toBe("LISTING_VIEW:2026-11-10:h:g1");
     expect(dedupeKeyFor("PROFILE_VIEW", "2026-11-10", "h", "s1")).not.toBeNull();
   });
-  it("is null for actions and impressions, which count every time", () => {
-    expect(dedupeKeyFor("WISHLIST_ADD", "2026-11-10", "h", "g1")).toBeNull();
-    expect(dedupeKeyFor("LISTING_IMPRESSION", "2026-11-10", "h", "g1")).toBeNull();
+  it("is set for impressions and wishlist adds, and null for other actions", () => {
+    expect(dedupeKeyFor("WISHLIST_ADD", "2026-11-10", "h", "g1")).not.toBeNull();
+    expect(dedupeKeyFor("LISTING_IMPRESSION", "2026-11-10", "h", "g1")).not.toBeNull();
+    expect(dedupeKeyFor("ENQUIRY_STARTED", "2026-11-10", "h", "g1")).toBeNull();
   });
   it("is null with no visitor", () => {
     expect(dedupeKeyFor("LISTING_VIEW", "2026-11-10", null, "g1")).toBeNull();
@@ -92,5 +94,18 @@ describe("retention and day keys", () => {
   });
   it("uses the UTC day", () => {
     expect(dayKey(new Date("2026-11-10T23:30:00Z"))).toBe("2026-11-10");
+  });
+});
+
+describe("looksLikeContactDetail", () => {
+  it("flags emails, web addresses, bare domains and phone numbers", () => {
+    expect(looksLikeContactDetail("ring jane@example.com")).toBe(true);
+    expect(looksLikeContactDetail("www.shop-example.in")).toBe(true);
+    expect(looksLikeContactDetail("https://x.test/a")).toBe(true);
+    expect(looksLikeContactDetail("call 98765 43210")).toBe(true);
+  });
+  it("lets ordinary gemstone searches through", () => {
+    expect(looksLikeContactDetail("blue sapphire 2 ct")).toBe(false);
+    expect(looksLikeContactDetail("burmese ruby")).toBe(false);
   });
 });

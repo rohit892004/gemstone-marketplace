@@ -128,7 +128,7 @@ beforeEach(() => {
 describe("registerSeller", () => {
   it("creates the profile and private documents, with opaque storage keys", async () => {
     const result = await registerSeller(input(), { ip: "203.0.113.5" });
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, userId: expect.any(String) });
 
     expect(profileCreates).toHaveLength(1);
     expect(profileCreates[0]).toMatchObject({
@@ -177,7 +177,7 @@ describe("registerSeller", () => {
   it("deletes stored files and still returns the generic success when the email already exists", async () => {
     mode.value = "exists";
     const result = await registerSeller(input(), { ip: "203.0.113.5" });
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ ok: true, userId: null });
     expect(objects.size).toBe(0);
   });
 

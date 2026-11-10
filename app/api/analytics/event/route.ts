@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth/auth";
 import { getEnv } from "@/lib/config/env";
 import { prisma } from "@/lib/db/client";
 import { CLIENT_EVENT_KINDS } from "@/lib/analytics/events";
+import { publicListingWhere } from "@/lib/listings/visibility";
 import { newVisitorId, recordEvent, validVisitorId, VISITOR_COOKIE, visitorCookie } from "@/lib/analytics/tracking";
 import { getClientIp } from "@/lib/security/client-ip";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
@@ -47,8 +48,15 @@ export async function POST(request: Request) {
   }
 
   // The visitor: keep the existing cookie, or start one. The cookie holds a random id, never a person.
+  // Nothing is recorded on the request that starts the cookie. Without a cookie, a script could repeat a view with no
+  // dedupe, so every recorded event needs a cookie the visitor already has.
   const existing = validVisitorId(cookieValue(request));
   const visitorId = existing ?? newVisitorId();
+  if (!existing) {
+    const headers = new Headers();
+    headers.set("Set-Cookie", visitorCookie(visitorId, getEnv().APP_URL.startsWith("https://")));
+    return new Response(null, { status: 204, headers });
+  }
   const session = await auth();
   const actor = session?.user ? { id: session.user.id, role: session.user.role } : null;
   const userAgent = request.headers.get("user-agent");
@@ -83,14 +91,12 @@ export async function POST(request: Request) {
     await recordEvent({ ...common, kind: "SEARCH", term: parsed.term, categoryId: parsed.categoryId ?? null });
   }
 
-  const headers = new Headers();
-  if (!existing) headers.set("Set-Cookie", visitorCookie(visitorId, getEnv().APP_URL.startsWith("https://")));
-  return new Response(null, { status: 204, headers });
+  return new Response(null, { status: 204 });
 }
 
 async function publicListing(id: string) {
   const listing = await prisma.gemstone.findFirst({
-    where: { id, status: "PUBLISHED", seller: { approvalStatus: "APPROVED" } },
+    where: { id, ...publicListingWhere() },
     select: { id: true, sellerId: true, categoryId: true, seller: { select: { userId: true } } },
   });
   if (!listing) return null;

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import {
   dayKey,
   dedupeKeyFor,
+  looksLikeContactDetail,
   normaliseTerm,
   shouldRecord,
   visitorHash,
@@ -81,11 +82,14 @@ export async function recordEvent(input: RecordInput): Promise<RecordResult> {
 
   const term = input.kind === "SEARCH" ? normaliseTerm(input.term) : null;
   if (input.kind === "SEARCH" && term === null) return { recorded: false, reason: "no-term" };
+  if (term !== null && looksLikeContactDetail(term)) return { recorded: false, reason: "contact-like" };
 
   const now = input.now ?? new Date();
   const day = dayKey(now);
   const visitor = validVisitorId(input.visitorId);
-  const hash = visitor ? visitorHash(visitor, day, analyticsSecret()) : null;
+  // A wishlist add is deduplicated per buyer, so the buyer's id (salted and hashed daily) stands in for the visitor.
+  const subject = input.kind === "WISHLIST_ADD" && input.actorUserId ? input.actorUserId : visitor;
+  const hash = subject ? visitorHash(subject, day, analyticsSecret()) : null;
   const target = input.gemstoneId ?? input.sellerId ?? "";
   const dedupeKey = dedupeKeyFor(input.kind, day, hash, target);
 

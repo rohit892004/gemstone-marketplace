@@ -7,26 +7,19 @@ import { prisma } from "@/lib/db/client";
 import { getClientIp } from "@/lib/security/client-ip";
 
 /**
- * Referral attribution for a seller who just registered with ?ref=. Never blocks or fails the registration: every
- * problem is logged and dropped. Unknown codes and self-referrals are refused silently (attributeReferral decides).
+ * Referral attribution for a seller account that was just created with ?ref=. Never blocks or fails the registration:
+ * every problem is logged and dropped. Unknown codes and self-referrals are refused silently (attributeReferral decides).
  *
- * The account is found by email and must have been created in the last few minutes. An email that already had an
- * account gets the same "check your email" result, and must not be attributed to a referrer after the fact.
+ * The caller passes the id of the account the registration created. Attribution never looks an account up by email,
+ * so an existing account can never be attributed after the fact.
  */
-const NEW_ACCOUNT_WINDOW_MS = 5 * 60 * 1000;
-
-export async function attributeSellerReferral(input: { email: string; ref: string | null | undefined }): Promise<void> {
+export async function attributeSellerReferral(input: { userId: string; ref: string | null | undefined }): Promise<void> {
   try {
     const code = normaliseReferralCode(input.ref);
     if (!code) return;
 
-    const email = input.email.trim();
-    if (!email) return;
-    const user = await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" }, role: "SELLER" },
-      select: { id: true, email: true, createdAt: true },
-    });
-    if (!user || Date.now() - user.createdAt.getTime() > NEW_ACCOUNT_WINDOW_MS) return;
+    const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { id: true, email: true, role: true } });
+    if (!user || user.role !== "SELLER") return;
 
     const requestHeaders = await headers();
     const visitorId = validVisitorId((await cookies()).get(VISITOR_COOKIE)?.value);

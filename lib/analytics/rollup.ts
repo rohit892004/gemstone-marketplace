@@ -2,7 +2,7 @@ import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
 import { prisma } from "@/lib/db/client";
 import { evaluateMemberships, qualifyReferrals } from "@/lib/membership/service";
-import { dayKey, retentionCutoff } from "./events";
+import { dayKey, looksLikeContactDetail, retentionCutoff } from "./events";
 
 /**
  * The daily rollup job (npm run analytics:rollup, once a day). It:
@@ -49,6 +49,10 @@ function rowKey(day: Date, kind: string, sellerId: string | null, gemstoneId: st
   return `${dayKey(day)}|${kind}|${sellerId ?? ""}|${gemstoneId ?? ""}`;
 }
 
+/**
+ * Writes one rollup row. A demo row seeded by hand keeps its demo flag on a re-run: platform and term rows never clear
+ * it, because their demo status is set when the row is seeded, not derived from events.
+ */
 async function upsertRollup(input: {
   day: Date;
   kind: string;
@@ -57,6 +61,7 @@ async function upsertRollup(input: {
   count: number;
   uniqueVisitors: number;
   isDemo: boolean;
+  keepDemoFlag?: boolean;
 }): Promise<void> {
   const key = rowKey(input.day, input.kind, input.sellerId, input.gemstoneId);
   const data = {
@@ -66,9 +71,12 @@ async function upsertRollup(input: {
     gemstoneId: input.gemstoneId,
     count: input.count,
     uniqueVisitors: input.uniqueVisitors,
-    isDemo: input.isDemo,
   };
-  await prisma.analyticsRollup.upsert({ where: { key }, create: { key, ...data }, update: data });
+  await prisma.analyticsRollup.upsert({
+    where: { key },
+    create: { key, ...data, isDemo: input.isDemo },
+    update: input.keepDemoFlag ? data : { ...data, isDemo: input.isDemo },
+  });
 }
 
 /** Aggregates one UTC day. Returns how many rollup rows were written. */
@@ -89,12 +97,15 @@ export async function rollupDay(day: Date): Promise<number> {
   }
 
   // Top search terms and top categories for the day.
+  // A term is kept only when at least two different visitors searched it that day, so one person's search (which may
+  // be typed personal information) never appears as a platform trend. Contact-like terms are dropped.
   const terms = await prisma.$queryRaw<Array<{ term: string; c: number }>>`
     SELECT term, count(*)::int AS c FROM "AnalyticsEvent"
     WHERE day = ${day} AND kind = 'SEARCH' AND term IS NOT NULL
-    GROUP BY term ORDER BY c DESC LIMIT ${TOP_LIMIT}`;
-  for (const row of terms) {
-    await upsertRollup({ day, kind: "PLATFORM_TOP_TERM:" + row.term, sellerId: null, gemstoneId: null, count: row.c, uniqueVisitors: 0, isDemo: false });
+    GROUP BY term HAVING count(DISTINCT "visitorHash") >= 2
+    ORDER BY c DESC LIMIT ${TOP_LIMIT}`;
+  for (const row of terms.filter((t) => !looksLikeContactDetail(t.term))) {
+    await upsertRollup({ day, kind: "PLATFORM_TOP_TERM:" + row.term, sellerId: null, gemstoneId: null, count: row.c, uniqueVisitors: 0, isDemo: false, keepDemoFlag: true });
     rows += 1;
   }
   const categories = await prisma.$queryRaw<Array<{ id: string; c: number }>>`
@@ -102,7 +113,7 @@ export async function rollupDay(day: Date): Promise<number> {
     WHERE day = ${day} AND kind = 'LISTING_VIEW' AND "categoryId" IS NOT NULL
     GROUP BY "categoryId" ORDER BY c DESC LIMIT ${TOP_LIMIT}`;
   for (const row of categories) {
-    await upsertRollup({ day, kind: "PLATFORM_TOP_CATEGORY:" + row.id, sellerId: null, gemstoneId: null, count: row.c, uniqueVisitors: 0, isDemo: false });
+    await upsertRollup({ day, kind: "PLATFORM_TOP_CATEGORY:" + row.id, sellerId: null, gemstoneId: null, count: row.c, uniqueVisitors: 0, isDemo: false, keepDemoFlag: true });
     rows += 1;
   }
 
@@ -120,7 +131,7 @@ export async function rollupDay(day: Date): Promise<number> {
     ["PLATFORM_ACTIVE_USER", await prisma.user.count({ where: inDay("lastLoginAt") })],
   ];
   for (const [kind, count] of platform) {
-    await upsertRollup({ day, kind, sellerId: null, gemstoneId: null, count, uniqueVisitors: 0, isDemo: false });
+    await upsertRollup({ day, kind, sellerId: null, gemstoneId: null, count, uniqueVisitors: 0, isDemo: false, keepDemoFlag: true });
     rows += 1;
   }
   return rows;

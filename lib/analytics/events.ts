@@ -27,8 +27,11 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 /** Kinds the browser may send to the tracking endpoint. Everything else is recorded on the server, by the action. */
 export const CLIENT_EVENT_KINDS: readonly EventKind[] = ["PROFILE_VIEW", "LISTING_VIEW", "LISTING_IMPRESSION", "SEARCH"];
 
-/** Views are deduplicated per visitor, per item, per day. Impressions and actions are counted every time. */
-export const DEDUPED_KINDS: readonly EventKind[] = ["PROFILE_VIEW", "LISTING_VIEW"];
+/**
+ * Views and impressions are deduplicated per visitor, per item, per day. A wishlist add is deduplicated per buyer, per
+ * listing, per day. Other actions are counted every time they happen.
+ */
+export const DEDUPED_KINDS: readonly EventKind[] = ["PROFILE_VIEW", "LISTING_VIEW", "LISTING_IMPRESSION", "WISHLIST_ADD"];
 
 export const RETENTION_DAYS = 90;
 export const MAX_TERM_LENGTH = 80;
@@ -51,6 +54,18 @@ export function visitorHash(visitorId: string, day: string, secret: string): str
 export function dedupeKeyFor(kind: EventKind, day: string, hash: string | null, targetId: string): string | null {
   if (!hash || !DEDUPED_KINDS.includes(kind)) return null;
   return `${kind}:${day}:${hash}:${targetId}`;
+}
+
+const CONTACT_PATTERNS = [
+  /[^\s@]+@[^\s@]+\.[^\s@]+/, // email address
+  /(?:https?:\/\/|www\.)\S+/i, // web address
+  /\S+\.(?:com|net|org|in|io|co)/i, // bare domain
+  /(?:\+?\d[\s().-]?){7,}/, // phone-like run of digits
+];
+
+/** True when a search term looks like a contact detail. Such terms are never stored or aggregated. */
+export function looksLikeContactDetail(term: string): boolean {
+  return CONTACT_PATTERNS.some((pattern) => pattern.test(term));
 }
 
 /** Search terms: trimmed, lower-cased, spaces collapsed, at most 80 characters. Null when too short to mean anything. */

@@ -19,9 +19,9 @@ export async function platformRollupRows(fromDay: string, lastDay: string): Prom
       kind: { startsWith: "PLATFORM_" },
       day: { gte: utcDay(fromDay), lte: utcDay(lastDay) },
     },
-    select: { day: true, kind: true, count: true },
+    select: { day: true, kind: true, count: true, isDemo: true },
   });
-  return rows.map((row) => ({ day: dayKey(row.day), kind: row.kind, count: row.count }));
+  return rows.map((row) => ({ day: dayKey(row.day), kind: row.kind, count: row.count, isDemo: row.isDemo }));
 }
 
 /** Category names for the ids the rollup ranked. Unknown ids are left out. */

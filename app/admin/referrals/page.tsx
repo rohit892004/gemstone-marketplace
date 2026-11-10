@@ -1,3 +1,4 @@
+import { DemoBadge } from "@/components/catalogue/badges";
 import Link from "next/link";
 import { Suspense } from "react";
 import type { Prisma } from "@/app/generated/prisma/client";
@@ -39,6 +40,7 @@ const referralSelect = {
   voidedReason: true,
   referrer: { select: { businessName: true } },
   referred: { select: { sellerProfile: { select: { businessName: true } } } },
+  isDemo: true,
 } satisfies Prisma.ReferralSelect;
 
 async function ReferralsView({ searchParams }: { searchParams: SearchParams }) {
@@ -107,7 +109,7 @@ async function ReferralsView({ searchParams }: { searchParams: SearchParams }) {
                   </div>
                   <div>
                     <dt className="text-stone-600">Referred seller</dt>
-                    <dd>{sellerName(r)}</dd>
+                    <dd>{sellerName(r)} {r.isDemo ? <DemoBadge /> : null}</dd>
                   </div>
                   <div className="sm:col-span-2">
                     <dt className="text-stone-600">Flag reason</dt>
@@ -170,7 +172,7 @@ async function ReferralsView({ searchParams }: { searchParams: SearchParams }) {
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t border-stone-200 align-top">
                     <td className="px-3 py-2">{r.referrer.businessName}</td>
-                    <td className="px-3 py-2">{sellerName(r)}</td>
+                    <td className="px-3 py-2">{sellerName(r)} {r.isDemo ? <DemoBadge /> : null}</td>
                     <td className="px-3 py-2">
                       {r.status === "PENDING" ? "Pending" : r.status === "QUALIFIED" ? "Qualified" : "Voided"}
                       {r.status === "QUALIFIED" && r.qualifiedAt ? <span className="block text-xs text-stone-600">{formatDate(r.qualifiedAt)}</span> : null}

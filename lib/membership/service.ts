@@ -133,7 +133,7 @@ export async function membershipSnapshot(sellerId: string, now: Date = new Date(
     metricsFor([sellerId], now),
     prisma.sellerMembership.findUnique({ where: { sellerId } }),
     prisma.gemstone.count({ where: { sellerId, status: "PUBLISHED" } }),
-    prisma.gemstone.count({ where: { sellerId, sellerFeatured: true } }),
+    prisma.gemstone.count({ where: { sellerId, sellerFeatured: true, status: "PUBLISHED" } }),
   ]);
   const tier: Tier = row?.tier ?? "FREE";
   const seller = metrics.get(sellerId) ?? { qualifiedReferrals: 0, followerCount: 0, responseRate: null, averageRating: null };

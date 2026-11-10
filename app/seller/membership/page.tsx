@@ -1,3 +1,4 @@
+import { DemoBadge } from "@/components/catalogue/badges";
 import { Suspense } from "react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { CopyLink } from "@/components/membership/copy-button";
@@ -57,7 +58,7 @@ async function MembershipView() {
   if (gate !== "approved") return <AwaitingApprovalPage title="Membership" />;
 
   const user = await requireRole(["SELLER"], { sellerApproved: true });
-  const seller = await prisma.sellerProfile.findUnique({ where: { userId: user.id }, select: { id: true, slug: true } });
+  const seller = await prisma.sellerProfile.findUnique({ where: { userId: user.id }, select: { id: true, slug: true, isDemo: true } });
   if (!seller) return <AwaitingApprovalPage title="Membership" />;
 
   const [snapshot, rules, referralCounts] = await Promise.all([
@@ -84,7 +85,9 @@ async function MembershipView() {
   return (
     <section className="mx-auto max-w-5xl space-y-12 px-4 py-10 sm:px-6">
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Membership</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Membership {seller?.isDemo ? <DemoBadge /> : null}
+        </h1>
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-lg text-ink">
             Current membership: <strong className="font-semibold">{tierName(tier)}</strong>

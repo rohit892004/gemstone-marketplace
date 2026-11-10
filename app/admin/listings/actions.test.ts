@@ -16,6 +16,10 @@ vi.mock("@/lib/auth/auth", () => ({ auth: vi.fn(async () => state.session) }));
 vi.mock("@/lib/db/client", () => ({ prisma: db }));
 vi.mock("@/lib/audit/audit", () => audit);
 vi.mock("next/server", () => ({ connection: async () => undefined }));
+vi.mock("@/lib/membership/service", () => ({
+  assertCanPublishListing: vi.fn(async () => undefined),
+  MembershipError: class MembershipError extends Error {},
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "x-forwarded-for": "198.51.100.7" }),
@@ -27,6 +31,7 @@ vi.mock("@/lib/config/app-url", () => ({
 import { AuthzError } from "@/lib/auth/require-role";
 import { MemoryEmailProvider, setEmailProviderForTests } from "@/lib/notify/email";
 import { approveListing, rejectListing, setListingFeatured } from "./actions";
+import { assertCanPublishListing, MembershipError } from "@/lib/membership/service";
 
 const admin = {
   id: "u_admin",
@@ -99,6 +104,14 @@ describe("approveListing", () => {
     });
     expect(audit.recordAudit).not.toHaveBeenCalled();
     expect(mail.sent).toHaveLength(0);
+  });
+
+  it("refuses to publish over the seller's listing limit, and does not change the listing", async () => {
+    vi.mocked(assertCanPublishListing).mockRejectedValueOnce(new MembershipError("LIMIT", "limit"));
+    const result = await approveListing(null, form({ listingId: "g1" }));
+    expect(result.ok).toBe(false);
+    expect(db.gemstone.updateMany).not.toHaveBeenCalled();
+    expect(audit.recordAudit).not.toHaveBeenCalled();
   });
 
   it("refuses non-admins before touching the listing", async () => {

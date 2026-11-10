@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanPublishListing, MembershipError } from "@/lib/membership/service";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { catalogueTemplates } from "@/lib/admin-catalogue/templates";
@@ -46,6 +47,18 @@ export async function approveListing(_prev: AdminActionState, formData: FormData
 
   const listing = await sellerContact(listingId);
   if (!listing) return { ok: false, error: "Listing not found." };
+
+  // The seller's membership limit applies to every publish, including an admin approval.
+  const target = await prisma.gemstone.findUnique({ where: { id: listingId }, select: { sellerId: true } });
+  if (!target) return { ok: false, error: "Listing not found." };
+  try {
+    await assertCanPublishListing(target.sellerId);
+  } catch (error) {
+    if (error instanceof MembershipError) {
+      return { ok: false, error: "The seller is at the active listing limit for their membership. Ask them to archive a listing, or change their membership tier." };
+    }
+    throw error;
+  }
 
   const now = new Date();
   const result = await prisma.gemstone.updateMany({

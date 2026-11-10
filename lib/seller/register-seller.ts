@@ -20,7 +20,7 @@ export const REGISTER_IP_LIMIT = 10;
 export const REGISTER_WINDOW_SECONDS = 60 * 60;
 
 export type RegisterSellerResult =
-  | { ok: true }
+  | { ok: true; /** The new account's id. Null when the email already had an account (nothing was created). */ userId: string | null }
   | { ok: false; reason: "validation"; fieldErrors: FieldErrors }
   | { ok: false; reason: "rate_limited" }
   | { ok: false; reason: "failed" };
@@ -103,6 +103,7 @@ export async function registerSeller(
   };
 
   let outcome: "CREATED" | "EXISTING";
+  let createdUserId: string | null = null;
   try {
     const result = await registerAccount({
       role: "SELLER",
@@ -113,6 +114,7 @@ export async function registerSeller(
       country: account.country,
       ip: options.ip,
       createProfile: async (tx, user) => {
+        createdUserId = user.id;
         const profile = await tx.sellerProfile.create({
           data: {
             userId: user.id,
@@ -154,5 +156,5 @@ export async function registerSeller(
   // Duplicate email: no documents may be kept. The caller still gets the generic success.
   if (outcome === "EXISTING") await deleteKeys(writtenKeys);
 
-  return { ok: true };
+  return { ok: true, userId: outcome === "CREATED" ? createdUserId : null };
 }

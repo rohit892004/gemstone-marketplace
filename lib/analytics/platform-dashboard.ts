@@ -27,6 +27,8 @@ export interface PlatformDashboard {
   rows: PlatformRow[];
   topCategories: RankedName[];
   topTerms: RankedName[];
+  /** True when the window includes demo history. The page says so. */
+  hasDemo: boolean;
 }
 
 export async function loadPlatformDashboard(input: { requestedRange: RangeDays; now?: Date }): Promise<PlatformDashboard> {
@@ -39,7 +41,7 @@ export async function loadPlatformDashboard(input: { requestedRange: RangeDays; 
   const range = input.requestedRange;
 
   if (last === null) {
-    return { range, today, lastFigureDay: null, behind, days: [], kpis: [], rows: [], topCategories: [], topTerms: [] };
+    return { range, today, lastFigureDay: null, behind, days: [], kpis: [], rows: [], topCategories: [], topTerms: [], hasDemo: false };
   }
 
   const { current, previous } = comparisonDays(last, range);
@@ -49,6 +51,7 @@ export async function loadPlatformDashboard(input: { requestedRange: RangeDays; 
   const names = await categoryNames(categories.map((c) => c.key));
 
   return {
+    hasDemo: rows.some((row) => row.isDemo === true),
     range,
     today,
     lastFigureDay: last,
