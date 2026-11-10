@@ -16,8 +16,8 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 |---|---|
 | **M3 Communication** (current) | Enquiries from product and portfolio pages, offers (accept, decline, counter), buyer requirements with seller responses and a requirements board, quotations (with PDF), in-platform chat with attachments, notifications (bell and email via Resend), notification preferences, contact-detail moderation, admin flagged queue and audited conversation viewing, reports and blocks, Resend and MSG91 providers |
 | M4 Valuation | Three-step valuation (upload, analysis, results), "Request valuation" from a product page, downloadable PDF reports, saved reports |
-| M5 Analytics & membership | Seller analytics (profile visits, product views, enquiries, performance), membership tiers Free / Premium / Elite (Free live; paid tiers as demo), referral programme with progress, admin for memberships and referrals |
-| M6 Content & launch | Education, market news, newsletter (double opt-in, campaigns), admin content publishing, platform activity and analytics, accessibility and polish, deployment preparation |
+| M5 Analytics & membership | Privacy-safe event tracking and daily rollups, seller analytics (visits, views, impressions, enquiries, conversion, response rate, quotations, valuations, followers) with CSV export, followers, membership tiers Free / Premium / Elite with progress (placeholder rules, pending client confirmation; upgrades when criteria are met, downgrades after a 14-day grace), referral programme with fraud flags, admin memberships and tier rules, referrals queue, platform analytics dashboard (signups, approvals, listings, enquiries, conversations, quotations, valuations, active users, top categories and searches, CSV export) |
+| M6 Content & launch | Education, market news, newsletter (double opt-in, campaigns), admin content publishing, accessibility and polish, deployment preparation, hardening (see the M6 hardening list) |
 
 ## Coverage of the client brief
 
@@ -36,7 +36,7 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 | 2. Seller: manage buyer enquiries, quotations, conversations | M3 |
 | 2. Seller: analytics (profile visits, product views, enquiries, performance) | M5. Product views and profile visits need tracking added in M5 |
 | 3. Membership: Free live; Premium and Elite upcoming; progress and upcoming benefits in the dashboard; referrals and engagement | M5. Free is live from M1. Progress display is part of M5 |
-| 4. Admin: applications, approvals, products, categories, certificates, reports, document verification, memberships, referrals, buyer enquiries, platform activity | Applications, approvals, products, documents, categories and certificates: done (M1 and M2). Reports and buyer enquiries: M3. Memberships and referrals: M5. Platform activity: M6 |
+| 4. Admin: applications, approvals, products, categories, certificates, reports, document verification, memberships, referrals, buyer enquiries, platform activity | Applications, approvals, products, documents, categories and certificates: done (M1 and M2). Reports and buyer enquiries: M3. Memberships, referrals and platform analytics: M5. Content and platform hardening: M6 |
 | 5. Connected journeys (buyer and seller) | Built up across M1–M5; the full journey is covered by the end-to-end tests from M3 onward |
 | Design: preserve the current direction; demo data labelled | Ongoing, every milestone |
 
@@ -48,6 +48,8 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 4. **Valuation report on the product page.** The brief asks for valuation reports on the product detail page. M2 shows verified public documents, which can include a valuation report if the seller uploads one. The "request valuation" flow is M4.
 
 ## M6 hardening list
+
+(Platform analytics moved from M6 to M5.)
 
 Work to do in the M6 pass, found during reviews and not urgent enough for the milestone that found it.
 

@@ -158,6 +158,8 @@ model User {
   valuationsRequested        Valuation[]               @relation("ValuationRequester")
   valuationsAssigned         Valuation[]               @relation("ValuationAssignee")
   valuationNotes             ValuationNote[]
+  followsGiven               Follow[]                  @relation("Follower")
+  referralsReceived          Referral[]                @relation("ReferredUser")
   flagsResolved              ModerationFlag[]          @relation("FlagResolver")
   notificationPreference     NotificationPreference?
   reviewedDocuments          SellerDocument[]          @relation("DocumentReviewer")
@@ -211,8 +213,8 @@ model BuyerProfile {
 }
 
 model SellerProfile {
-  id              String         @id @default(cuid())
-  userId          String         @unique
+  id              String            @id @default(cuid())
+  userId          String            @unique
   businessName    String
   businessType    BusinessType
   gstNumber       String?
@@ -226,22 +228,27 @@ model SellerProfile {
   description     String?
   logoKey         String?
   bannerKey       String?
-  approvalStatus  ApprovalStatus @default(PENDING)
+  approvalStatus  ApprovalStatus    @default(PENDING)
+  /// Public referral code shown on the membership page. Generated on first use. Null until then.
+  referralCode    String?           @unique
+  followers       Follow[]
+  referralsMade   Referral[]        @relation("ReferrerSeller")
+  membership      SellerMembership?
   approvedById    String?
   approvedAt      DateTime?
   reviewedAt      DateTime?
   rejectionReason String?
   tagline         String?
   /// Admin-set: shown in the featured sellers carousel.
-  featured        Boolean        @default(false)
+  featured        Boolean           @default(false)
   /// Set on demo seed data only. Demo sellers are labelled and refused in production.
-  isDemo          Boolean        @default(false)
+  isDemo          Boolean           @default(false)
   /// Cached from approved reviews. Null until the first review.
-  ratingAverage   Decimal?       @db.Decimal(3, 2)
-  reviewCount     Int            @default(0)
-  slug            String         @unique
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  ratingAverage   Decimal?          @db.Decimal(3, 2)
+  reviewCount     Int               @default(0)
+  slug            String            @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   approvedBy User?            @relation("SellerApprover", fields: [approvedById], references: [id])
@@ -283,14 +290,14 @@ model SellerDocument {
  * Admin-editable list of certificate labs. Not an enum. "Other" uses certificateLabOther.
  */
 model CertificateLab {
-  id        String   @id @default(cuid())
+  id         String      @id @default(cuid())
   valuations Valuation[]
-  code      String   @unique
-  name      String
-  isOther   Boolean  @default(false)
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  code       String      @unique
+  name       String
+  isOther    Boolean     @default(false)
+  active     Boolean     @default(true)
+  sortOrder  Int         @default(0)
+  createdAt  DateTime    @default(now())
 
   documents        SellerDocument[]
   gemstones        Gemstone[]
@@ -344,6 +351,8 @@ model Gemstone {
   availability     Availability             @default(AVAILABLE)
   status           ListingStatus            @default(DRAFT)
   featured         Boolean                  @default(false)
+  /// Seller-chosen featured slot (membership). Separate from the admin-set `featured` flag.
+  sellerFeatured   Boolean                  @default(false)
   /// Set on demo seed data only. Demo rows are labelled in the UI and refused in production.
   isDemo           Boolean                  @default(false)
   submittedAt      DateTime?
@@ -800,6 +809,7 @@ model NotificationPreference {
   offersAndQuotes Boolean  @default(true)
   requirements    Boolean  @default(true)
   valuations      Boolean  @default(true)
+  membership      Boolean  @default(true)
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -822,7 +832,6 @@ model Notification {
 }
 
 // ---------- Valuation ----------
-
 
 // ---------- Content and newsletter ----------
 
@@ -918,33 +927,33 @@ enum ValuationValuedBy {
 
 /// An indicative valuation request. Private to the requester, assigned valuators and admins.
 model Valuation {
-  id          String           @id @default(cuid())
+  id          String          @id @default(cuid())
   /// Public reference shown on the PDF and the verification page, e.g. GSV-26-K7Q2M9.
-  reference   String           @unique
+  reference   String          @unique
   requesterId String
   source      ValuationSource
   gemstoneId  String?
-  status      ValuationStatus  @default(DRAFT)
-  isDemo      Boolean          @default(false)
+  status      ValuationStatus @default(DRAFT)
+  isDemo      Boolean         @default(false)
 
   // Stone details, as entered by the requester.
-  gemstoneType     String
-  categoryId       String?
-  shape            String?
+  gemstoneType      String
+  categoryId        String?
+  shape             String?
   /// Carat in thousandths (2.5 ct = 2500). Integer, so no floating point reaches the price.
-  caratMilli       Int?
-  dimensions       String?
-  colour           String?
-  clarity          String?
+  caratMilli        Int?
+  dimensions        String?
+  colour            String?
+  clarity           String?
   /// Overall quality grade: PREMIUM, FINE, STANDARD or COMMERCIAL. Null when the requester does not know.
-  qualityGrade     String?
-  origin           String?
-  treatment        String?
-  labId            String?
+  qualityGrade      String?
+  origin            String?
+  treatment         String?
+  labId             String?
   certificateNumber String?
-  notes            String?
-  currency         String           @default("INR")
-  requestExpert    Boolean          @default(false)
+  notes             String?
+  currency          String  @default("INR")
+  requestExpert     Boolean @default(false)
 
   // Automatic result. Set when the engine runs. Indicative only.
   autoEstimateMinor BigInt?
@@ -955,7 +964,7 @@ model Valuation {
   expertReasons     String[]
 
   // Expert result. Set on valuator sign-off. The final result replaces the automatic one for display.
-  valuedBy          ValuationValuedBy?
+  valuedBy           ValuationValuedBy?
   finalEstimateMinor BigInt?
   finalLowMinor      BigInt?
   finalHighMinor     BigInt?
@@ -967,18 +976,18 @@ model Valuation {
   withdrawnAt        DateTime?
   withdrawnReason    String?
   /// The seller who owns the listing chose to show this completed report on the listing.
-  publishedOnListing Boolean          @default(false)
+  publishedOnListing Boolean   @default(false)
   submittedAt        DateTime?
   completedAt        DateTime?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  requester      User             @relation("ValuationRequester", fields: [requesterId], references: [id], onDelete: Cascade)
-  assignedValuator User?          @relation("ValuationAssignee", fields: [assignedValuatorId], references: [id], onDelete: SetNull)
-  gemstone       Gemstone?        @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
-  certificateLab CertificateLab?  @relation(fields: [labId], references: [id], onDelete: SetNull)
-  media          ValuationMedia[]
-  notes_         ValuationNote[]
+  requester        User             @relation("ValuationRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  assignedValuator User?            @relation("ValuationAssignee", fields: [assignedValuatorId], references: [id], onDelete: SetNull)
+  gemstone         Gemstone?        @relation(fields: [gemstoneId], references: [id], onDelete: SetNull)
+  certificateLab   CertificateLab?  @relation(fields: [labId], references: [id], onDelete: SetNull)
+  media            ValuationMedia[]
+  notes_           ValuationNote[]
 
   @@index([requesterId, createdAt])
   @@index([status, createdAt])
@@ -987,15 +996,15 @@ model Valuation {
 }
 
 model ValuationMedia {
-  id           String             @id @default(cuid())
-  valuationId  String
-  kind         ValuationMediaKind
-  storageKey   String
-  mimeType     String
-  sizeBytes    Int
-  sortOrder    Int                @default(0)
-  createdAt    DateTime           @default(now())
-  valuation    Valuation          @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+  id          String             @id @default(cuid())
+  valuationId String
+  kind        ValuationMediaKind
+  storageKey  String
+  mimeType    String
+  sizeBytes   Int
+  sortOrder   Int                @default(0)
+  createdAt   DateTime           @default(now())
+  valuation   Valuation          @relation(fields: [valuationId], references: [id], onDelete: Cascade)
 
   @@index([valuationId, sortOrder])
 }
@@ -1032,12 +1041,160 @@ model ReferencePrice {
 
 /// Multiplier in basis points (10000 = x1) for origin, treatment or lab. Keys are lower case.
 model ValuationMultiplier {
-  id      String  @id @default(cuid())
-  kind    String
-  key     String
-  label   String
-  bps     Int
-  isDemo  Boolean @default(false)
+  id     String  @id @default(cuid())
+  kind   String
+  key    String
+  label  String
+  bps    Int
+  isDemo Boolean @default(false)
 
   @@unique([kind, key])
+}
+
+enum AnalyticsEventKind {
+  PROFILE_VIEW
+  LISTING_VIEW
+  LISTING_IMPRESSION
+  WISHLIST_ADD
+  ENQUIRY_STARTED
+  QUOTATION_SENT
+  QUOTATION_ACCEPTED
+  VALUATION_REQUESTED
+  FOLLOW
+  SEARCH
+}
+
+/// Raw analytics event. Holds no personal data: the visitor is a hash that changes every day. Kept 90 days, then
+/// deleted by the rollup job (npm run analytics:rollup). Dashboards read AnalyticsRollup, not this table.
+model AnalyticsEvent {
+  id          String             @id @default(cuid())
+  kind        AnalyticsEventKind
+  occurredAt  DateTime           @default(now())
+  /// UTC calendar day of the event.
+  day         DateTime           @db.Date
+  /// Daily-salted hash of the first-party visitor cookie. Null for server events with no visitor.
+  visitorHash String?
+  sellerId    String?
+  gemstoneId  String?
+  categoryId  String?
+  /// Search term, trimmed and lower-cased, at most 80 characters. Never linked to a person.
+  term        String?
+  /// Makes a view count once per visitor, per item, per day. Unique, so a repeat insert is ignored.
+  dedupeKey   String?            @unique
+  isDemo      Boolean            @default(false)
+
+  @@index([kind, day])
+  @@index([sellerId, day])
+  @@index([gemstoneId, day])
+  @@index([occurredAt])
+}
+
+/// Daily aggregates the dashboards read. Seller and listing rows use sellerId and gemstoneId. Platform rows use
+/// kind values starting with PLATFORM_ and no seller or listing. The job rewrites a day's rows, so it can re-run.
+model AnalyticsRollup {
+  id             String   @id @default(cuid())
+  /// day|kind|sellerId|gemstoneId, with empty strings for nulls. Unique for upserts.
+  key            String   @unique
+  day            DateTime @db.Date
+  kind           String
+  sellerId       String?
+  gemstoneId     String?
+  count          Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  isDemo         Boolean  @default(false)
+
+  @@index([sellerId, day])
+  @@index([kind, day])
+}
+
+/// A buyer or seller following a seller. Followers are notified when the seller publishes a new listing.
+model Follow {
+  id         String        @id @default(cuid())
+  followerId String
+  sellerId   String
+  createdAt  DateTime      @default(now())
+  isDemo     Boolean       @default(false)
+  follower   User          @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  seller     SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, sellerId])
+  @@index([sellerId])
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  VOIDED
+}
+
+/// A seller who signed up with another seller's referral code. Qualifies when approved and with a published listing.
+model Referral {
+  id               String         @id @default(cuid())
+  referrerSellerId String
+  referredUserId   String         @unique
+  status           ReferralStatus @default(PENDING)
+  /// Set when a fraud rule matches. Flagged referrals wait for an admin, and do not qualify automatically.
+  flagged          Boolean        @default(false)
+  flagReason       String?
+  /// Keyed hashes of the signup IP and device cookie. Raw values are never stored.
+  ipHash           String?
+  deviceHash       String?
+  qualifiedAt      DateTime?
+  voidedAt         DateTime?
+  voidedReason     String?
+  isDemo           Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  referrer         SellerProfile  @relation("ReferrerSeller", fields: [referrerSellerId], references: [id], onDelete: Cascade)
+  referred         User           @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerSellerId, status])
+  @@index([flagged])
+  @@index([ipHash])
+  @@index([deviceHash])
+}
+
+enum MembershipTier {
+  FREE
+  PREMIUM
+  ELITE
+}
+
+/// Tier rules. Admin-editable. The defaults are placeholders, labelled "pending client confirmation".
+model TierRule {
+  tier               MembershipTier @id
+  /// Null means unlimited.
+  activeListingLimit Int?
+  featuredSlots      Int            @default(0)
+  analyticsDays      Int
+  hasBadge           Boolean        @default(false)
+  /// Added to a seller's ranking in the directory and the top-sellers carousel.
+  rankingBoost       Int            @default(0)
+  unlockReferrals    Int?
+  unlockFollowers    Int?
+  minResponseRate    Int            @default(0)
+  minRating          Decimal?       @db.Decimal(3, 2)
+  updatedById        String?
+  updatedAt          DateTime       @updatedAt
+}
+
+/// A seller's current tier and the metrics it was last evaluated on. Written by the rollup job and by admin overrides.
+model SellerMembership {
+  sellerId           String          @id
+  tier               MembershipTier  @default(FREE)
+  tierSince          DateTime        @default(now())
+  /// Set when the seller qualifies for a lower tier. The tier drops to graceTier when this passes.
+  graceUntil         DateTime?
+  graceTier          MembershipTier?
+  manualOverride     Boolean         @default(false)
+  overrideReason     String?
+  overrideById       String?
+  qualifiedReferrals Int             @default(0)
+  followerCount      Int             @default(0)
+  /// Percent of buyer-started conversations the seller replied to, over the last 90 days. Null with no conversations.
+  responseRate       Int?
+  /// Average of approved, non-demo reviews. Null with none.
+  averageRating      Decimal?        @db.Decimal(3, 2)
+  evaluatedAt        DateTime?
+  isDemo             Boolean         @default(false)
+  seller             SellerProfile   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }

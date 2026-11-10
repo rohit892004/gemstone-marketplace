@@ -55,6 +55,7 @@ export async function getNotificationPrefs(userId: string): Promise<Notification
     offersAndQuotes: row.offersAndQuotes,
     requirements: row.requirements,
     valuations: row.valuations,
+    membership: row.membership,
   };
 }
 

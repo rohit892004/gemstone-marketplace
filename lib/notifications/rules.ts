@@ -19,6 +19,9 @@ export const NOTIFICATION_TYPES = {
   VALUATION_INFO_REQUESTED: "valuation.info_requested",
   VALUATION_INFO_ANSWERED: "valuation.info_answered",
   VALUATION_ASSIGNED: "valuation.assigned",
+  FOLLOWED_NEW_LISTING: "follow.new_listing",
+  MEMBERSHIP_TIER: "membership.tier",
+  REFERRAL_QUALIFIED: "referral.qualified",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -36,6 +39,7 @@ export interface NotificationPrefs {
   offersAndQuotes: boolean;
   requirements: boolean;
   valuations: boolean;
+  membership: boolean;
 }
 
 export const DEFAULT_PREFS: NotificationPrefs = {
@@ -45,6 +49,7 @@ export const DEFAULT_PREFS: NotificationPrefs = {
   offersAndQuotes: true,
   requirements: true,
   valuations: true,
+  membership: true,
 };
 
 export type PrefCategory = Exclude<keyof NotificationPrefs, "emailEnabled">;
@@ -56,6 +61,7 @@ export function categoryFor(type: string): PrefCategory | null {
   if (type.startsWith("offer.") || type.startsWith("quotation.")) return "offersAndQuotes";
   if (type.startsWith("requirement.")) return "requirements";
   if (type.startsWith("valuation.")) return "valuations";
+  if (type.startsWith("follow.") || type.startsWith("membership.") || type.startsWith("referral.")) return "membership";
   return null;
 }
 

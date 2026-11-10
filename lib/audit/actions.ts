@@ -71,6 +71,17 @@ export const AuditAction = {
   VALUATOR_REACTIVATED: "valuator.reactivated",
   REFERENCE_PRICES_CHANGED: "valuation.reference_prices_changed",
   VALUATION_THRESHOLD_CHANGED: "valuation.threshold_changed",
+  // Analytics and membership (M5)
+  ANALYTICS_ROLLUP_RUN: "analytics.rollup_run",
+  FOLLOW_CHANGED: "follow.changed",
+  REFERRAL_ATTRIBUTED: "referral.attributed",
+  REFERRAL_QUALIFIED: "referral.qualified",
+  REFERRAL_VOIDED: "referral.voided",
+  REFERRAL_FLAG_CLEARED: "referral.flag_cleared",
+  MEMBERSHIP_TIER_CHANGED: "membership.tier_changed",
+  MEMBERSHIP_OVERRIDE_SET: "membership.override_set",
+  MEMBERSHIP_OVERRIDE_CLEARED: "membership.override_cleared",
+  TIER_RULES_CHANGED: "membership.tier_rules_changed",
 } as const;
 
 export type AuditActionName = (typeof AuditAction)[keyof typeof AuditAction];

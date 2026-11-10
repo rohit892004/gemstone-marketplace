@@ -38,6 +38,7 @@ export async function savePreferences(
     offersAndQuotes: formData.get("offersAndQuotes") === "on",
     requirements: formData.get("requirements") === "on",
     valuations: formData.get("valuations") === "on",
+    membership: formData.get("membership") === "on",
   };
   try {
     await saveNotificationPrefs(user.id, next);
