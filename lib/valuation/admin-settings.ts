@@ -1,3 +1,4 @@
+import { assertActiveAdmin } from "@/lib/auth/assert-admin";
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
 import { prisma } from "@/lib/db/client";
@@ -49,6 +50,7 @@ export async function saveThresholdSettings(input: {
   admin: { id: string };
   form: ThresholdForm;
 }): Promise<ParseResult<{ changed: string[] }>> {
+  await assertActiveAdmin(input.admin.id);
   const current = await loadThresholdSettings();
   const globalParsed = parseThresholdInput(input.form.global);
   if (!globalParsed.ok) return { ok: false, error: `Global threshold: ${globalParsed.error}` };

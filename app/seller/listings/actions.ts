@@ -24,7 +24,7 @@ import { unpublishValuationsOnStoneChange } from "@/lib/valuation/service";
 import { getStorageProvider } from "@/lib/storage/storage";
 import { uploadErrorMessage, validateUpload } from "@/lib/storage/upload-validation";
 import { getEnv } from "@/lib/config/env";
-import { assertCanPublishListing, assertFeaturedSlot, MembershipError } from "@/lib/membership/service";
+import { assertCanPublishListing, assertFeaturedSlot, MembershipError, withSellerLock } from "@/lib/membership/service";
 import { notifyFollowersOfNewListing } from "@/lib/membership/notify-followers";
 
 /** Server actions for the seller listing editor. Every write is scoped to the signed-in seller. */
@@ -139,15 +139,9 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   const becomesLive = (resolved.status === "PUBLISHED" || resolved.status === "PENDING_REVIEW") && current?.status !== "PUBLISHED";
   const wantsFeatured = formData.get("sellerFeatured") === "on";
   const featuredSent = text(formData, "sellerFeaturedSet") === "1";
-  try {
-    if (becomesLive) await assertCanPublishListing(seller.id, current?.id);
-    if (featuredSent && wantsFeatured) await assertFeaturedSlot(seller.id, current?.id ?? "new-listing");
-  } catch (error) {
-    if (error instanceof MembershipError) {
-      return { formError: error.message, values: { ...values, sellerFeatured: wantsFeatured ? "true" : "false" } };
-    }
-    throw error;
-  }
+  // The checks and the write run in one transaction under the seller's row lock (see withSellerLock).
+  const checkFeatured = featuredSent && wantsFeatured;
+  const limitError = (error: MembershipError) => ({ formError: error.message, values: { ...values, sellerFeatured: wantsFeatured ? "true" : "false" } });
   const publishedNow = resolved.status === "PUBLISHED" && current?.status !== "PUBLISHED";
 
   const now = new Date();
@@ -185,10 +179,20 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
       select: { species: true, caratWeight: true, treatment: true, certificateLabId: true, certificateNo: true },
     });
     // Ownership is repeated in the where clause so a race cannot write another seller's row.
-    const result = await prisma.gemstone.updateMany({
-      where: { id: current.id, seller: { userId: user.id } },
-      data: fields,
-    });
+    let result: { count: number };
+    try {
+      result = await withSellerLock(seller.id, async (tx) => {
+        if (becomesLive) await assertCanPublishListing(seller.id, current.id, tx);
+        if (checkFeatured) await assertFeaturedSlot(seller.id, current.id, tx);
+        return tx.gemstone.updateMany({
+          where: { id: current.id, seller: { userId: user.id } },
+          data: fields,
+        });
+      });
+    } catch (error) {
+      if (error instanceof MembershipError) return limitError(error);
+      throw error;
+    }
     if (result.count !== 1) return { formError: "Listing not found." };
     if (before) {
       const changed = changedKeyStoneFields(before, fields);
@@ -206,11 +210,16 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   let created: { id: string; slug: string } | null = null;
   for (let attempt = 0; attempt < 5 && !created; attempt++) {
     try {
-      created = await prisma.gemstone.create({
-        data: { ...fields, sellerId: seller.id, slug: generateListingSlug(input.title) },
-        select: { id: true, slug: true },
+      created = await withSellerLock(seller.id, async (tx) => {
+        if (becomesLive) await assertCanPublishListing(seller.id, undefined, tx);
+        if (checkFeatured) await assertFeaturedSlot(seller.id, "new-listing", tx);
+        return tx.gemstone.create({
+          data: { ...fields, sellerId: seller.id, slug: generateListingSlug(input.title) },
+          select: { id: true, slug: true },
+        });
       });
     } catch (error) {
+      if (error instanceof MembershipError) return limitError(error);
       if (!isSlugCollision(error)) throw error;
     }
   }

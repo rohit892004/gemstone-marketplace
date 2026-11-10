@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
+import type { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db/client";
 import { NOTIFICATION_TYPES, notify } from "@/lib/notifications/service";
 import { DEFAULT_TIER_RULES } from "./defaults";
@@ -156,33 +157,81 @@ export async function membershipSnapshot(sellerId: string, now: Date = new Date(
   };
 }
 
+/** Anything that can run queries: the shared client, or a transaction client. */
+export type MembershipDb = Pick<Prisma.TransactionClient, "gemstone" | "sellerMembership" | "$queryRaw">;
+
+/**
+ * Locks the seller's SellerProfile row until the transaction ends (SELECT ... FOR UPDATE). Two concurrent publishes
+ * or featured changes for one seller then run one after the other, so each re-counts after the other has written.
+ */
+export async function lockSellerForUpdate(tx: MembershipDb, sellerId: string): Promise<void> {
+  await tx.$queryRaw`SELECT "id" FROM "SellerProfile" WHERE "id" = ${sellerId} FOR UPDATE`;
+}
+
+/** Runs `fn` in a transaction that holds the seller's lock. Use it for every check-then-write on listing limits. */
+export async function withSellerLock<T>(sellerId: string, fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await lockSellerForUpdate(tx, sellerId);
+    return fn(tx);
+  });
+}
+
+/** The count of listings that count toward the active limit, optionally leaving one listing out. Pure SQL, no logic. */
+export async function countLimitedListings(db: MembershipDb, sellerId: string, excludeGemstoneId?: string): Promise<number> {
+  return db.gemstone.count({
+    where: {
+      sellerId,
+      status: { in: [...LIMIT_COUNTED_STATUSES] },
+      ...(excludeGemstoneId ? { NOT: { id: excludeGemstoneId } } : {}),
+    },
+  });
+}
+
+/** Featured listings in use (published and flagged by the seller), optionally leaving one listing out. */
+export async function countFeaturedInUse(db: MembershipDb, sellerId: string, excludeGemstoneId?: string): Promise<number> {
+  return db.gemstone.count({
+    where: {
+      sellerId,
+      sellerFeatured: true,
+      status: "PUBLISHED",
+      ...(excludeGemstoneId ? { NOT: { id: excludeGemstoneId } } : {}),
+    },
+  });
+}
+
+async function tierRuleFor(db: MembershipDb, sellerId: string): Promise<{ tier: Tier; rule: TierRule }> {
+  const [rules, row] = await Promise.all([loadTierRules(), db.sellerMembership.findUnique({ where: { sellerId } })]);
+  const tier: Tier = row?.tier ?? "FREE";
+  return { tier, rule: ruleFor(rules, tier) };
+}
+
 /**
  * The server check for every publish of a new listing. Throws LIMIT with a message the seller can act on.
  * `excludeGemstoneId` is the listing being published, so it is not counted against itself (an admin approving a
- * PENDING_REVIEW listing, or a seller resubmitting one).
+ * PENDING_REVIEW listing, or a seller resubmitting one). Pass a transaction client `db` and call it inside
+ * withSellerLock, so the count and the following write are atomic.
  */
-export async function assertCanPublishListing(sellerId: string, excludeGemstoneId?: string): Promise<void> {
-  const snapshot = await membershipSnapshot(sellerId);
-  const others = excludeGemstoneId
-    ? await prisma.gemstone.count({ where: { sellerId, status: { in: [...LIMIT_COUNTED_STATUSES] }, NOT: { id: excludeGemstoneId } } })
-    : snapshot.publishedListings;
-  const check = canPublishNewListing(snapshot.rule, others);
+export async function assertCanPublishListing(sellerId: string, excludeGemstoneId?: string, db: MembershipDb = prisma): Promise<void> {
+  const { tier, rule } = await tierRuleFor(db, sellerId);
+  const others = await countLimitedListings(db, sellerId, excludeGemstoneId);
+  const check = canPublishNewListing(rule, others);
   if (!check.ok) {
-    throw new MembershipError("LIMIT", `Your ${snapshot.tier.toLowerCase()} membership allows ${check.limit} active listings. Archive one to publish another.`);
+    throw new MembershipError("LIMIT", `Your ${tier.toLowerCase()} membership allows ${check.limit} active listings. Archive one to publish another.`);
   }
 }
 
 /** The server check for turning on a seller-chosen featured slot. Turning one off is always allowed. */
-export async function assertFeaturedSlot(sellerId: string, gemstoneId: string): Promise<void> {
-  const snapshot = await membershipSnapshot(sellerId);
-  const current = await prisma.gemstone.findFirst({ where: { id: gemstoneId, sellerId }, select: { sellerFeatured: true } });
+export async function assertFeaturedSlot(sellerId: string, gemstoneId: string, db: MembershipDb = prisma): Promise<void> {
+  const current = await db.gemstone.findFirst({ where: { id: gemstoneId, sellerId }, select: { sellerFeatured: true } });
   if (current?.sellerFeatured) return;
-  if (!featuredAvailable(snapshot.rule, snapshot.featuredInUse)) {
+  const { rule } = await tierRuleFor(db, sellerId);
+  const inUse = await countFeaturedInUse(db, sellerId, gemstoneId);
+  if (!featuredAvailable(rule, inUse)) {
     throw new MembershipError(
       "LIMIT",
-      snapshot.rule.featuredSlots === 0
+      rule.featuredSlots === 0
         ? "Featured listings are a Premium and Elite benefit."
-        : `Your membership allows ${snapshot.rule.featuredSlots} featured listing(s). Unfeature one first.`,
+        : `Your membership allows ${rule.featuredSlots} featured listing(s). Unfeature one first.`,
     );
   }
 }

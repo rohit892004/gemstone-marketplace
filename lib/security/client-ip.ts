@@ -1,19 +1,43 @@
+import { getEnv } from "@/lib/config/env";
+
+/**
+ * The configured count. An invalid environment is already rejected at server start (instrumentation.ts), so the
+ * fallback to the default only keeps request handling alive in tests and tooling that do not set the env.
+ */
+function configuredProxyCount(): number {
+  try {
+    return getEnv().TRUSTED_PROXY_COUNT;
+  } catch {
+    return 1;
+  }
+}
+
 /**
  * Best-effort client IP for audit logs and rate limits.
  *
- * Assumes exactly ONE trusted reverse proxy in front of the app. Such a proxy appends
- * the address it received to X-Forwarded-For, so the RIGHTMOST entry is the one it saw.
- * Client-supplied leftmost entries are ignored, so rotating the header cannot dodge
- * per-IP limits. Without a proxy, the header is client-controlled and per-IP limits
- * are weak; per-email limits still apply.
+ * X-Forwarded-For is a list. Each trusted proxy APPENDS the address it received, so the entry
+ * appended by the proxy nearest to the app is N entries from the RIGHT, where N is
+ * TRUSTED_PROXY_COUNT (default 1: one Nginx in front of the app). Entries further left were
+ * supplied by the client or by an earlier hop and are not trusted, so a client that prepends
+ * fake addresses cannot rotate its per-IP limits.
+ *
+ * - N = 0 (no proxy): X-Forwarded-For is client-controlled and ignored. X-Real-IP is used if present.
+ * - Header with fewer than N entries: "unknown" (the request did not pass through the expected proxies).
+ * - Header absent: X-Real-IP, then "unknown".
+ *
+ * Set TRUSTED_PROXY_COUNT to the real number of proxies. Too high a value reads a client-supplied
+ * entry; too low a value reads a proxy address and merges every user into one bucket.
  */
-export function getClientIp(headers: Headers): string {
+export function getClientIp(headers: Headers, trustedProxyCount?: number): string {
+  const count = trustedProxyCount ?? configuredProxyCount();
   const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
+
+  if (count > 0 && forwarded !== null) {
     const parts = forwarded.split(",").map((p) => p.trim()).filter(Boolean);
-    const last = parts[parts.length - 1];
-    if (last) return last;
+    if (parts.length < count) return "unknown";
+    return parts[parts.length - count];
   }
+
   const realIp = headers.get("x-real-ip")?.trim();
   if (realIp) return realIp;
   return "unknown";

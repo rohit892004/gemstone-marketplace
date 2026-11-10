@@ -1,3 +1,4 @@
+import { assertActiveAdmin } from "@/lib/auth/assert-admin";
 import { prisma } from "@/lib/db/client";
 import { VALUATOR_QUEUE_STATUSES } from "./valuator-queue";
 
@@ -18,7 +19,8 @@ export interface ValuationStats {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export async function loadValuationStats(now = new Date()): Promise<ValuationStats> {
+export async function loadValuationStats(admin: { id: string }, now = new Date()): Promise<ValuationStats> {
+  await assertActiveAdmin(admin.id);
   const since7 = new Date(now.getTime() - 7 * DAY_MS);
   const since30 = new Date(now.getTime() - 30 * DAY_MS);
 

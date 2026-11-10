@@ -1,3 +1,4 @@
+import { assertActiveAdmin } from "@/lib/auth/assert-admin";
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
 import { prisma } from "@/lib/db/client";
@@ -113,6 +114,7 @@ export function parsePriceCell(cell: PriceCell): ParseResult<{
 }
 
 export async function savePriceRow(input: { admin: { id: string }; cell: PriceCell }): Promise<ParseResult<true>> {
+  await assertActiveAdmin(input.admin.id);
   const parsed = parsePriceCell(input.cell);
   if (!parsed.ok) return parsed;
   const value = parsed.value;
@@ -145,6 +147,7 @@ export async function importReferencePriceCsv(input: {
   admin: { id: string };
   text: string;
 }): Promise<{ ok: true; rows: number } | { ok: false; errors: CsvError[] }> {
+  await assertActiveAdmin(input.admin.id);
   const parsed = parseReferencePriceCsv(input.text);
   if (!parsed.ok) return { ok: false, errors: parsed.errors };
 
@@ -178,6 +181,7 @@ export async function saveMultiplierPercents(input: {
   admin: { id: string };
   updates: Array<{ id: string; percent: string }>;
 }): Promise<ParseResult<number>> {
+  await assertActiveAdmin(input.admin.id);
   const parsedUpdates: Array<{ id: string; bps: number }> = [];
   for (const update of input.updates) {
     const bps = parsePercentToBps(update.percent);
@@ -211,6 +215,7 @@ export async function addMultiplier(input: {
   label: string;
   percent: string;
 }): Promise<ParseResult<true>> {
+  await assertActiveAdmin(input.admin.id);
   if (!(MULTIPLIER_KINDS as readonly string[]).includes(input.kind)) return { ok: false, error: "Choose origin, treatment or lab." };
   const kind = input.kind as MultiplierKind;
   const key = normaliseMultiplierKey(input.key);
@@ -243,6 +248,7 @@ export async function saveEditedPrices(input: {
   admin: { id: string };
   updates: Array<{ id: string; priceMajor: string }>;
 }): Promise<{ ok: true; changed: number } | { ok: false; error: string; fieldErrors: Record<string, string> }> {
+  await assertActiveAdmin(input.admin.id);
   const fieldErrors: Record<string, string> = {};
   const parsed: Array<{ id: string; minor: bigint }> = [];
   for (const update of input.updates) {

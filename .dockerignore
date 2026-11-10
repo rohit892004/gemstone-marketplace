@@ -1,0 +1,21 @@
+# Keep secrets, local data, build output and tests out of the build context.
+.env
+.env.*
+.data
+.next
+node_modules
+e2e
+screenshots
+test-results
+playwright-report
+coverage
+docs/milestones
+docs
+.git
+.github
+*.log
+*.tsbuildinfo
+npm-debug.log*
+Dockerfile
+docker-compose*.yml
+.dockerignore

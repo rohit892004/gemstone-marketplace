@@ -1,0 +1,85 @@
+# Production stack: app, worker, one-off migration job, Postgres.
+#
+# README
+#   1. Copy the env template to a file that is NOT committed, e.g. /etc/gemstone/app.env, and fill it in.
+#      It holds DATABASE_URL, AUTH_SECRET, provider keys and so on. See docs/DEPLOYMENT.md for the full list.
+#   2. Set POSTGRES_PASSWORD in the same file. The db service and the URL built in this file must use the same
+#      password. Use only URL-safe characters in it (letters, digits, - _ . ~), or percent-encode it.
+#   3. Build and start: docker compose -f docker-compose.prod.yml --env-file /etc/gemstone/app.env up -d --build
+#      The app service builds the image; migrate, worker and app share it.
+#      Order: db becomes healthy, migrate runs `prisma migrate deploy` and exits 0, then app and worker start.
+#   4. The app listens on 127.0.0.1:3000 only. Put Nginx (TLS, X-Forwarded-For) in front of it.
+#   5. Postgres has no published port. Only containers on this compose network can reach it.
+#   6. Logs: docker compose -f docker-compose.prod.yml logs -f app worker
+#
+# NOT BUILT on the M6 platform machine (no Docker). Validate with `docker compose config` before first use.
+
+name: gemstone
+
+x-app-env: &app-env
+  env_file:
+    - ${APP_ENV_FILE:-/etc/gemstone/app.env}
+  environment:
+    # Inside the compose network the database host is "db", not localhost. Overrides DATABASE_URL from the file.
+    DATABASE_URL: postgresql://gemstone:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the env file}@db:5432/gemstone?schema=public
+    STORAGE_DIR: /app/.data/uploads
+  restart: unless-stopped
+  image: gemstone-marketplace:latest
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gemstone
+      POSTGRES_USER: gemstone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the env file}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gemstone -d gemstone"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # No "ports:" section: the database is reachable only on the compose network.
+
+  migrate:
+    <<: *app-env
+    command: ["npx", "prisma", "migrate", "deploy", "--config", "prisma7.config.ts"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    <<: *app-env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "server.js"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - uploads:/app/.data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app-env
+    command: ["npx", "tsx", "scripts/worker.ts"]
+    volumes:
+      - uploads:/app/.data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  uploads:

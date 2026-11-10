@@ -24,8 +24,8 @@ function Card({ label, value, note }: { label: string; value: string; note?: str
 }
 
 async function Stats() {
-  await requirePageRole(["ADMIN"]);
-  const stats = await loadValuationStats();
+  const admin = await requirePageRole(["ADMIN"]);
+  const stats = await loadValuationStats({ id: admin.id });
   const total = stats.statusCounts.reduce((sum, row) => sum + row.count, 0);
 
   return (

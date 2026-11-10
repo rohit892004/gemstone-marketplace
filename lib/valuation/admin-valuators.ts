@@ -1,3 +1,4 @@
+import { assertActiveAdmin } from "@/lib/auth/assert-admin";
 import { randomBytes } from "node:crypto";
 import { hashPassword } from "@/lib/auth/password";
 import { issueToken } from "@/lib/auth/tokens";
@@ -104,6 +105,7 @@ export async function createValuator(input: {
   admin: { id: string };
   raw: { name: unknown; email: unknown; mobile: unknown };
 }): Promise<ParseResult<{ userId: string }>> {
+  await assertActiveAdmin(input.admin.id);
   const parsed = parseValuatorInput(input.raw);
   if (!parsed.ok) return parsed;
   const { name, email, mobile } = parsed.value;
@@ -144,6 +146,7 @@ export async function createValuator(input: {
 
 /** Sends a fresh set-password link to a valuator who has not yet set a password. */
 export async function resendSetPasswordLink(input: { admin: { id: string }; valuatorId: string }): Promise<ParseResult<true>> {
+  await assertActiveAdmin(input.admin.id);
   const user = await prisma.user.findUnique({
     where: { id: input.valuatorId },
     select: { id: true, email: true, name: true, role: true, status: true },
@@ -173,6 +176,7 @@ export async function setValuatorActive(input: {
   valuatorId: string;
   active: boolean;
 }): Promise<ParseResult<true>> {
+  await assertActiveAdmin(input.admin.id);
   const released = await prisma.$transaction(async (tx) => {
     const result = await tx.user.updateMany({
       where: { id: input.valuatorId, role: "VALUATOR", status: input.active ? "SUSPENDED" : "ACTIVE" },
