@@ -59,6 +59,7 @@ export const getPublicGemstoneBySlug = cache(async (slug: string) => {
           ratingAverage: true,
           reviewCount: true,
           isDemo: true,
+          bannerKey: true,
         },
       },
     },

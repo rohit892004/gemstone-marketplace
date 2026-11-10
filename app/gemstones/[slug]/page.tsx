@@ -96,6 +96,7 @@ async function GemstoneDetail({ params }: Props) {
     ratingAverage: listing.seller.ratingAverage ? listing.seller.ratingAverage.toString() : null,
     reviewCount: listing.seller.reviewCount,
     isDemo: listing.seller.isDemo,
+    hasBanner: Boolean(listing.seller.bannerKey),
   };
 
   return (

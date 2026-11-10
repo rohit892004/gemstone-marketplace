@@ -58,6 +58,7 @@ const CARD_SELECT = {
   ratingAverage: true,
   reviewCount: true,
   isDemo: true,
+  bannerKey: true,
   membership: { select: { tier: true } },
 } satisfies Prisma.SellerProfileSelect;
 
@@ -111,6 +112,7 @@ async function rankedPage(
       reviewCount: row.reviewCount,
       // The sort never touches isDemo: a demo seller keeps its Demo label on every page.
       isDemo: row.isDemo,
+      hasBanner: Boolean(row.bannerKey),
       tier,
       hasBadge: ruleFor(rules, tier).hasBadge,
     });

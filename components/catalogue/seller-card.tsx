@@ -13,6 +13,8 @@ export interface SellerCardData {
   ratingAverage: string | null;
   reviewCount: number;
   isDemo: boolean;
+  /** False when the seller has no banner file: the card then shows the panel instead of requesting a 404. */
+  hasBanner?: boolean;
 }
 
 function initials(name: string): string {
@@ -33,7 +35,7 @@ export function SellerCard({ seller, priority = false }: { seller: SellerCardDat
     <article className="group flex h-full flex-col">
       <Link href={`/sellers/${seller.slug}`} className="block focus-visible:outline-none">
         <Photo
-          src={`/api/sellers/${seller.slug}/assets/banner`}
+          src={seller.hasBanner === false ? "" : `/api/sellers/${seller.slug}/assets/banner`}
           alt={`${seller.businessName} banner`}
           ratio="aspect-[16/9]"
           priority={priority}

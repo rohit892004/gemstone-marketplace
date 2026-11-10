@@ -140,6 +140,10 @@ test.describe.serial("M5 growth", () => {
       await db.query('DELETE FROM "Follow" WHERE "followerId" = $1 AND "sellerId" = $2', [buyerId, sellerId]);
     });
 
+    // Analytics tiles only render once the daily rollup has processed a finished day. A fresh e2e database has
+    // not run it yet, so process it first to get a baseline. The rollup is idempotent.
+    runRollup();
+
     const sellerCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const buyerCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     try {

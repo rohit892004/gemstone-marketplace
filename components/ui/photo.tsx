@@ -1,5 +1,6 @@
 "use client";
 
+import { Gem } from "lucide-react";
 import { useState } from "react";
 import { cx } from "./cx";
 
@@ -32,8 +33,20 @@ export function Photo({
   const box = cx("relative overflow-hidden bg-panel", ratio, className);
 
   if (failed || !src) {
+    // No photo: an ivory panel with a thin gem line icon, never a cartoon or a flat colour block.
     // Empty alt means decorative: hide the panel from assistive technology instead of labelling it.
-    return <div role={alt ? "img" : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true} className={box} />;
+    return (
+      <div
+        role={alt ? "img" : undefined}
+        aria-label={alt || undefined}
+        aria-hidden={alt ? undefined : true}
+        className={cx("relative overflow-hidden border border-line bg-surface-raised", ratio, className)}
+      >
+        <div className="absolute inset-0 grid place-items-center text-accent/70">
+          <Gem className="h-1/4 max-h-16 min-h-8 w-auto" strokeWidth={0.9} aria-hidden />
+        </div>
+      </div>
+    );
   }
 
   return (

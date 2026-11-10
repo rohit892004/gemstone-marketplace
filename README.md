@@ -174,11 +174,16 @@ proxy.ts              coarse route gate
 
 ### End-to-end tests
 
+The suite writes to its own database, **`gemstone_test`**, never the development database (`gemstone`). Its name must end in `_test`; the config and global setup refuse anything else. Set `E2E_DATABASE_URL` to use a different test database.
+
 ```bash
+npm run db:start              # local PostgreSQL (creates gemstone; test DB is created below)
+npm run test:e2e:db           # creates gemstone_test, applies migrations, loads the demo seeds
 npm run build                 # production build
-npm run db:seed:demo          # demo data (dev database only)
-npm run test:e2e              # Playwright; starts the server on port 3200
+npm run test:e2e              # Playwright; starts the server on port 3200 against gemstone_test
 ```
+
+Re-run `npm run test:e2e:db` before a full run to reset the test data. It touches only `gemstone_test`.
 
 `playwright.config.ts` sets `ALLOW_NON_DELIVERING_PROVIDERS=true` for the server, so the console email provider can print verification links to `e2e/.server.log`. Without that flag, console providers are refused in production. `e2e/global-setup.ts` clears the database rate-limit counters before each run; it refuses to run in production. Screenshots are written to `screenshots/` (git-ignored).
 
