@@ -4,21 +4,26 @@ Branch: `d1-design`. Instructions: `docs/milestones/d1.md`. The client approved 
 
 ## Done
 
-- **Design tokens (Phase A, part 1):** colours moved to the luxury palette (warm ivory surface, near-black charcoal ink and brand, one muted gold accent, gold text kept at 4.5:1 or higher). Fonts: Cormorant Garamond for headings and Inter for body text, both self-hosted through `next/font`. Headings use the serif by default. Small radius token (4px). A global reduced-motion rule shortens every animation and transition to near zero.
-- The three old cartoon directions and the first luxury preview were already removed in earlier commits.
+- **Phase A (core):** design tokens (luxury palette, Cormorant Garamond and Inter, 4px radius, reduced-motion rule), a 22-part component library in `components/ui/` (documented in `docs/design/COMPONENTS.md`), the new header and footer, and the demo seed with real photos. Listings use the Pixabay photos for their stone type (sapphire, ruby, emerald, diamond). Demo sellers have monogram logos and banners, and articles have covers.
+- **Phase B (parallel):** public pages (homepage matching the approved preview, catalogue, product, sellers, valuation, education, news, reference, legal, auth, newsletter, errors), buyer and seller dashboards (sidebar layout, tabs, KPI tiles, DataTable lists), and admin and valuator pages (sidebar, tables, status badges, forms on shared fields).
+- **Phase C:** merged and checked: typecheck, lint, 1178 unit tests, production build. One Windows-1252 byte in `app/buyer/requirements/page.tsx` was fixed to UTF-8.
+- **Phase D:** independent review. Fixed hover colours, hand-rolled button classes, the legal heading font, 44px mobile touch targets, and a star-rating accessibility label.
+- **Phase E:** Playwright 48 of 48 passing in the final full run (one test added afterwards, checked by curl only). Selector changes were limited to copy and id changes (see commit `c34cb45`). Axe reports zero serious or critical issues on the main public pages, the buyer and seller dashboards and the admin newsletter. Two real product bugs were fixed: every `/admin` page crashed (Lucide icon components passed from a server layout into a client component), and the header logo had an axe label mismatch.
+- **Screenshots:** 38 files in `screenshots/d1/` (`<slug>-390.png` and `<slug>-1440.png`) for the main pages. Folder is git-ignored.
+- **`/design-preview` is 404 in production** (checked on a production server).
 
-## Not done (to do next, in order)
+## Known gaps (not fixed in D1)
 
-1. **Core component library (Phase A):** Button, Input, Select, Card, ProductCard, SellerCard, Badge/Tag, Tabs, Modal, Toast, Skeleton, EmptyState (photo or line icons only), Carousel, Gallery with zoom and lightbox, Reveal (never starts invisible), Counter, Sidebar, PageHeader, data Table.
-2. **New header and footer** (Phase A).
-3. **Demo seed with real photos (Phase A):** listings, categories, seller banners, articles and news use the processed photos in `public/design-preview/luxury/` (source files in `R:\Demo\demo-images\`) with matching names. Each demo seller gets a text monogram logo. Commit.
-4. **Phase B:** three parallel worktree subagents (public pages; buyer and seller dashboards; admin and valuator), each using only the Phase A components.
-5. **Phase C:** merge, typecheck, lint, unit tests, build.
-6. **Phase D:** read-only review (cartoon check, consistency, 390px overflow, accessibility, reduced motion, performance), with fixes.
-7. **Phase E:** all 48 Playwright tests still pass (selectors updated only where markup changed), axe zero serious or critical, screenshots at 390px and 1440px in `screenshots/d1/`, `/design-preview` returns 404 in production.
-8. **Close-out:** worktree cleanup (rmdir junction without `/s`, then `git worktree remove`, then prune), commit, push, restart the dev server with fresh demo data.
+- **Hand-rolled empty states:** about 11 dashed empty-state blocks still use their own markup instead of `EmptyState` (admin prices, valuators, wishlist, seller analytics, admin UI, markdown editor, valuation empty states, photo uploader, valuator media gallery and thread list).
+- **Hand-rolled form controls:** auth forms, listing documents, valuator form, admin content and membership admin forms still use their own input classes instead of `Field` and `Input`.
+- **Duplicate carousel:** `components/catalogue/carousel.tsx` duplicates `components/ui/carousel.tsx`. It stays because it carries impression tracking.
+- **Visual nits from the final review:** the seller dashboard's 10 workspace tiles leave an empty last cell at 1440px; the logged-in header logo sits tight against the nav at 1440px; listing cards without photos show a flat teal panel (test listings only).
+- **Hex colours kept on purpose:** the uPlot chart colours and `app/global-error.tsx` (no stylesheet there).
+- **Visible copy kept:** the admin membership rules page still says "Placeholder rules, pending client confirmation", as M5 specified.
+- **Demo data:** the Phase E run added E2E sellers that push the demo seller past page 1 of the admin memberships list. The seed resets demo rows only. Consider cleaning up E2E sellers in the seed.
+- **Line endings:** git warns about LF and CRLF on several edited files. Content is correct, but line endings are mixed.
 
-## Known risks
+## Close-out
 
-- The existing pages use the old rounded-card and green-accent classes in many files. Phase B must replace them, not patch them.
-- Scroll-reveal must never leave content hidden; the Reveal component should start visible and only offset slightly.
+- Worktrees removed (junctions removed with `rmdir`, no `/s`), registrations pruned. The branches `d1-b-public`, `d1-b-dash` and `d1-b-admin` are merged and kept locally.
+- Dev server restarted on port 3000 with fresh demo data.
