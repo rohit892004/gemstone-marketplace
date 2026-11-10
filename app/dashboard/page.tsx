@@ -17,8 +17,9 @@ export default function DashboardPage() {
 }
 
 async function DashboardRouter(): Promise<null> {
-  const user = await requirePageRole(["BUYER", "SELLER", "ADMIN"]);
+  const user = await requirePageRole(["BUYER", "SELLER", "ADMIN", "VALUATOR"]);
   if (user.role === "ADMIN") redirect("/admin");
+  if (user.role === "VALUATOR") redirect("/valuator/queue");
   if (user.role === "SELLER") redirect("/seller");
   redirect("/buyer");
   return null; // redirect() throws; this satisfies the return type

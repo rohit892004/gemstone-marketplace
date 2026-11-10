@@ -8,7 +8,7 @@ import { auth } from "@/lib/auth/auth";
  * still calls requireRole()/requirePageRole(), which re-checks the database.
  */
 
-const PROTECTED_PREFIXES = ["/buyer", "/seller", "/admin", "/dashboard", "/verify-mobile"];
+const PROTECTED_PREFIXES = ["/buyer", "/seller", "/admin", "/valuator", "/dashboard", "/verify-mobile"];
 
 export default auth((req) => {
   const { pathname, search } = req.nextUrl;
@@ -34,10 +34,13 @@ export default auth((req) => {
   if (pathname.startsWith("/buyer") && role !== "BUYER") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
+  if (pathname.startsWith("/valuator") && role !== "VALUATOR") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/buyer/:path*", "/seller/:path*", "/admin/:path*", "/dashboard/:path*", "/verify-mobile/:path*"],
+  matcher: ["/buyer/:path*", "/seller/:path*", "/admin/:path*", "/valuator/:path*", "/dashboard/:path*", "/verify-mobile/:path*"],
 };
