@@ -18,6 +18,7 @@
     "db:seed:m5": "tsx prisma/seed-m5-demo.ts",
     "notify:flush": "tsx scripts/flush-digests.ts",
     "analytics:rollup": "tsx scripts/analytics-rollup.ts",
+    "worker": "tsx scripts/worker.ts",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
     "db:start": "node scripts/db.mjs start",
