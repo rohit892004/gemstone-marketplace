@@ -177,11 +177,11 @@ export async function setValuatorActive(input: {
   if (result.count !== 1) return { ok: false, error: "This valuer is already in that state, or was not found." };
 
   await recordAudit({
-    action: input.active ? AuditAction.VALUATION_VALUATOR_CREATED : AuditAction.VALUATION_VALUATOR_DEACTIVATED,
+    action: input.active ? AuditAction.VALUATOR_REACTIVATED : AuditAction.VALUATION_VALUATOR_DEACTIVATED,
     actorId: input.admin.id,
     entityType: "User",
     entityId: input.valuatorId,
-    meta: { reactivated: input.active },
+    meta: {},
   });
   return { ok: true, value: true };
 }

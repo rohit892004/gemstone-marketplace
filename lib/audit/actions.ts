@@ -68,6 +68,7 @@ export const AuditAction = {
   VALUATION_PUBLISHED: "valuation.published_on_listing",
   VALUATION_VALUATOR_CREATED: "valuator.created",
   VALUATION_VALUATOR_DEACTIVATED: "valuator.deactivated",
+  VALUATOR_REACTIVATED: "valuator.reactivated",
   REFERENCE_PRICES_CHANGED: "valuation.reference_prices_changed",
   VALUATION_THRESHOLD_CHANGED: "valuation.threshold_changed",
 } as const;
