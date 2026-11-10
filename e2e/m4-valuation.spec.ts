@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { VALUATION_DISCLAIMER } from "../lib/valuation/disclaimer";
 import path from "node:path";
 import { type Browser, type BrowserContext, type Locator, type Page, expect, test } from "@playwright/test";
 import { sampleJpeg, tokenSentTo } from "./helpers";
@@ -25,8 +26,7 @@ const SELLER_SLUG = "himalaya-gem-house";
 const SELLER_EMAIL = "himalaya-gem-house@demo.gemstone.local";
 const SELLER_PASSWORD = process.env.DEMO_SELLER_PASSWORD || "Demo-Seller-Pass-1";
 
-const DISCLAIMER =
-  "This valuation is indicative only. It is not a certified appraisal and should not be used as one for insurance, sale, or legal purposes.";
+const DISCLAIMER = VALUATION_DISCLAIMER;
 const REFERENCE_RE = /GSV-\d{2}-[A-Z0-9]{6}/;
 const SHOTS = path.join(__dirname, "..", "screenshots", "m4");
 const VIEWPORTS = [
@@ -237,8 +237,8 @@ test.describe.serial("M4 valuation journey", () => {
     expect(bytes.subarray(0, 4).toString("latin1")).toBe("%PDF");
     const text = pdfText(bytes);
     expect(text).toContain(buyerRef);
-    // The PDF has its own, longer wording of the same disclaimer. Check its opening sentence.
-    expect(squash(text)).toContain(squash("This is an indicative valuation only. It is not a certified appraisal"));
+    // The PDF and the page use one shared disclaimer, so the wording is identical.
+    expect(squash(text)).toContain(squash(VALUATION_DISCLAIMER));
     expect(text).not.toContain("?1");
     expect(text).not.toContain(BUYER_NAME);
     expect(text).not.toContain(BUYER_EMAIL);

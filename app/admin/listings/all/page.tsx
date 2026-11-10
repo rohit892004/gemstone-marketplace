@@ -116,7 +116,7 @@ async function AllListings({ searchParams }: { searchParams: SearchParams }) {
       {listings.length === 0 ? (
         <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No listings match these filters.</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-stone-300 bg-stone-50 text-xs uppercase tracking-wide text-stone-600">
               <tr>

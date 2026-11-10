@@ -56,7 +56,7 @@ export async function setActiveAction(_prev: ValuationActionState, formData: For
     ok: true,
     message: active
       ? "Valuer reactivated. They can sign in again."
-      : "Valuer deactivated. They can no longer sign in or act. Reassign their open requests.",
+      : "Valuer deactivated. They can no longer sign in or act. Their open requests are back in the admin queue.",
   };
 }
 

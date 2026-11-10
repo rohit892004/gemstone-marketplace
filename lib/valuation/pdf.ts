@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { escapePdfText, wrapText } from "@/lib/quotations/pdf";
+import { VALUATION_DISCLAIMER } from "./disclaimer";
 
 /**
  * Valuation report PDF. A4, Helvetica, text and vector shapes only. No images are embedded.
@@ -33,8 +34,7 @@ export interface ValuationPdfInput {
   withdrawn: boolean;
 }
 
-export const VALUATION_DISCLAIMER =
-  "This is an indicative valuation only. It is not a certified appraisal and must not be used for insurance, sale or legal purposes without an independent certified appraisal.";
+export { VALUATION_DISCLAIMER } from "./disclaimer";
 
 const PAGE_WIDTH = 595;
 const PAGE_HEIGHT = 842;

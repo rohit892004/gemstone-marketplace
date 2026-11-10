@@ -48,7 +48,7 @@ async function Stats() {
         {stats.statusCounts.length === 0 ? (
           <p className="text-sm text-stone-600">No requests yet.</p>
         ) : (
-          <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+          <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">Requests by status</caption>
               <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">

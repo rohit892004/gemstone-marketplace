@@ -87,7 +87,7 @@ async function ValuatorAccounts() {
 
                 {valuator.active && open.length > 0 ? (
                   <div>
-                    <p className="font-medium">Open requests to reassign if you deactivate this valuer</p>
+                    <p className="font-medium">Open requests that go back to the admin queue if you deactivate this valuer</p>
                     <ul className="mt-1 list-disc pl-5">
                       {open.map((request) => (
                         <li key={request.id}>
@@ -115,7 +115,7 @@ async function ValuatorAccounts() {
                       />
                       <ValuationForm
                         title="Deactivate"
-                        description="The valuer can no longer sign in or act. Their open requests stay assigned until you reassign them."
+                        description="The valuer can no longer sign in or act. Their open requests go back to the admin queue, unassigned."
                         action={setActiveAction}
                         hidden={{ valuatorId: valuator.id, active: "false" }}
                         submitLabel="Deactivate valuer"

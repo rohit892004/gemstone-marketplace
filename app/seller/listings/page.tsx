@@ -65,7 +65,7 @@ async function SellerListingsView({ searchParams }: { searchParams: SearchParams
       {data.rows.length === 0 ? (
         <p className="text-ink-soft">No listings match this filter.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">Your listings</caption>
             <thead className="border-b border-line text-ink-soft">

@@ -16,7 +16,7 @@ const nav = [
 export function SiteHeader() {
   return (
     <header className="border-b border-line bg-surface-raised">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-4 sm:px-6">
         <Link href="/" className="whitespace-nowrap text-base font-semibold tracking-tight text-brand-strong sm:text-lg">
           Gemstone Selections
         </Link>

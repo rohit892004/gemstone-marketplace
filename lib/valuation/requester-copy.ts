@@ -1,11 +1,11 @@
+import { VALUATION_DISCLAIMER } from "./disclaimer";
 /**
  * Status labels and copy for the requester side (wizard, results, dashboards, verification page).
  * Plain text only. Every status label and disclaimer used by a requester page comes from here.
  */
 
 export const DISCLAIMER_TITLE = "Indicative only";
-export const DISCLAIMER_TEXT =
-  "This valuation is indicative only. It is not a certified appraisal and should not be used as one for insurance, sale, or legal purposes.";
+export const DISCLAIMER_TEXT = VALUATION_DISCLAIMER;
 
 export const ESTIMATE_METHOD_NOTE =
   "The estimate uses reference prices and the details you give. It does not look at your photos. Photos are for the expert valuer.";

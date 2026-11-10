@@ -56,7 +56,7 @@ async function Queue() {
           The queue is empty.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-stone-300 bg-stone-50 text-xs uppercase tracking-wide text-stone-600">
               <tr>

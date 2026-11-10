@@ -197,7 +197,7 @@ async function SellerDetail({ params }: { params: Params }) {
         {seller.documents.length === 0 ? (
           <p className="text-sm text-stone-600">No documents uploaded.</p>
         ) : (
-          <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+          <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
             <table className="w-full text-left text-sm">
               <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
                 <tr>

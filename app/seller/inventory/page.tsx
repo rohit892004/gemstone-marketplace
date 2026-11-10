@@ -43,7 +43,7 @@ async function SellerInventoryView({ searchParams }: { searchParams: SearchParam
       {data.rows.length === 0 ? (
         <p className="text-ink-soft">You have no listings yet.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">Listing inventory</caption>
             <thead className="border-b border-line text-ink-soft">

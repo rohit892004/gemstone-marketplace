@@ -162,26 +162,38 @@ export async function resendSetPasswordLink(input: { admin: { id: string }; valu
 }
 
 /**
- * Deactivates (active false) or reactivates (active true) a valuator. Open requests stay assigned until an admin
- * reassigns them; the admin pages show them. Only one valuator row changes, and only if it is still a valuator.
+ * Deactivates (active false) or reactivates (active true) a valuator, in one transaction.
+ *
+ * Deactivating releases the valuer's open requests (IN_EXPERT_REVIEW or NEEDS_INFO): they go back to the admin
+ * queue unassigned, so no request is left waiting on someone who can no longer act. Reactivating starts the valuer
+ * with no assignments; an admin assigns work again. Only a valuator row changes, and only if it is still one.
  */
 export async function setValuatorActive(input: {
   admin: { id: string };
   valuatorId: string;
   active: boolean;
 }): Promise<ParseResult<true>> {
-  const result = await prisma.user.updateMany({
-    where: { id: input.valuatorId, role: "VALUATOR", status: input.active ? "SUSPENDED" : "ACTIVE" },
-    data: { status: input.active ? "ACTIVE" : "SUSPENDED" },
+  const released = await prisma.$transaction(async (tx) => {
+    const result = await tx.user.updateMany({
+      where: { id: input.valuatorId, role: "VALUATOR", status: input.active ? "SUSPENDED" : "ACTIVE" },
+      data: { status: input.active ? "ACTIVE" : "SUSPENDED" },
+    });
+    if (result.count !== 1) return null;
+    if (input.active) return 0;
+    const release = await tx.valuation.updateMany({
+      where: { assignedValuatorId: input.valuatorId, status: { in: ["IN_EXPERT_REVIEW", "NEEDS_INFO"] } },
+      data: { assignedValuatorId: null },
+    });
+    return release.count;
   });
-  if (result.count !== 1) return { ok: false, error: "This valuer is already in that state, or was not found." };
+  if (released === null) return { ok: false, error: "This valuer is already in that state, or was not found." };
 
   await recordAudit({
     action: input.active ? AuditAction.VALUATOR_REACTIVATED : AuditAction.VALUATION_VALUATOR_DEACTIVATED,
     actorId: input.admin.id,
     entityType: "User",
     entityId: input.valuatorId,
-    meta: {},
+    meta: input.active ? {} : { releasedRequests: released },
   });
   return { ok: true, value: true };
 }

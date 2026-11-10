@@ -83,7 +83,7 @@ async function SellersList({ searchParams }: { searchParams: SearchParams }) {
           No sellers match this filter.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
               <tr>
