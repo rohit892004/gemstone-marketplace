@@ -52,6 +52,14 @@ const nextConfig: NextConfig = {
     // documents (each up to UPLOAD_MAX_MB, default 10 MB) in one form post.
     serverActions: { bodySizeLimit: "35mb" },
   },
+  async redirects() {
+    // Legal pages live under /legal. The older short paths stay valid (footer links use them).
+    return [
+      { source: "/terms", destination: "/legal/terms", permanent: true },
+      { source: "/privacy", destination: "/legal/privacy", permanent: true },
+      { source: "/cookies", destination: "/legal/cookies", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
