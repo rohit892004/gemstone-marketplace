@@ -39,7 +39,7 @@ export function TextField({
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={[error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") || undefined}
-        className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+        className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
       />
       {hint ? (
         <p id={hintId} className="text-xs text-ink-soft">
@@ -47,7 +47,7 @@ export function TextField({
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="text-sm text-red-700">
+        <p id={errorId} className="text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -81,7 +81,7 @@ export function SelectField({
         defaultValue={defaultValue}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+        className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -90,7 +90,7 @@ export function SelectField({
         ))}
       </select>
       {error ? (
-        <p id={errorId} className="text-sm text-red-700">
+        <p id={errorId} className="text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -100,12 +100,12 @@ export function SelectField({
 
 export function Notice({ tone, children }: { tone: "error" | "success" | "info"; children: ReactNode }) {
   const styles = {
-    error: "border-red-200 bg-red-50 text-red-800",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-900",
+    error: "border-danger/40 text-danger",
+    success: "border-success/40 bg-surface-raised text-ink",
     info: "border-line bg-accent-soft text-ink",
   } as const;
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`rounded-md border px-3 py-2 text-sm ${styles[tone]}`}>
+    <div role={tone === "error" ? "alert" : "status"} className={`border px-4 py-3 text-[14px] ${styles[tone]}`}>
       {children}
     </div>
   );
@@ -115,8 +115,8 @@ export function Notice({ tone, children }: { tone: "error" | "success" | "info";
 export function AuthCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-12 sm:px-6 sm:py-16">
-      <div className="rounded-lg border border-line bg-surface-raised p-6 shadow-sm sm:p-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
+      <div className="border border-line bg-surface-raised p-6 shadow-soft sm:p-8">
+        <h1 className="font-heading text-3xl text-ink">{title}</h1>
         <div className="mt-6 space-y-6">{children}</div>
       </div>
     </div>

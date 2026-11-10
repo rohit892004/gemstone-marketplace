@@ -11,7 +11,7 @@ export function RequesterAccessMessage({ state, returnTo, title = "Valuations" }
         <AccessMessage
           title="Sign in to request a valuation"
           action={
-            <Link href={REQUESTER_PATHS.login(returnTo)} className="rounded-md bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-strong">
+            <Link href={REQUESTER_PATHS.login(returnTo)} className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50">
               Sign in
             </Link>
           }

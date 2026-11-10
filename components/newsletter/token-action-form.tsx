@@ -19,8 +19,8 @@ export function TokenActionForm({
   const [result, formAction, pending] = useActionState(action, null);
   const buttonClass =
     tone === "danger"
-      ? "rounded-md bg-red-700 px-5 py-2.5 font-medium text-white hover:bg-red-800 disabled:opacity-50"
-      : "rounded-md bg-brand-strong px-5 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-50";
+      ? "inline-flex min-h-11 items-center justify-center bg-danger px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-danger/90 disabled:opacity-50"
+      : "inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
   return (
     <form action={formAction} className="space-y-3">
       <input type="hidden" name="token" value={token} />

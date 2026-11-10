@@ -10,7 +10,7 @@ export function SubmitButton({ children, pendingLabel }: { children: ReactNode; 
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex w-full items-center justify-center rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex min-h-11 w-full items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending && pendingLabel ? pendingLabel : children}
     </button>

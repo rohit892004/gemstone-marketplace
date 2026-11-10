@@ -18,7 +18,7 @@ export function PreferencesForm({ token, topics }: { token: string; topics: stri
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-brand-strong px-5 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? "Saving..." : "Save my topics"}
         </button>
@@ -26,7 +26,7 @@ export function PreferencesForm({ token, topics }: { token: string; topics: stri
       </form>
 
       <section aria-labelledby="unsub-heading" className="space-y-3 border-t border-line pt-8">
-        <h2 id="unsub-heading" className="text-lg font-semibold text-ink">Unsubscribe from everything</h2>
+        <h2 id="unsub-heading" className="font-heading text-2xl text-ink">Unsubscribe from everything</h2>
         <p className="text-sm text-ink-soft">You will stop receiving all newsletter email. You can sign up again at any time.</p>
         <TokenActionForm action={unsubscribeAction} token={token} label="Unsubscribe from everything" tone="danger" />
       </section>

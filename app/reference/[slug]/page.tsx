@@ -52,7 +52,7 @@ async function ReferenceEntry({ params }: Props) {
       </nav>
 
       <header className="space-y-4">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{entry.name}</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">{entry.name}</h1>
         <p className="text-lg text-ink-soft">{entry.summary}</p>
         <div className="flex flex-wrap items-center gap-3 text-sm text-ink-soft">
           {entry.hardness ? <span>Hardness: {entry.hardness}</span> : null}
@@ -64,28 +64,28 @@ async function ReferenceEntry({ params }: Props) {
         .filter((section) => section.html !== "")
         .map((section) => (
           <section key={section.key} aria-labelledby={`section-${section.key}`} className="space-y-2">
-            <h2 id={`section-${section.key}`} className="text-2xl font-semibold tracking-tight text-ink">
+            <h2 id={`section-${section.key}`} className="font-heading text-3xl font-medium text-ink">
               {section.heading}
             </h2>
             <ProseHtml html={section.html} />
           </section>
         ))}
 
-      <section aria-labelledby="listings-heading" className="space-y-4 rounded-lg border border-line bg-surface-raised p-6">
-        <h2 id="listings-heading" className="text-xl font-semibold text-ink">
+      <section aria-labelledby="listings-heading" className="space-y-4 border border-line bg-surface-raised p-6">
+        <h2 id="listings-heading" className="font-heading text-2xl text-ink">
           Find {entry.name.toLowerCase()} listings
         </h2>
         <p className="text-sm text-ink-soft">Browse listings from verified sellers in the matching catalogue category.</p>
         <div className="flex flex-wrap gap-3">
           <Link
             href={`/categories/${entry.categorySlug}`}
-            className="rounded-md bg-brand px-5 py-3 text-sm font-medium text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             View {entry.name} listings
           </Link>
           <Link
             href="/valuation"
-            className="rounded-md border border-line bg-surface px-5 py-3 text-sm font-medium text-ink hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="border border-line bg-surface px-5 py-3 text-sm font-medium text-ink hover:border-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             Get an indicative valuation
           </Link>

@@ -18,7 +18,7 @@ export function TopicFieldset({
   const hintId = `${idPrefix}-hint`;
   return (
     <fieldset className="space-y-3" aria-describedby={hint ? hintId : undefined}>
-      <legend className="text-sm font-semibold text-ink">{legend}</legend>
+      <legend className="text-sm font-medium text-ink">{legend}</legend>
       {hint ? (
         <p id={hintId} className="text-sm text-ink-soft">
           {hint}
@@ -28,7 +28,7 @@ export function TopicFieldset({
         {NEWSLETTER_TOPICS.map((topic: NewsletterTopicName) => (
           <label
             key={topic}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-surface p-3 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink"
+            className="flex cursor-pointer items-start gap-3 border border-line bg-surface p-3 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink"
           >
             <input
               type="checkbox"

@@ -12,7 +12,7 @@ export default function NewsletterPage() {
     <section className="mx-auto max-w-3xl space-y-10 px-4 py-16 sm:px-6">
       <header className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Newsletter</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">The Gemstone Selections newsletter</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">The Gemstone Selections newsletter</h1>
         <p className="text-ink-soft">
           A short email, sent weekly when there is something to say. You choose the topics. Nothing is sent until you
           confirm your address from the email we send you.
@@ -20,7 +20,7 @@ export default function NewsletterPage() {
       </header>
 
       <section aria-labelledby="what-heading" className="space-y-3">
-        <h2 id="what-heading" className="text-xl font-semibold text-ink">What you will get</h2>
+        <h2 id="what-heading" className="font-heading text-2xl text-ink">What you will get</h2>
         <ul className="list-disc space-y-2 pl-5 text-ink-soft">
           {NEWSLETTER_TOPICS.map((topic) => (
             <li key={topic}>
@@ -37,8 +37,8 @@ export default function NewsletterPage() {
         </p>
       </section>
 
-      <section aria-labelledby="signup-heading" className="rounded-lg border border-line bg-surface-raised p-6">
-        <h2 id="signup-heading" className="mb-4 text-xl font-semibold text-ink">Sign up</h2>
+      <section aria-labelledby="signup-heading" className="border border-line bg-surface-raised p-6">
+        <h2 id="signup-heading" className="mb-4 font-heading text-2xl text-ink">Sign up</h2>
         <NewsletterSignup source="newsletter-page" variant="page" />
       </section>
     </section>

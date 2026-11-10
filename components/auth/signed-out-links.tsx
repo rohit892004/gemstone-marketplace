@@ -4,12 +4,12 @@ import Link from "next/link";
 export function SignedOutLinks() {
   return (
     <>
-      <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink">
+      <Link href="/login" className="px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink">
         Log in
       </Link>
       <Link
         href="/register"
-        className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-strong"
+        className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
       >
         Join
       </Link>

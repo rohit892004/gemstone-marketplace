@@ -16,7 +16,7 @@ export default function SellerRegisterPage({ searchParams }: { searchParams: Sea
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Sellers</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">Apply to sell on Gemstone Selections</h1>
+      <h1 className="mt-3 font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Apply to sell on Gemstone Selections</h1>
       <p className="mt-4 text-ink-soft">
         Create your account and business profile. Our team reviews your documents before your listings go live.
         Already registered? <Link href="/login" className="font-medium text-brand underline">Sign in</Link>.

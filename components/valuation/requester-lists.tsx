@@ -24,7 +24,7 @@ export interface ValuationRow {
 export function ValuationList({ rows, resultsHref, empty }: { rows: ValuationRow[]; resultsHref: string; empty: ReactNode }) {
   if (rows.length === 0) return <>{empty}</>;
   return (
-    <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised" aria-label="Your valuation requests">
+    <ul className="divide-y divide-line border border-line bg-surface-raised" aria-label="Your valuation requests">
       {rows.map((row) => (
         <li key={row.id} className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -34,7 +34,7 @@ export function ValuationList({ rows, resultsHref, empty }: { rows: ValuationRow
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">
+            <span className="border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">
               {statusLabel(row.status, row.withdrawnAt !== null)}
             </span>
             <Link href={`${resultsHref}/${row.id}`} className={linkClass}>
@@ -63,7 +63,7 @@ export interface SavedReportRow {
 export function SavedReportList({ rows, resultsHref, empty }: { rows: SavedReportRow[]; resultsHref: string; empty: ReactNode }) {
   if (rows.length === 0) return <>{empty}</>;
   return (
-    <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised" aria-label="Saved reports">
+    <ul className="divide-y divide-line border border-line bg-surface-raised" aria-label="Saved reports">
       {rows.map((row) => (
         <li key={row.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -72,7 +72,7 @@ export function SavedReportList({ rows, resultsHref, empty }: { rows: SavedRepor
               Ref. {row.reference} · Completed {dateLabel(row.completedAt)}
             </p>
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="rounded-full border border-line px-2.5 py-0.5 font-medium text-ink-soft">{statusLabel(row.status, row.withdrawnAt !== null)}</span>
+              <span className="border border-line px-2.5 py-0.5 font-medium text-ink-soft">{statusLabel(row.status, row.withdrawnAt !== null)}</span>
               <span className="text-ink-soft">{row.valuedBy === "EXPERT" ? METHOD_LABEL.EXPERT : METHOD_LABEL.AUTO}</span>
               {row.isDemo ? <DemoTag label={DEMO_LABEL} /> : null}
             </div>

@@ -73,7 +73,7 @@ export function NewsletterSignup({ source, variant = "page" }: { source: string;
             required
             autoComplete="email"
             maxLength={254}
-            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-ink focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-ink"
+            className="w-full border border-line bg-surface px-3 py-2 text-ink focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-ink"
           />
         </div>
 
@@ -92,13 +92,13 @@ export function NewsletterSignup({ source, variant = "page" }: { source: string;
         <button
           type="submit"
           disabled={sending}
-          className="rounded-md bg-brand-strong px-5 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {sending ? "Sending..." : "Sign up"}
         </button>
       </form>
 
-      <div role="status" aria-live="polite" className={state.kind === "error" ? "text-sm text-red-700" : "text-sm text-ink"}>
+      <div role="status" aria-live="polite" className={state.kind === "error" ? "text-sm text-danger" : "text-sm text-ink"}>
         {state.kind === "done" || state.kind === "error" ? state.message : null}
       </div>
     </div>

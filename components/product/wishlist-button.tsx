@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addToWishlist, removeFromWishlist } from "@/lib/wishlist/actions";
+import { buttonClasses } from "@/components/ui/button";
 
 /**
  * Toggle for the wishlist. Calls the server actions; the server re-checks role, ownership and
@@ -28,12 +29,12 @@ export function WishlistButton({ listingId, initialSaved }: { listingId: string;
         onClick={toggle}
         disabled={pending}
         aria-pressed={saved}
-        className="w-full rounded-md border border-brand px-4 py-2.5 text-sm font-medium text-brand-strong hover:bg-accent-soft disabled:opacity-60"
+        className={buttonClasses({ variant: "secondary", block: true, className: "disabled:opacity-60" })}
       >
         {saved ? "Saved" : "Save to wishlist"}
       </button>
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-[13px] text-danger">
           {error}
         </p>
       ) : null}

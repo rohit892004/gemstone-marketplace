@@ -75,12 +75,12 @@ async function Result({ params }: Props) {
         <p className="text-sm text-ink-soft">
           Ref. {view.reference} · {view.gemstoneType || "Gemstone"}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{label}</h1>
+        <h1 className="font-heading text-3xl font-medium leading-tight text-ink sm:text-4xl">{label}</h1>
         <p className="text-ink-soft">{STATUS_BODY[view.status] ?? "Your valuation is in progress."}</p>
       </header>
 
       {view.withdrawn ? (
-        <div role="alert" className="space-y-1 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div role="alert" className="space-y-1 border border-danger/40 px-4 py-3 text-sm text-danger">
           <p className="font-medium">{WITHDRAWN_BANNER_TITLE}</p>
           <p>{WITHDRAWN_BANNER_TEXT}</p>
           {view.withdrawnReason ? <p className="pt-1 font-medium">Reason: {view.withdrawnReason}</p> : null}

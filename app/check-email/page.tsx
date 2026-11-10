@@ -11,7 +11,7 @@ export default function CheckEmailPage() {
       </p>
 
       <div className="space-y-3 border-t border-line pt-6">
-        <h2 className="text-sm font-semibold text-ink">Did not get the email?</h2>
+        <h2 className="text-sm font-medium text-ink">Did not get the email?</h2>
         <ResendVerificationForm />
       </div>
 

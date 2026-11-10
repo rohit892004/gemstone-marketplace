@@ -26,7 +26,7 @@ async function ReferenceList() {
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
       <header className="max-w-3xl space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Gemstone Reference Library</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Gemstone Reference Library</h1>
         <p className="text-ink-soft">
           One page per gemstone: its properties, where it comes from, how it is treated, how to judge quality, how to care
           for it and what moves the price.
@@ -42,8 +42,8 @@ async function ReferenceList() {
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {entries.map((entry) => (
             <li key={entry.id}>
-              <article className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface-raised p-5">
-                <h2 className="text-lg font-semibold text-ink">
+              <article className="flex h-full flex-col gap-3 border border-line bg-surface-raised p-5">
+                <h2 className="font-heading text-2xl text-ink">
                   <Link href={`/reference/${entry.slug}`} className="rounded hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
                     {entry.name}
                   </Link>

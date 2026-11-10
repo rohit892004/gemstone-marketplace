@@ -21,12 +21,12 @@ export function ResultPanel({ view, factors, isDemo }: { view: ValuationView; fa
       <Panel title="Your indicative estimate" id="estimate-heading">
         <div className="flex flex-wrap items-center gap-2">
           {isDemo ? <DemoTag label={DEMO_LABEL} /> : null}
-          <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">{methodLabel}</span>
+          <span className="border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">{methodLabel}</span>
         </div>
         <dl className="grid gap-4 sm:grid-cols-3">
           <div>
             <dt className="text-sm text-ink-soft">Estimate</dt>
-            <dd className="mt-1 text-2xl font-semibold text-ink">{formatMoney(result.estimateMinor, currency)}</dd>
+            <dd className="mt-1 font-heading text-2xl text-ink">{formatMoney(result.estimateMinor, currency)}</dd>
           </div>
           <div>
             <dt className="text-sm text-ink-soft">Range</dt>

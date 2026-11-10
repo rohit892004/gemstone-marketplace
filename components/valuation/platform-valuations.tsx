@@ -16,12 +16,12 @@ export async function PlatformValuations({ gemstoneId }: { gemstoneId: string })
 
   return (
     <section aria-labelledby="platform-valuation-heading" className="space-y-3">
-      <h2 id="platform-valuation-heading" className="text-lg font-semibold text-ink">
+      <h2 id="platform-valuation-heading" className="font-heading text-2xl text-ink">
         Platform indicative valuation – not a certified appraisal
       </h2>
       <ul className="space-y-3">
         {rows.map((row) => (
-          <li key={row.reference} className="space-y-2 rounded-lg border border-line bg-surface-raised p-4 text-sm">
+          <li key={row.reference} className="space-y-2 border border-line bg-surface-raised p-4 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-ink-soft">
                 {row.completedAt
@@ -32,7 +32,7 @@ export async function PlatformValuations({ gemstoneId }: { gemstoneId: string })
                 {demoRefs.has(row.reference) ? <DemoTag label={DEMO_LABEL} /> : null}
                 <Link
                   href={VALUATION_ROUTES.verify(row.reference)}
-                  className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-brand underline"
+                  className="border border-line px-2.5 py-0.5 text-xs font-medium text-brand underline"
                 >
                   Verify ref. {row.reference}
                 </Link>

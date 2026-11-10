@@ -69,7 +69,7 @@ async function NewsItem({ params }: Props) {
         <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent-text">
           {item.category ? <span>{item.category}</span> : <span>Market news</span>}
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{item.title}</h1>
+        <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">{item.title}</h1>
         {item.summary ? <p className="text-lg text-ink-soft">{item.summary}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-soft">
           {published ? <time dateTime={item.publishedAt?.toISOString()}>{published}</time> : null}
@@ -78,7 +78,7 @@ async function NewsItem({ params }: Props) {
       </header>
 
       {item.sourceName && item.sourceUrl && isHttpsUrl(item.sourceUrl) ? (
-        <aside aria-label="Source" className="rounded-lg border border-line bg-surface-raised p-4 text-sm text-ink-soft">
+        <aside aria-label="Source" className="border border-line bg-surface-raised p-4 text-sm text-ink-soft">
           Source: <span className="font-medium text-ink">{item.sourceName}</span>.{" "}
           <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="font-medium text-brand-strong underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
             Read the original report<span className="sr-only"> (opens in a new tab)</span>
@@ -95,7 +95,7 @@ async function NewsItem({ params }: Props) {
 
       {related.length > 0 ? (
         <section aria-labelledby="related-news-heading" className="space-y-4 border-t border-line pt-10">
-          <h2 id="related-news-heading" className="text-xl font-semibold text-ink">
+          <h2 id="related-news-heading" className="font-heading text-2xl text-ink">
             More market news
           </h2>
           <ul className="grid gap-5 md:grid-cols-3">

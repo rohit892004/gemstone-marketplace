@@ -84,7 +84,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
   return (
     <section aria-labelledby={`${ids}-photos`} className="space-y-4">
       <div>
-        <h2 id={`${ids}-photos`} className="text-lg font-semibold text-ink">
+        <h2 id={`${ids}-photos`} className="font-heading text-2xl text-ink">
           {heading}
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
@@ -104,7 +104,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" aria-label="Photos added">
           {photos.map((photo, index) => (
             <li key={photo.id} className="space-y-2">
-              <div className="relative aspect-square overflow-hidden rounded-md border border-line bg-surface">
+              <div className="relative aspect-square overflow-hidden border border-line bg-surface">
                 <Image
                   src={REQUESTER_PATHS.media(photo.id, "thumb")}
                   alt={`Photo ${index + 1} of ${photos.length}`}
@@ -123,14 +123,14 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
           ))}
         </ul>
       ) : (
-        <p className="rounded-md border border-dashed border-line bg-surface-raised px-4 py-6 text-center text-sm text-ink-soft">No photos yet.</p>
+        <p className="border border-dashed border-line bg-surface-raised px-4 py-6 text-center text-sm text-ink-soft">No photos yet.</p>
       )}
 
       {videos.length > 0 ? (
         <div className="space-y-2">
           {videos.map((video) => (
             <div key={video.id} className="space-y-2">
-              <video controls preload="metadata" src={REQUESTER_PATHS.media(video.id, "full")} className="max-h-64 w-full rounded-md border border-line bg-black" aria-label="Video of the stone" />
+              <video controls preload="metadata" src={REQUESTER_PATHS.media(video.id, "full")} className="max-h-64 w-full border border-line bg-night" aria-label="Video of the stone" />
               {canRemove ? (
                 <button type="button" onClick={() => remove(video.id)} className="text-sm text-brand-strong underline underline-offset-4">
                   Remove video
@@ -142,7 +142,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
       ) : null}
 
       {canAdd ? (
-        <form ref={formRef} action={formAction} className="space-y-4 rounded-lg border border-line bg-surface-raised p-4">
+        <form ref={formRef} action={formAction} className="space-y-4 border border-line bg-surface-raised p-4">
           <input type="hidden" name="valuationId" value={valuationId} />
           <div className="space-y-1">
             <label htmlFor={`${ids}-files`} className="block text-sm font-medium text-ink">
@@ -157,7 +157,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
               onChange={onPhotosChange}
               disabled={remaining === 0}
               aria-describedby={`${ids}-files-hint`}
-              className="block w-full text-sm text-ink file:mr-3 file:rounded-md file:border file:border-brand file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-strong"
+              className="block w-full text-sm text-ink file:mr-3 file:border file:border-brand file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-strong"
             />
             <p id={`${ids}-files-hint`} className="text-xs text-ink-soft">
               {remaining > 0 ? `You can add ${remaining} more, up to ${PHOTO_LIMIT} in total.` : `You have reached the limit of ${PHOTO_LIMIT} photos.`}
@@ -175,7 +175,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
               accept={VIDEO_ACCEPT}
               disabled={videoFull}
               aria-describedby={`${ids}-video-hint`}
-              className={`${inputClass} mt-0 file:mr-3 file:rounded-md file:border file:border-brand file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-strong`}
+              className={`${inputClass} mt-0 file:mr-3 file:border file:border-brand file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-strong`}
             />
             <p id={`${ids}-video-hint`} className="text-xs text-ink-soft">
               {videoFull ? "You have added a video. Remove it to add another." : "One video, MP4 or WebM."}

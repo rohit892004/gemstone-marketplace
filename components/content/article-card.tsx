@@ -28,19 +28,19 @@ export function ArticleCard({ article, href, headingLevel = 2 }: { article: Arti
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const date = formatPublishedDate(article.publishedAt);
   return (
-    <article className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface-raised p-5">
+    <article className="flex h-full flex-col gap-4">
       {article.coverKey ? <CoverImage coverKey={article.coverKey} alt={article.coverAlt} className="mb-1" /> : null}
-      <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent-text">
+      <p className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-accent-text">
         <span>{TYPE_LABELS[article.type]}</span>
         {article.type === "NEWS" && article.category ? <span className="text-ink-soft">· {article.category}</span> : null}
       </p>
-      <Heading className="text-lg font-semibold leading-snug text-ink">
-        <Link href={href} className="rounded hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+      <Heading className="font-heading text-2xl leading-snug text-ink">
+        <Link href={href} className="hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           {article.title}
         </Link>
       </Heading>
-      {article.summary ? <p className="text-sm text-ink-soft">{article.summary}</p> : null}
-      <p className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-soft">
+      {article.summary ? <p className="text-[15px] leading-relaxed text-ink-soft">{article.summary}</p> : null}
+      <p className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-[12px] text-ink-soft">
         {date ? <time dateTime={article.publishedAt?.toISOString()}>{date}</time> : null}
         {article.type !== "NEWS" ? <span>{article.readingMinutes} min read</span> : null}
         {article.type === "NEWS" && article.sourceName ? <span>Source: {article.sourceName}</span> : null}

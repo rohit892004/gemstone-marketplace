@@ -22,7 +22,7 @@ export async function RequestValuationSlot({ gemstoneId, slug }: { gemstoneId: s
         <div className="space-y-2">
           <Link
             href={REQUESTER_PATHS.login(`/gemstones/${slug}`)}
-            className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
+            className="block w-full border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
           >
             Sign in to request a valuation
           </Link>

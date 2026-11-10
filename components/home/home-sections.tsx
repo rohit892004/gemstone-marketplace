@@ -1,20 +1,44 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { connection } from "next/server";
+import { Maximize2 } from "lucide-react";
 import { Carousel, CarouselItem } from "@/components/catalogue/carousel";
 import { ListingCard } from "@/components/catalogue/listing-card";
 import { SellerCard } from "@/components/catalogue/seller-card";
 import { TierBadge } from "@/components/membership/tier-badge";
+import { ButtonLink, buttonClasses } from "@/components/ui/button";
+import { Photo } from "@/components/ui/photo";
 import { topRankedSellers } from "@/lib/seller-public/directory";
 import { publicListingWhere } from "@/lib/listings/visibility";
 import { loadCards } from "@/lib/listings/search";
 import { prisma } from "@/lib/db/client";
 import { loadHomepageBlocks } from "@/lib/homepage/blocks";
 import { listPublicArticles } from "@/lib/content/service";
+import { LUXURY_PHOTOS } from "@/components/design-preview/luxury-images";
 
 /**
- * Async homepage sections. Each one reads the database, so each is rendered inside a <Suspense>
- * boundary on the homepage. Layout-only pieces stay in the static shell.
+ * Async homepage sections, in the luxury design. Each one reads the database, so each is rendered inside a
+ * <Suspense> boundary on the homepage. Layout-only pieces stay in the static shell.
  */
+
+const eyebrow = "text-[11px] uppercase tracking-[0.28em] text-accent-text";
+const sectionTitle = "mt-3 font-heading text-4xl font-medium leading-tight text-ink sm:text-5xl";
+const categoryPhotos: Record<string, string> = LUXURY_PHOTOS.categories;
+
+/** Eyebrow, serif title and an optional action, as used on every homepage section. */
+function SectionTop({ id, label, title, action }: { id?: string; label: string; title: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p className={eyebrow}>{label}</p>
+        <h2 id={id} className={sectionTitle}>
+          {title}
+        </h2>
+      </div>
+      {action}
+    </div>
+  );
+}
 
 export async function HeroCopy() {
   // Homepage copy comes from the admin-edited HomepageBlock table, so it must not be frozen at build time.
@@ -22,8 +46,8 @@ export async function HeroCopy() {
   const { hero } = await loadHomepageBlocks();
   return (
     <>
-      <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-ink sm:text-5xl">{hero.headline}</h1>
-      <p className="mt-6 max-w-2xl text-lg text-ink-soft">{hero.subheadline}</p>
+      <h1 className="mt-5 max-w-3xl font-heading text-5xl font-medium leading-[1.05] text-ivory sm:text-7xl">{hero.headline}</h1>
+      <p className="mt-6 max-w-xl text-base leading-relaxed text-ivory/85">{hero.subheadline}</p>
       <HeroButtons />
     </>
   );
@@ -33,10 +57,13 @@ async function HeroButtons() {
   const { hero } = await loadHomepageBlocks();
   return (
     <div className="mt-8 flex flex-wrap gap-3">
-      <Link href={hero.primaryCtaHref} className="rounded-md bg-brand px-5 py-3 text-sm font-medium text-white hover:bg-brand-strong">
+      <ButtonLink href={hero.primaryCtaHref} variant="gold" size="lg">
         {hero.primaryCtaLabel}
-      </Link>
-      <Link href={hero.secondaryCtaHref} className="rounded-md border border-line bg-surface-raised px-5 py-3 text-sm font-medium text-ink hover:border-ink-soft">
+      </ButtonLink>
+      <Link
+        href={hero.secondaryCtaHref}
+        className="inline-flex min-h-11 items-center justify-center gap-2 border border-ivory/60 px-8 py-4 text-sm tracking-wide text-ivory transition duration-300 hover:bg-ivory/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
         {hero.secondaryCtaLabel}
       </Link>
     </div>
@@ -46,7 +73,7 @@ async function HeroButtons() {
 /** Static: a GET form to /gemstones. Works without JavaScript. */
 export function HeroSearch() {
   return (
-    <form action="/gemstones" method="get" role="search" className="mt-10 flex max-w-2xl flex-col gap-2 sm:flex-row">
+    <form action="/gemstones" method="get" role="search" className="mt-10 flex max-w-2xl flex-col gap-3 sm:flex-row">
       <label htmlFor="home-search" className="sr-only">
         Search gemstones
       </label>
@@ -56,9 +83,9 @@ export function HeroSearch() {
         name="q"
         maxLength={120}
         placeholder="Search sapphire, ruby, emerald, origin..."
-        className="min-w-0 flex-1 rounded-md border border-line bg-surface-raised px-4 py-3 text-sm text-ink placeholder:text-ink-soft"
+        className="min-h-11 min-w-0 flex-1 border border-ivory/40 bg-night/60 px-5 py-4 text-sm text-ivory placeholder:text-ivory/70 outline-none transition duration-300 focus:border-champagne focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       />
-      <button type="submit" className="rounded-md bg-ink px-5 py-3 text-sm font-medium text-surface-raised hover:bg-ink-soft">
+      <button type="submit" className={buttonClasses({ variant: "gold", size: "lg" })}>
         Search
       </button>
     </form>
@@ -74,16 +101,14 @@ export async function TopSellers() {
   if (sellers.length === 0) return null;
 
   return (
-    <section aria-labelledby="top-sellers-heading" className="space-y-4">
-      <h2 id="top-sellers-heading" className="text-2xl font-semibold text-ink">
-        Top-rated verified sellers
-      </h2>
+    <section aria-labelledby="top-sellers-heading" className="space-y-12">
+      <SectionTop id="top-sellers-heading" label="Independent sellers" title="Top-rated verified sellers" />
       <Carousel label="Top-rated verified sellers">
-        {sellers.map((seller) => (
+        {sellers.map((seller, i) => (
           <CarouselItem key={seller.slug}>
-            <div className="flex h-full flex-col gap-2">
+            <div className="flex h-full flex-col gap-3">
               <TierBadge tier={seller.tier} hasBadge={seller.hasBadge} />
-              <SellerCard seller={seller} />
+              <SellerCard seller={seller} priority={i < 2} />
             </div>
           </CarouselItem>
         ))}
@@ -105,15 +130,20 @@ export async function FeaturedListings() {
   if (cards.length === 0) return null;
 
   return (
-    <section aria-labelledby="featured-heading" className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <h2 id="featured-heading" className="text-2xl font-semibold text-ink">
-          Featured gemstones
-        </h2>
-        <Link href="/gemstones" className="text-sm text-ink-soft underline hover:text-ink">
-          Browse all
-        </Link>
-      </div>
+    <section aria-labelledby="featured-heading" className="space-y-12">
+      <SectionTop
+        id="featured-heading"
+        label="Selected stones"
+        title="Featured gemstones"
+        action={
+          <Link
+            href="/gemstones"
+            className="inline-flex min-h-11 items-center text-[13px] tracking-wide text-ink underline underline-offset-4 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Browse all
+          </Link>
+        }
+      />
       <Carousel label="Featured gemstones">
         {cards.map((card, index) => (
           <CarouselItem key={card.id}>
@@ -134,21 +164,24 @@ export async function CategoryGrid() {
   if (categories.length === 0) return null;
 
   return (
-    <section aria-labelledby="categories-heading" className="space-y-4">
-      <div>
-        <h2 id="categories-heading" className="text-2xl font-semibold text-ink">
-          {blocks.categoriesHeading.heading}
-        </h2>
-        {blocks.categoriesHeading.intro ? <p className="mt-1 text-sm text-ink-soft">{blocks.categoriesHeading.intro}</p> : null}
-      </div>
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <section aria-labelledby="categories-heading" className="space-y-12">
+      <SectionTop id="categories-heading" label="Browse" title={blocks.categoriesHeading.heading} />
+      {blocks.categoriesHeading.intro ? (
+        <p className="-mt-6 max-w-2xl text-[15px] leading-relaxed text-ink-soft">{blocks.categoriesHeading.intro}</p>
+      ) : null}
+      <ul className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
         {categories.map((category) => (
           <li key={category.id}>
             <Link
               href={`/categories/${category.slug}`}
-              className="block rounded-lg border border-line bg-surface-raised p-4 font-medium text-ink hover:border-ink-soft"
+              className="group relative block overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             >
-              {category.name}
+              <Photo src={categoryPhotos[category.slug] ?? ""} alt="" ratio="aspect-[4/5]" />
+              <span className="absolute inset-0 bg-gradient-to-t from-night/80 via-night/10 to-transparent" aria-hidden />
+              <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 sm:p-6">
+                <span className="font-heading text-2xl text-ivory sm:text-3xl">{category.name}</span>
+                <Maximize2 className="h-4 w-4 shrink-0 text-ivory/70 transition duration-300 group-hover:text-champagne" strokeWidth={1.25} aria-hidden />
+              </span>
             </Link>
           </li>
         ))}
@@ -166,7 +199,7 @@ export async function Teasers() {
     listPublicArticles({ type: "NEWS", take: 1 }),
   ]);
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-3">
       <TeaserCard id="valuation-teaser" heading={blocks.valuationTeaser.heading} body={blocks.valuationTeaser.body} ctaLabel={blocks.valuationTeaser.ctaLabel} ctaHref={blocks.valuationTeaser.ctaHref} />
       <TeaserCard
         id="education-teaser"
@@ -190,33 +223,22 @@ export async function Teasers() {
   );
 }
 
+/** Newsletter teaser. Links to the live sign-up page; the form itself lives there. */
 export async function NewsletterTeaser() {
   const blocks = await loadHomepageBlocks();
   const { heading, body } = blocks.newsletterTeaser;
   return (
-    <section aria-labelledby="newsletter-heading" className="rounded-lg border border-line bg-surface-raised p-6">
-      <h2 id="newsletter-heading" className="text-xl font-semibold text-ink">
-        {heading}
-      </h2>
-      <p className="mt-2 text-sm text-ink-soft">{body}</p>
-      <form className="mt-4 flex flex-col gap-2 sm:flex-row" aria-describedby="newsletter-note">
-        <label htmlFor="newsletter-email" className="sr-only">
-          Email address
-        </label>
-        <input
-          id="newsletter-email"
-          type="email"
-          disabled
-          placeholder="you@example.com"
-          className="min-w-0 flex-1 rounded-md border border-line bg-surface px-4 py-3 text-sm"
-        />
-        <button type="button" disabled className="rounded-md bg-ink px-5 py-3 text-sm font-medium text-surface-raised opacity-50">
-          Coming soon
-        </button>
-      </form>
-      <p id="newsletter-note" className="mt-2 text-xs text-ink-soft">
-        Newsletter sign-up is not open yet. We do not store email addresses at this time.
-      </p>
+    <section aria-labelledby="newsletter-heading" className="grid gap-6 border border-line bg-surface-raised p-8 shadow-soft md:grid-cols-[1fr_auto] md:items-center sm:p-10">
+      <div className="space-y-3">
+        <p className={eyebrow}>Newsletter</p>
+        <h2 id="newsletter-heading" className="font-heading text-3xl text-ink">
+          {heading}
+        </h2>
+        <p className="max-w-2xl text-[15px] leading-relaxed text-ink-soft">{body}</p>
+      </div>
+      <ButtonLink href="/newsletter" variant="primary" size="lg">
+        Sign up for the newsletter
+      </ButtonLink>
     </section>
   );
 }
@@ -239,19 +261,25 @@ function TeaserCard({
   emptyText?: string;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="flex flex-col gap-3 rounded-lg border border-line bg-surface-raised p-6">
-      <h2 id={`${id}-heading`} className="text-lg font-semibold text-ink">
+    <section id={id} aria-labelledby={`${id}-heading`} className="flex flex-col gap-4 border border-line bg-surface-raised p-7 shadow-soft">
+      <h2 id={`${id}-heading`} className="font-heading text-2xl text-ink">
         {heading}
       </h2>
-      <p className="text-sm text-ink-soft">{body}</p>
+      <p className="text-[15px] leading-relaxed text-ink-soft">{body}</p>
       {latest === undefined ? null : latest ? (
-        <p className="text-sm text-ink">
-          Latest: <Link href={latest.href} className="font-medium underline hover:text-brand-strong">{latest.title}</Link>
+        <p className="text-[14px] text-ink">
+          Latest:{" "}
+          <Link href={latest.href} className="underline underline-offset-4 hover:text-accent-text">
+            {latest.title}
+          </Link>
         </p>
       ) : emptyText ? (
-        <p className="text-sm italic text-ink-soft">{emptyText}</p>
+        <p className="text-[14px] italic text-ink-soft">{emptyText}</p>
       ) : null}
-      <Link href={ctaHref} className="mt-auto text-sm font-medium text-brand-strong underline">
+      <Link
+        href={ctaHref}
+        className="mt-auto inline-flex min-h-11 items-center text-[13px] tracking-wide text-ink underline underline-offset-4 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
         {ctaLabel}
       </Link>
     </section>

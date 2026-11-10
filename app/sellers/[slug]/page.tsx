@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { TrackView } from "@/components/analytics/track";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
@@ -17,14 +16,22 @@ import { FollowButton } from "@/components/membership/follow-button";
 import { TierBadge } from "@/components/membership/tier-badge";
 import { loadTierRules } from "@/lib/membership/service";
 import { ruleFor, type Tier } from "@/lib/membership/tiers";
+import { ButtonLink } from "@/components/ui/button";
+import { Photo } from "@/components/ui/photo";
+import { EmptyState } from "@/components/ui/empty-state";
 
 /**
  * Public seller portfolio. Shows only public profile fields, APPROVED reviews and the seller's
  * public gemstones. Logo and banner images come from /api/sellers/[slug]/assets/[kind], which
- * serves them only for APPROVED sellers. A plain initial avatar and gradient show when none exist.
+ * serves them only for APPROVED sellers. A plain initial avatar and panel show when none exist.
  */
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ page?: string | string[] }> };
+
+const eyebrow = "text-[11px] uppercase tracking-[0.25em] text-accent-text";
+const panel = "border border-line bg-surface-raised p-6 shadow-soft";
+const pageLink =
+  "inline-flex min-h-11 items-center border border-line px-5 text-[13px] tracking-wide text-ink transition duration-300 hover:border-accent hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -68,51 +75,45 @@ async function SellerPortfolio({ params, searchParams }: Props) {
   return (
     <>
       <TrackView kind="PROFILE_VIEW" sellerSlug={slug} />
-      <div className="relative h-40 bg-gradient-to-r from-accent-soft to-surface-raised sm:h-52" aria-hidden="true">
-        {seller.hasBanner ? (
-          <Image
-            src={`/api/sellers/${encodeURIComponent(seller.slug)}/assets/banner`}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-            unoptimized
-          />
-        ) : null}
-      </div>
-      <section className="mx-auto max-w-5xl px-4 sm:px-6">
-        <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end">
+      <Photo
+        src={seller.hasBanner ? `/api/sellers/${encodeURIComponent(seller.slug)}/assets/banner` : ""}
+        alt=""
+        ratio="h-44 sm:h-64"
+        sizes="100vw"
+        priority
+        zoomOnHover={false}
+      />
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <div className="-mt-14 flex flex-col gap-6 sm:flex-row sm:items-end">
           {seller.hasLogo ? (
-            <div className="relative size-24 shrink-0 overflow-hidden rounded-full border-4 border-surface bg-surface-raised">
-              <Image
-                src={`/api/sellers/${encodeURIComponent(seller.slug)}/assets/logo`}
-                alt={`${seller.businessName} logo`}
-                fill
-                sizes="96px"
-                className="object-cover"
-                unoptimized
-              />
-            </div>
+            <Photo
+              src={`/api/sellers/${encodeURIComponent(seller.slug)}/assets/logo`}
+              alt={`${seller.businessName} logo`}
+              ratio="size-28 rounded-full"
+              className="size-28 shrink-0 border-4 border-surface"
+              zoomOnHover={false}
+              sizes="112px"
+            />
           ) : (
             <div
               aria-hidden="true"
-              className="flex size-24 shrink-0 items-center justify-center rounded-full border-4 border-surface bg-brand text-3xl font-semibold text-white"
+              className="grid size-28 shrink-0 place-items-center rounded-full border-4 border-surface bg-brand font-heading text-4xl text-ivory"
             >
               {seller.businessName.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="space-y-2 pb-1">
+          <div className="space-y-3 pb-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-ink">{seller.businessName}</h1>
+              <h1 className="font-heading text-4xl leading-tight text-ink sm:text-5xl">{seller.businessName}</h1>
               <VerifiedSellerBadge />
               {seller.isDemo ? <DemoBadge /> : null}
               <TierBadge tier={tier} hasBadge={tierRule.hasBadge} />
             </div>
-            <p className="text-sm text-ink-soft">
+            <p className="text-[13px] text-ink-soft">
               {followerCount} {followerCount === 1 ? "follower" : "followers"}
             </p>
-            {seller.tagline ? <p className="text-ink-soft">{seller.tagline}</p> : null}
-            <p className="text-sm text-ink-soft">
+            {seller.tagline ? <p className="text-[15px] text-ink-soft">{seller.tagline}</p> : null}
+            <p className="text-[13px] text-ink-soft">
               {[seller.city, seller.state, seller.country].filter(Boolean).join(", ")}
               {seller.yearsInBusiness ? ` · ${seller.yearsInBusiness} years in business` : ""}
             </p>
@@ -120,45 +121,45 @@ async function SellerPortfolio({ params, searchParams }: Props) {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-8 md:grid-cols-[2fr_1fr]">
-          <div className="space-y-8">
-            <section aria-labelledby="about-heading">
-              <h2 id="about-heading" className="text-lg font-semibold text-ink">
+        <div className="mt-14 grid gap-12 lg:grid-cols-[2fr_1fr]">
+          <div className="min-w-0 space-y-14">
+            <section aria-labelledby="about-heading" className="space-y-4">
+              <h2 id="about-heading" className={eyebrow}>
                 About
               </h2>
-              <p className="mt-2 whitespace-pre-line text-ink-soft">
+              <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">
                 {seller.description ?? "This seller has not written a description yet."}
               </p>
             </section>
 
-            <section aria-labelledby="stones-heading">
-              <h2 id="stones-heading" className="text-lg font-semibold text-ink">
+            <section aria-labelledby="stones-heading" className="space-y-8">
+              <h2 id="stones-heading" className="font-heading text-3xl text-ink">
                 Gemstones ({gemstones.total})
               </h2>
               {gemstones.items.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-soft">No stones are listed right now.</p>
+                <EmptyState title="No stones are listed right now" body="Check back soon, or follow this seller to hear about new listings." />
               ) : (
                 <>
-                  <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <ul className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2">
                     {gemstones.items.map((item, i) => (
                       <li key={item.id}>
                         <ListingCard listing={item} priority={i < 2} />
                       </li>
                     ))}
                   </ul>
-                  <nav aria-label="Pagination" className="mt-6 flex items-center justify-between text-sm">
+                  <nav aria-label="Pagination" className="flex items-center justify-between gap-4 text-sm">
                     {page > 1 ? (
-                      <Link href={`/sellers/${seller.slug}?page=${page - 1}`} rel="prev" className="rounded-md border border-line px-3 py-1.5">
+                      <Link href={`/sellers/${seller.slug}?page=${page - 1}`} rel="prev" className={pageLink}>
                         Previous
                       </Link>
                     ) : (
                       <span />
                     )}
-                    <span className="text-ink-soft">
+                    <span className="text-[13px] text-ink-soft">
                       Page {page} of {totalPages}
                     </span>
                     {page < totalPages ? (
-                      <Link href={`/sellers/${seller.slug}?page=${page + 1}`} rel="next" className="rounded-md border border-line px-3 py-1.5">
+                      <Link href={`/sellers/${seller.slug}?page=${page + 1}`} rel="next" className={pageLink}>
                         Next
                       </Link>
                     ) : (
@@ -170,37 +171,37 @@ async function SellerPortfolio({ params, searchParams }: Props) {
             </section>
           </div>
 
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <FollowSection slug={seller.slug} sellerId={seller.id} />
             <ContactSection slug={seller.slug} businessName={seller.businessName} sellerId={seller.id} />
 
-            <section aria-labelledby="specialties-heading" className="rounded-lg border border-line bg-surface-raised p-5">
-              <h2 id="specialties-heading" className="text-base font-semibold text-ink">
+            <section aria-labelledby="specialties-heading" className={panel}>
+              <h2 id="specialties-heading" className={eyebrow}>
                 Specialties
               </h2>
               {seller.specialties.length > 0 ? (
-                <ul className="mt-3 flex flex-wrap gap-2">
+                <ul className="mt-4 flex flex-wrap gap-2">
                   {seller.specialties.map((s) => (
-                    <li key={s} className="rounded-full border border-line px-3 py-1 text-sm text-ink-soft">
+                    <li key={s} className="border border-line px-3 py-1.5 text-[13px] text-ink-soft">
                       {s}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-sm text-ink-soft">Not specified.</p>
+                <p className="mt-3 text-[14px] text-ink-soft">Not specified.</p>
               )}
             </section>
 
-            <section aria-labelledby="reviews-heading" className="rounded-lg border border-line bg-surface-raised p-5">
-              <h2 id="reviews-heading" className="text-base font-semibold text-ink">
+            <section aria-labelledby="reviews-heading" className={panel}>
+              <h2 id="reviews-heading" className={eyebrow}>
                 Reviews
               </h2>
               {reviews.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-soft">No reviews yet.</p>
+                <p className="mt-3 text-[14px] text-ink-soft">No reviews yet.</p>
               ) : (
-                <ul className="mt-3 space-y-5">
+                <ul className="mt-4 divide-y divide-line">
                   {reviews.map((review) => (
-                    <li key={review.id} className="space-y-1 text-sm">
+                    <li key={review.id} className="space-y-2 py-5 text-[14px] first:pt-0 last:pb-0">
                       <p className="flex flex-wrap items-center gap-2 text-ink">
                         <span className="font-medium">{review.authorName}</span>
                         <span aria-label={`${review.rating} out of 5 stars`} className="text-accent-text">
@@ -208,7 +209,7 @@ async function SellerPortfolio({ params, searchParams }: Props) {
                         </span>
                         {review.isDemo ? <DemoBadge /> : null}
                       </p>
-                      <p className="text-xs text-ink-soft">{dateFormat.format(review.createdAt)}</p>
+                      <p className="text-[12px] text-ink-soft">{dateFormat.format(review.createdAt)}</p>
                       {review.title ? <p className="font-medium text-ink">{review.title}</p> : null}
                       <p className="whitespace-pre-line text-ink-soft">{review.body}</p>
                     </li>
@@ -233,14 +234,11 @@ async function FollowSection({ slug, sellerId }: { slug: string; sellerId: strin
   if (!viewer.ok) {
     content =
       viewer.code === "UNAUTHENTICATED" || viewer.code === "EMAIL_NOT_VERIFIED" ? (
-        <Link
-          href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`}
-          className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
-        >
+        <ButtonLink href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`} variant="secondary" block>
           Sign in to follow
-        </Link>
+        </ButtonLink>
       ) : (
-        <p className="text-sm text-ink-soft">Following is available to buyer and seller accounts.</p>
+        <p className="text-[14px] text-ink-soft">Following is available to buyer and seller accounts.</p>
       );
   } else {
     const [owner, follow] = await Promise.all([
@@ -252,18 +250,18 @@ async function FollowSection({ slug, sellerId }: { slug: string; sellerId: strin
     ]);
     content =
       owner?.userId === viewer.user.id ? (
-        <p className="text-sm text-ink-soft">This is your business profile.</p>
+        <p className="text-[14px] text-ink-soft">This is your business profile.</p>
       ) : (
         <FollowButton sellerSlug={slug} following={Boolean(follow)} />
       );
   }
   return (
-    <section aria-labelledby="follow-heading" className="rounded-lg border border-line bg-surface-raised p-5">
-      <h2 id="follow-heading" className="text-base font-semibold text-ink">
+    <section aria-labelledby="follow-heading" className="border border-line bg-surface-raised p-6 shadow-soft">
+      <h2 id="follow-heading" className={eyebrow}>
         Follow
       </h2>
-      <p className="mt-2 text-sm text-ink-soft">Get an alert when this seller publishes a new listing.</p>
-      <div className="mt-3">{content}</div>
+      <p className="mt-3 text-[14px] text-ink-soft">Get an alert when this seller publishes a new listing.</p>
+      <div className="mt-4">{content}</div>
     </section>
   );
 }
@@ -278,35 +276,31 @@ async function ContactSection({ slug, businessName, sellerId }: { slug: string; 
   if (!viewer.ok) {
     content =
       viewer.code === "UNAUTHENTICATED" ? (
-        <div className="space-y-2">
-          <Link
-            href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`}
-            className="block w-full rounded-md border border-brand px-4 py-2.5 text-center text-sm font-medium text-brand-strong hover:bg-accent-soft"
-          >
+        <div className="space-y-3">
+          <ButtonLink href={`/login?next=${encodeURIComponent(`/sellers/${slug}`)}`} variant="secondary" block>
             Sign in to contact
-          </Link>
-          <p className="text-xs text-ink-soft">Sign in as a buyer to message this seller on the platform.</p>
+          </ButtonLink>
+          <p className="text-[12px] text-ink-soft">Sign in as a buyer to message this seller on the platform.</p>
         </div>
       ) : (
-        <p className="text-sm text-ink-soft">Messaging is available to approved buyer and seller accounts.</p>
+        <p className="text-[14px] text-ink-soft">Messaging is available to approved buyer and seller accounts.</p>
       );
   } else {
     const owner = await prisma.sellerProfile.findUnique({ where: { id: sellerId }, select: { userId: true } });
     content =
       owner?.userId === viewer.user.id ? (
-        <p className="text-sm text-ink-soft">This is your business profile.</p>
+        <p className="text-[14px] text-ink-soft">This is your business profile.</p>
       ) : (
         <ContactSellerForm sellerSlug={slug} businessName={businessName} />
       );
   }
 
   return (
-    <section aria-labelledby="contact-heading" className="rounded-lg border border-line bg-surface-raised p-5">
-      <h2 id="contact-heading" className="text-base font-semibold text-ink">
+    <section aria-labelledby="contact-heading" className="border border-line bg-surface-raised p-6 shadow-soft">
+      <h2 id="contact-heading" className={eyebrow}>
         Contact seller
       </h2>
-      <div className="mt-3">{content}</div>
+      <div className="mt-4">{content}</div>
     </section>
   );
 }
-
