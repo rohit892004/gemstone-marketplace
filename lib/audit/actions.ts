@@ -93,6 +93,8 @@ export const AuditAction = {
   NEWSLETTER_CAMPAIGN_TEST_SENT: "newsletter.campaign_test_sent",
   EMAIL_SUPPRESSED: "email.suppressed",
   EMAIL_SUPPRESSION_CLEARED: "email.suppression_cleared",
+  // Contact form
+  CONTACT_SUBMITTED: "contact.submitted",
 } as const;
 
 export type AuditActionName = (typeof AuditAction)[keyof typeof AuditAction];

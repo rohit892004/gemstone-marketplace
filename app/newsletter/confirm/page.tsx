@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TokenActionForm } from "@/components/newsletter/token-action-form";
@@ -26,6 +27,8 @@ export default function ConfirmPage({ searchParams }: { searchParams: Promise<{ 
 }
 
 async function ConfirmView({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  // Request-time: the outcome depends on the current time (link expiry), so it must not be prerendered.
+  await connection();
   const { token } = await searchParams;
   const outcome = token ? await pendingConfirmation(token) : "INVALID";
   const canConfirm = Boolean(token) && outcome === "CONFIRMED";

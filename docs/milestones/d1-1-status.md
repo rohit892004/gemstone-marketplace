@@ -32,3 +32,12 @@ Instructions: `docs/milestones/d1-1.md`. Branch `d1-design`.
 - Duplicate carousel `components/catalogue/carousel.tsx` (kept for impression tracking).
 - Admin membership rules page still says "Placeholder rules, pending client confirmation" (M5 copy, intentional).
 - E2E sellers accumulate in the test database between runs (reset with `npm run test:e2e:db` after dropping `gemstone_test`).
+
+## Final state (round 2)
+
+- Full Playwright suite on a freshly reset `gemstone_test`: 55 of 55 passed.
+- Featured carousel: the stale homepage was not reproduced on a production build (fresh at every probe; no cache header on `/`). Root cause not established. The journey test now uses a 5-second check, not a retry loop. If it fails again, investigate with the server log.
+- Contact form: moderated (contact details refused, not masked), rate-limited per hashed IP, audited (`contact.submitted`, no body, name or email), with two Playwright tests.
+- Newsletter confirm page is request-time (fixes a prerender error on build).
+- Spinel tile uses the mixed coloured-stones photo; no real spinel photo is in the library. The client should supply one (see IMAGE-CREDITS.md).
+- Open for the owner: the confirmation email contains "[Registered business address: to be confirmed before launch]", a placeholder in outgoing mail.

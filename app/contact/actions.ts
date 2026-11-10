@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { checkRole } from "@/lib/auth/require-role";
 import { contactSchema, type ContactField } from "@/lib/contact/schema";
 import type { ContactFormState } from "@/lib/contact/state";
 import { submitContactMessage } from "@/lib/contact/service";
@@ -14,9 +15,9 @@ function text(formData: FormData, key: string): string {
 }
 
 /**
- * Contact form. Order: honeypot, validation, rate limit, send. Validation runs before the rate limit so that
- * only well-formed messages count against the hourly allowance. Nothing is written to the database and the
- * message is never echoed back in the URL or the page.
+ * Contact form. Order: honeypot, validation, contact-detail check, rate limit, send, audit. Validation and the
+ * contact-detail check run before the rate limit, so only acceptable messages count against the hourly allowance.
+ * Nothing is written to the database (except the audit row) and the message is never echoed back in the URL or the page.
  */
 export async function submitContactAction(_prev: ContactFormState, formData: FormData): Promise<ContactFormState> {
   // Honeypot: bots fill every field. Answer as if sent, so they learn nothing and nothing is delivered.
@@ -40,9 +41,14 @@ export async function submitContactAction(_prev: ContactFormState, formData: For
     return { status: "error", fieldErrors };
   }
 
-  const outcome = await submitContactMessage(parsed.data, getClientIp(await headers()));
-  if (outcome === "sent") return { status: "sent" };
-  if (outcome === "rate_limited") {
+  // Signed-in visitors are recorded by user id in the audit row. Anonymous visitors (the common case) get null.
+  const access = await checkRole(["BUYER", "SELLER", "ADMIN", "VALUATOR"]);
+  const actorId = access.ok ? access.user.id : null;
+
+  const outcome = await submitContactMessage(parsed.data, getClientIp(await headers()), actorId);
+  if (outcome.status === "sent") return { status: "sent" };
+  if (outcome.status === "refused") return { status: "error", fieldErrors: outcome.fieldErrors };
+  if (outcome.status === "rate_limited") {
     return {
       status: "error",
       fieldErrors: {},

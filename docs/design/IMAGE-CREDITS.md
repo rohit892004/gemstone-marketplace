@@ -45,10 +45,10 @@ Caution: the luxury preview uses some of these photos for seller logos and banne
 | workshop-03 | workshop-03.jpg | https://pixabay.com/photos/work-hand-man-craft-jewellery-3748395/ | photosforyou | 6000x4000 |
 | workshop-04 | workshop-04.jpg | https://pixabay.com/photos/magnifying-glass-diamonds-tweezers-3492305/ | MasterTux | 3840x2160 |
 | sapphire-04 | sapphire-04.png | https://pixabay.com/photos/gold-ring-with-eye-decoration-ring-3383368/ | Agzam | 3072x3072 |
-| spinel-01 | spinel-01.jpg | https://pixabay.com/photos/gem-amber-stone-fossilized-resin-6579/ | Hans | 3264x2448 |
+| spinel-01 | (removed) | https://pixabay.com/photos/gem-amber-stone-fossilized-resin-6579/ | Hans | 3264x2448 |
 | tourmaline-01 | tourmaline-01.jpg | https://pixabay.com/photos/nature-food-wood-desktop-crystal-3287634/ | angelsover | 5456x3632 |
 | colored-stones-01 | colored-stones-01.jpg | https://pixabay.com/photos/gems-jewelry-rubies-jewel-3418293/ | laminaria-vest | 3858x2592 |
 
 Added 2026-11-10 for the homepage category tiles (Spinel, Tourmaline, Other Coloured Stones). The files are 1280 px wide and were downloaded with the Pixabay API search (`q` = "spinel gemstone", "tourmaline gemstone", "colored gemstones"; image_type=photo, safesearch=true). The web versions are `category-spinel.webp`, `category-tourmaline.webp` and `category-other-coloured-stones.webp` in `public/design-preview/luxury/`, each cropped on the stone to 4:5.
 
-Caution for spinel-01: no Pixabay result for the spinel searches showed a clearly identified spinel. This is a sharp close-up of a single faceted-looking stone that Pixabay tags as amber, so it is a generic stand-in. Replace it with a photo of an identified spinel when one is available.
+Spinel: no photo of a real spinel is in the library. The earlier spinel-01 file was removed because Pixabay tags it as fossilized resin (amber), not a spinel. The Spinel tile uses the mixed coloured-stones photo (colored-stones-01) until the client supplies a real spinel photo. Never label a photo as a stone it is not. ACTION: request a spinel photo from the client.

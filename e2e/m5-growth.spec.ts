@@ -280,7 +280,8 @@ test.describe.serial("M5 growth", () => {
       await admin.locator('input[name="FREE.activeListingLimit"]').fill(String(value));
       await admin.getByRole("button", { name: "Save tier rules" }).click();
       await expect
-        .poll(async () => (await scalar<{ limit: number | null }>(`SELECT "activeListingLimit" AS limit FROM "TierRule" WHERE tier = 'FREE'`)).limit)
+        // The row may not exist yet while the save is still committing: read it as null and let poll retry.
+        .poll(async () => (await scalar<{ limit: number | null } | undefined>(`SELECT "activeListingLimit" AS limit FROM "TierRule" WHERE tier = 'FREE'`))?.limit ?? null)
         .toBe(value);
     };
     try {

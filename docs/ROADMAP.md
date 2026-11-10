@@ -76,3 +76,9 @@ Work to do in the M6 pass, found during reviews and not urgent enough for the mi
 2. Final limits for each membership tier (listing counts, featured slots). Placeholders are live in M5 and labelled "pending client confirmation".
 3. Are expert valuators internal staff or external appraisers? (Answered in M4: internal staff.)
 4. Should listings awaiting review count toward the Free listing limit? (Raised in M5.)
+
+## D1 / D1.1 follow-up (design)
+
+- **Forms migration (partial in D1.1).** Many label-and-control pairs still use hand-written `<label htmlFor>` markup instead of the shared `Field` wrapper: messaging composers, seller listing and portfolio forms, notifications preferences, membership copy and follow controls, and the seller registration form's fieldsets (`components/seller/seller-register-form.tsx`). Hand-rolled button classes remain in seller listing media and documents, notifications and membership. Convert them to `Field`, `Input`, `Select`, `Textarea` and `buttonClasses`, one area at a time, with the e2e tests run after each.
+- **Real spinel photo.** The Spinel category tile uses a mixed coloured-stones photo until the client supplies a real spinel photo (see `docs/design/IMAGE-CREDITS.md`).
+- **Valuation forms.** The valuation pages keep their own form field wrapper (required marker and role=alert errors); decide whether to move them to the shared `Field`.
