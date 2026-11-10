@@ -38,6 +38,7 @@ export async function loadOwnedListingForEdit(userId: string, listingId: string)
     select: {
       id: true,
       status: true,
+      sellerFeatured: true,
       title: true,
       categoryId: true,
       species: true,

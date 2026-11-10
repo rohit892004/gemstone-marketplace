@@ -72,8 +72,11 @@ export function listingDefaults(row: {
   currency: string;
   availability: string;
   description: string | null;
+  /** The seller's own featured flag. Passed on edit pages so the checkbox shows the saved state. */
+  sellerFeatured?: boolean;
 }): Record<string, string> {
   return {
+    ...(row.sellerFeatured === undefined ? {} : { sellerFeatured: row.sellerFeatured ? "true" : "false" }),
     title: row.title,
     categoryId: row.categoryId ?? "",
     species: row.species ?? "",

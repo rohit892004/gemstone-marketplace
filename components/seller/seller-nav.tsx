@@ -10,6 +10,8 @@ export const sellerNavItems = [
   { href: "/seller/quotations", label: "Quotations" },
   { href: "/seller/offers", label: "Offers" },
   { href: "/seller/valuations", label: "Valuations" },
+  { href: "/seller/analytics", label: "Analytics" },
+  { href: "/seller/membership", label: "Membership" },
 ] as const;
 
 export function SellerNav() {
