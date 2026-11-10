@@ -39,6 +39,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "uplot": "^1.6.32",
     "zod": "^4.6.7"
   },
@@ -56,7 +57,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
-    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.1.0"
   }

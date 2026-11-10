@@ -1,6 +1,6 @@
 "use server";
 
-import { assertCanPublishListing, MembershipError } from "@/lib/membership/service";
+import { assertCanPublishListing, MembershipError, withSellerLock } from "@/lib/membership/service";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { catalogueTemplates } from "@/lib/admin-catalogue/templates";
@@ -48,23 +48,26 @@ export async function approveListing(_prev: AdminActionState, formData: FormData
   const listing = await sellerContact(listingId);
   if (!listing) return { ok: false, error: "Listing not found." };
 
-  // The seller's membership limit applies to every publish, including an admin approval.
+  // The seller's membership limit applies to every publish, including an admin approval. The count and the
+  // status write run in one transaction under the seller's row lock, so two approvals cannot both pass the check.
   const target = await prisma.gemstone.findUnique({ where: { id: listingId }, select: { sellerId: true } });
   if (!target) return { ok: false, error: "Listing not found." };
+  const now = new Date();
+  let result: { count: number };
   try {
-    await assertCanPublishListing(target.sellerId, listingId);
+    result = await withSellerLock(target.sellerId, async (tx) => {
+      await assertCanPublishListing(target.sellerId, listingId, tx);
+      return tx.gemstone.updateMany({
+        where: { id: listingId, status: "PENDING_REVIEW" },
+        data: { status: "PUBLISHED", publishedAt: now, reviewedAt: now, reviewedById: admin.id, rejectionReason: null },
+      });
+    });
   } catch (error) {
     if (error instanceof MembershipError) {
       return { ok: false, error: "The seller is at the active listing limit for their membership. Ask them to archive a listing, or change their membership tier." };
     }
     throw error;
   }
-
-  const now = new Date();
-  const result = await prisma.gemstone.updateMany({
-    where: { id: listingId, status: "PENDING_REVIEW" },
-    data: { status: "PUBLISHED", publishedAt: now, reviewedAt: now, reviewedById: admin.id, rejectionReason: null },
-  });
   if (result.count === 0) return { ok: false, error: STALE_LISTING_ERROR };
 
   // Followers hear about the listing only now that it is published (the transition, not a later edit).

@@ -19,6 +19,8 @@ vi.mock("next/server", () => ({ connection: async () => undefined }));
 vi.mock("@/lib/membership/service", () => ({
   assertCanPublishListing: vi.fn(async () => undefined),
   MembershipError: class MembershipError extends Error {},
+  // Runs the work against the mocked shared client (the real one holds a SELECT ... FOR UPDATE lock).
+  withSellerLock: vi.fn(async (_sellerId: string, fn: (tx: unknown) => Promise<unknown>) => fn((await import("@/lib/db/client")).prisma)),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/headers", () => ({
