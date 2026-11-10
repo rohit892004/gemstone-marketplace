@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isSafeHref,
+  markdownToEmailText,
   MARKDOWN_MAX_CHARS,
   MarkdownTooLongError,
   markdownToPlainText,
@@ -116,5 +117,17 @@ describe("markdownToPlainText and readingMinutes", () => {
   it("rounds up at 200 words per minute", () => {
     const words = Array.from({ length: 401 }, () => "word").join(" ");
     expect(readingMinutes(words)).toBe(3);
+  });
+});
+
+describe("markdownToEmailText", () => {
+  it("keeps the address of an absolute link next to its text", () => {
+    expect(markdownToEmailText("Read the [guide](https://example.test/education/guide) today.")).toBe(
+      "Read the guide (https://example.test/education/guide) today.",
+    );
+  });
+
+  it("keeps only the text of a relative link", () => {
+    expect(markdownToEmailText("See [Sapphire](/categories/sapphire).")).toBe("See Sapphire.");
   });
 });

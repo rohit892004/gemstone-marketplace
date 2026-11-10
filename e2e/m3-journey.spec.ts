@@ -58,7 +58,7 @@ let enquiryPath = "";
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
@@ -95,7 +95,7 @@ test.describe.serial("M3 journey", () => {
   test("buyer registers, verifies email, and logs in", async () => {
     await buyer.goto("/register/buyer");
     await buyer.getByLabel("Full name").fill(BUYER_NAME);
-    await buyer.getByLabel("Email").fill(BUYER_EMAIL);
+    await buyer.getByLabel("Email", { exact: true }).fill(BUYER_EMAIL);
     await buyer.getByLabel("Mobile number").fill(BUYER_MOBILE);
     await buyer.getByLabel("Password").fill(BUYER_PASSWORD);
     await buyer.getByLabel("Country").selectOption({ label: "India" });
@@ -198,7 +198,7 @@ test.describe.serial("M3 journey", () => {
     // This requirement is seller A's own. Opening it by ID shows the not-found page and none of its details.
     // The HTTP status stays 200 because the page is streamed, so the content is what is checked.
     await sellerA.goto(requirementUrl);
-    await expect(sellerA.getByText("This page could not be found").first()).toBeVisible();
+    await expect(sellerA.getByText("We could not find that page").first()).toBeVisible();
     await expect(sellerA.getByText(SELLER_REQ_TYPE)).toHaveCount(0);
 
     // The conversation sits in seller A's inbox under Buying, and in seller B's under Selling.

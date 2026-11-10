@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
-import { MARKDOWN_MAX_CHARS, markdownToPlainText } from "@/lib/content/markdown";
+import { MARKDOWN_MAX_CHARS, markdownToEmailText } from "@/lib/content/markdown";
 import { prisma } from "@/lib/db/client";
 import { runExclusive } from "@/lib/jobs/lock";
 import { getEmailProvider } from "@/lib/notify/email";
@@ -87,7 +87,7 @@ export function selectRecipients(
 
 /** Plain-text message body for a campaign: the Markdown as plain text, then the footer. */
 export function campaignText(body: string, token: string): string {
-  return markdownToPlainText(body) + newsletterFooter({ manageUrl: manageUrl(token), unsubscribeUrl: unsubscribeUrl(token) });
+  return markdownToEmailText(body) + newsletterFooter({ manageUrl: manageUrl(token), unsubscribeUrl: unsubscribeUrl(token) });
 }
 
 export class CampaignStateError extends Error {}

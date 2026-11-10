@@ -41,7 +41,7 @@ let listingPath = "";
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   // Wait for the sign-in redirect so the session cookie is set before the next navigation.
@@ -80,7 +80,7 @@ test.describe.serial("M1 + M2 journey", () => {
   test("buyer registers, verifies email, and logs in", async () => {
     await buyer.goto("/register/buyer");
     await buyer.getByLabel("Full name").fill("E2E Buyer");
-    await buyer.getByLabel("Email").fill(BUYER_EMAIL);
+    await buyer.getByLabel("Email", { exact: true }).fill(BUYER_EMAIL);
     await buyer.getByLabel("Mobile number").fill(BUYER_MOBILE);
     await buyer.getByLabel("Password").fill(PASSWORD);
     await buyer.getByLabel("Country").selectOption({ label: "India" });
@@ -99,7 +99,8 @@ test.describe.serial("M1 + M2 journey", () => {
   test("seller applies, is pending, and admin approves", async () => {
     await seller.goto("/register/seller");
     // Fields are addressed by their form name: visible labels carry extra text (required markers, hints).
-    const field = (name: string) => seller.locator(`[name="${name}"]`);
+    // The footer also has a newsletter email field (name="email"), so the form's own field is addressed by id.
+    const field = (name: string) => (name === "email" ? seller.locator("input#email") : seller.locator(`[name="${name}"]`));
     await field("name").fill("E2E Seller");
     await field("email").fill(SELLER_EMAIL);
     await field("mobile").fill(SELLER_MOBILE);
@@ -158,7 +159,7 @@ test.describe.serial("M1 + M2 journey", () => {
     await listingField("certificateLabId").selectOption({ label: "GIA" });
     await listingField("certificateNo").fill("E2E-123");
     await seller.getByRole("button", { name: "Save draft" }).click();
-    await seller.waitForURL(/\/seller\/listings\/[^/]+\/edit/);
+    await seller.waitForURL(/\/seller\/listings\/[^/]+\/edit/);
     // Photo.
     await seller.getByLabel("Add images or videos").setInputFiles({ name: "photo.jpg", mimeType: "image/jpeg", buffer: await sampleJpeg() });
     await seller.getByRole("button", { name: "Upload", exact: true }).click();

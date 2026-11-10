@@ -108,7 +108,8 @@ export async function updateArticle(id: string, input: ArticleInput, actorId: st
     });
     if (problems.length > 0) throw new ContentError(problems[0]!.message, problems);
   }
-  await prisma.article.update({ where: { id }, data: articleData(input) });
+  const saved = await prisma.article.updateMany({ where: { id, status: current.status }, data: articleData(input) });
+  if (saved.count === 0) throw new ContentError("This item was changed by someone else. Reload and try again.");
   await recordAudit({ action: AuditAction.CONTENT_UPDATED, actorId, entityType: "Article", entityId: id, meta: { status: current.status } });
 }
 
@@ -154,7 +155,20 @@ export async function changeArticleStatus(
   if (to === "ARCHIVED") data.archivedAt = now;
   if (to === "DRAFT") data.scheduledFor = null;
 
-  const result = await prisma.article.updateMany({ where: { id, status: from }, data });
+  // The condition also covers every field the publish rules read, so an edit made after the check cannot slip through.
+  const result = await prisma.article.updateMany({
+    where: {
+      id,
+      status: from,
+      title: current.title,
+      body: current.body,
+      summary: current.summary,
+      sourceName: current.sourceName,
+      sourceUrl: current.sourceUrl,
+      metaDescription: current.metaDescription,
+    },
+    data,
+  });
   if (result.count === 0) throw new ContentError("This item was changed by someone else. Reload and try again.");
 
   const action =

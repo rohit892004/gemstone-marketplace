@@ -65,7 +65,7 @@ async function shot(page: Page, name: string) {
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
@@ -168,7 +168,7 @@ test.describe.serial("M4 valuation journey", () => {
   test("buyer registers, verifies email, and logs in", async () => {
     await buyer.goto("/register/buyer");
     await buyer.getByLabel("Full name").fill(BUYER_NAME);
-    await buyer.getByLabel("Email").fill(BUYER_EMAIL);
+    await buyer.getByLabel("Email", { exact: true }).fill(BUYER_EMAIL);
     await buyer.getByLabel("Mobile number").fill(BUYER_MOBILE);
     await buyer.getByLabel("Password").fill(BUYER_PASSWORD);
     await buyer.getByLabel("Country").selectOption({ label: "India" });
@@ -426,7 +426,7 @@ test.describe.serial("M4 valuation journey", () => {
 
     // A direct request for the buyer's valuation is the not-found page, with none of its details.
     await seller.goto(`/valuation/${buyerValuationId}`);
-    await expect(seller.getByText("This page could not be found").first()).toBeVisible();
+    await expect(seller.getByText("We could not find that page").first()).toBeVisible();
     const notFound = await seller.locator("body").innerText();
     expect(notFound).not.toContain(buyerRef);
     expect(notFound).not.toContain("₹");
@@ -462,7 +462,7 @@ test.describe.serial("M4 valuation journey", () => {
     await seller.locator('[name="caratMax"]').fill("2.5");
     await seller.locator('textarea[name="notes"]').fill(`M4 edit check ${stamp}: eye clean, pink or padparadscha.`);
     await seller.getByRole("button", { name: "Save changes", exact: true }).click();
-    await expect(seller.getByText("This page could not be found")).toHaveCount(0);
+    await expect(seller.getByText("We could not find that page")).toHaveCount(0);
     await expect(async () => {
       await seller.goto(editHref ?? "/seller/requirements/mine");
       await expect(seller.locator('[name="caratMax"]')).toHaveValue("2.5", { timeout: 2_000 });

@@ -155,17 +155,17 @@ async function runDigest(now: Date): Promise<DigestOutcome> {
   if (await prisma.newsletterDigestRun.findUnique({ where: { periodKey }, select: { id: true } })) {
     return { status: "already_sent" };
   }
-  // Create the run first. The unique key turns a concurrent second run into a no-op.
+  // Load the source and resolve the provider before the run is recorded. A failure here must not mark the week as sent.
+  const items = digestItemsFromSource(await loadDigestSource(now));
+  const itemTopics = [...new Set(items.map((i) => i.topic))];
+  const provider = getEmailProvider();
+  // Create the run next. The unique key turns a concurrent second run into a no-op.
   try {
     await prisma.newsletterDigestRun.create({ data: { periodKey, recipientCount: 0 } });
   } catch (error) {
     if ((error as { code?: string }).code === "P2002") return { status: "already_sent" };
     throw error;
   }
-
-  const items = digestItemsFromSource(await loadDigestSource(now));
-  const itemTopics = [...new Set(items.map((i) => i.topic))];
-  const provider = getEmailProvider();
   let recipients = 0;
   let failed = 0;
   let cursor: string | undefined;

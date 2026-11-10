@@ -70,7 +70,8 @@ describe("scrubbing", () => {
   });
 
   it("truncates long strings", () => {
-    expect((scrubForReport("a".repeat(2000)) as string).length).toBe(500);
+    // Words separated by spaces, as real messages are. One unbroken run would be masked as a token instead.
+    expect((scrubForReport("word ".repeat(400)) as string).length).toBe(500);
   });
 });
 

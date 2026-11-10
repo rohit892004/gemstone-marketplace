@@ -27,8 +27,13 @@ export function scrubForReport(value: unknown, depth = 0): unknown {
 
 export function maskPersonal(text: string): string {
   return text
+    // Connection strings and URLs can carry credentials: mask the whole URL first.
+    .replace(/[a-z][a-z0-9+.-]*:\/\/[^\s"'<>]+/gi, "[url]")
     .replace(/[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+/g, "[email]")
-    .replace(/\+?\d[\d\s-]{8,}\d/g, "[number]");
+    .replace(/\+?\d[\d\s-]{8,}\d/g, "[number]")
+    // Key-like tokens: provider prefixes, and long random-looking strings.
+    .replace(/\b(?:whsec|sk|re|pk|rk)_[A-Za-z0-9_-]{8,}/g, "[key]")
+    .replace(/\b[A-Za-z0-9_-]{40,}\b/g, "[token]");
 }
 
 export interface ParsedDsn {

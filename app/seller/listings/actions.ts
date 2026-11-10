@@ -184,8 +184,9 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
       result = await withSellerLock(seller.id, async (tx) => {
         if (becomesLive) await assertCanPublishListing(seller.id, current.id, tx);
         if (checkFeatured) await assertFeaturedSlot(seller.id, current.id, tx);
+        // The status is part of the condition, so a status change made after the read above is never overwritten.
         return tx.gemstone.updateMany({
-          where: { id: current.id, seller: { userId: user.id } },
+          where: { id: current.id, seller: { userId: user.id }, status: current.status },
           data: fields,
         });
       });
@@ -193,7 +194,7 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
       if (error instanceof MembershipError) return limitError(error);
       throw error;
     }
-    if (result.count !== 1) return { formError: "Listing not found." };
+    if (result.count !== 1) return { formError: "This listing was changed while you were editing. Reload and try again." };
     if (before) {
       const changed = changedKeyStoneFields(before, fields);
       await unpublishValuationsOnStoneChange({ gemstoneId: current.id, changed, actorId: user.id });

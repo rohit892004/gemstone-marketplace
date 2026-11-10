@@ -66,6 +66,8 @@ Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and
 | `npm run db:seed:demo` | Base demo data (run before the M4 and M5 seeds) |
 | `npm run db:seed:m4` | M4 valuation demo data (requires `ALLOW_DEMO_SEED=true`) |
 | `npm run db:seed:m5` | M5 demo data: 90 days of rollups, followers, referrals, one demo seller per tier (requires `ALLOW_DEMO_SEED=true`) |
+| `npm run db:seed:m6` | M6 demo content: 8 articles and guides, 7 reference pages, 5 fictional news items (requires `ALLOW_DEMO_SEED=true`) |
+| `npm run worker` | Long-running job worker: message digests, analytics rollup, newsletter sends, scheduled publishing, weekly digest, rate-limit cleanup |
 | `npm run analytics:rollup` | Daily analytics rollup, tier and referral passes, 90-day retention (see below) |
 | `npm run notify:flush` | Sends pending message digests. Run every 5 minutes from a scheduler (see below) |
 | `npm run test:e2e` | Playwright journeys (run against a production build with the demo seed) |
@@ -74,7 +76,8 @@ Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and
 ## Scheduled jobs
 - **Analytics rollup:** `npm run analytics:rollup` once a day, shortly after midnight UTC. It aggregates finished days, deletes raw events older than 90 days, and runs the membership tier and referral passes. Re-running is safe. To run it as of a later day (for example in a test), use `npm run analytics:rollup -- --as-of=YYYY-MM-DD`. Example cron entry (server clock set to UTC): `10 0 * * * cd /path/to/gemstone-marketplace && npm run analytics:rollup`. On Windows, use a Task Scheduler daily task at 00:10 UTC with the same command. The job is not scheduled by the repo; set it up on the host.
 
-- **Message digests:** `npm run notify:flush` every 5 minutes (cron, Task Scheduler or your host's scheduler). Message emails are batched: the first message in a 10 minute window is emailed at once, and later ones wait for the next flush. Without the schedule, digests after the first message never send. The flush takes a Postgres advisory lock, so overlapping runs are safe.
+- **Worker (M6):** `npm run worker` runs every scheduled job itself, so no host cron is needed: message digests (every 5 minutes), analytics rollup (daily at 00:30 IST), newsletter campaign batches and scheduled articles (every minute), weekly newsletter digest (hourly check), rate-limit cleanup (hourly). Each job takes a Postgres advisory lock, and the last-run state is kept in `.data/worker-state.json`. In Docker it is the `worker` service in `docker-compose.prod.yml`. Running more than one worker is safe because of the locks, but one is enough.
+- **Message digests:** `npm run notify:flush` every 5 minutes, if you run the jobs without the worker (cron, Task Scheduler or your host's scheduler). Message emails are batched: the first message in a 10 minute window is emailed at once, and later ones wait for the next flush. Without the schedule, digests after the first message never send. The flush takes a Postgres advisory lock, so overlapping runs are safe.
 
 ## Roles and access
 
@@ -248,3 +251,15 @@ On branch `m5-growth`. Full status: `docs/milestones/m5-status.md`.
 - **Known limitations:** the referral-link origin comes from `APP_URL`. The limit check and the featured-slot check are check-then-write, so two simultaneous saves could both pass. Pending-review listings do not count toward the limit. Tier limits and benefits are placeholders until the client confirms them.
 - **Tests:** `npm test` (972 unit tests across 98 files, 2026-11-10 close-out). `npm run test:e2e` has 34 Playwright tests in 5 files, including the four M5 journeys in `e2e/m5-growth.spec.ts` and the 390px no-overflow check on every journey page. The 34-of-34 result is from the Phase E run. Screenshots at 390px and 1440px for the M5 screens are in `screenshots/m5/` (git-ignored, not committed).
 
+
+## M6 status (Content, newsletter, polish, hardening, deployment prep)
+
+Final Phase 1 milestone. Branch `m6-launch`. Phase 1 completion report: `docs/PHASE1-REPORT.md`. Deployment guide and go-live checklist: `docs/DEPLOYMENT.md`.
+
+- **Education and reference:** `/education` (education, guides and research, with search, tags, reading time and related items), `/reference` (one structured page per gemstone category, linking to listings and valuation), `/news` (market news with category and a source link). Markdown is rendered with a strict sanitiser: raw HTML and images are disabled, and only http, https, mailto and same-site links survive.
+- **Admin content:** `/admin/content` with a Markdown editor and live preview, cover images, and DRAFT, SCHEDULED, PUBLISHED and ARCHIVED states. Scheduled items are published by the worker. Every publish, unpublish and archive is audited.
+- **Newsletter:** double opt-in with a consent record for each step (time, source, salted IP hash). Topics are Education, Market news, New listings and Platform updates; nothing is pre-ticked. Preferences and one-click unsubscribe use signed links that work without login, with a `List-Unsubscribe` header. Admin campaigns are sent in batches, with a test send, schedule and stats. A weekly digest goes to topic subscribers. The Resend webhook (`/api/webhooks/resend`) verifies the signature and suppresses bounces and complaints. Signed-in users manage topics in their account.
+- **Legal:** Terms, Privacy, Cookies and Seller Agreement at `/legal/*`, all marked "Draft – needs legal review". Cookie notice for the first-party analytics cookie. Custom 404 and 500 pages.
+- **Hardening:** `APP_URL` and production checks at startup (console providers, demo seed, `AUTH_SECRET`), `TRUSTED_PROXY_COUNT` for client IPs, security headers with CSP and HSTS in production, admin valuation services check the role themselves, listing limit and featured checks run inside a row lock on the seller, rate-limit cleanup, and an optional error report hook (off unless `SENTRY_DSN` is set). Pending-review listings count toward the tier limit.
+- **Deployment:** multi-stage Dockerfile (standalone output, non-root), `docker-compose.prod.yml` with app, worker, migrate and Postgres services, an S3-compatible storage provider (AWS S3, Cloudflare R2, DigitalOcean Spaces), `/api/health`, and the worker.
+- **Known gaps:** Docker was not available in the build environment, so the image was not built. CSP uses `unsafe-inline` for scripts (Next.js bootstrap); nonces are not wired. The seller-lock race has no database-level test yet. Campaign and digest sends are at least once: a crash between provider acceptance and the status write can duplicate a message.

@@ -2,7 +2,7 @@ import "dotenv/config";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { runAnalyticsRollup } from "@/lib/analytics/rollup";
-import { getEnv } from "@/lib/config/env";
+import { getEnv, parseStartupEnv } from "@/lib/config/env";
 import { prisma } from "@/lib/db/client";
 import { processDueCampaigns } from "@/lib/newsletter/campaigns";
 import { sendWeeklyDigestIfDue } from "@/lib/newsletter/digest";
@@ -100,7 +100,8 @@ async function tick(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  getEnv(); // fail fast on a bad environment
+  parseStartupEnv(process.env); // the same production rules as the web server, so a bad worker config fails at start
+  getEnv();
   const saved = await loadState();
   for (const [name, iso] of Object.entries(saved)) {
     const time = new Date(iso);

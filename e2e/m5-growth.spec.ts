@@ -59,7 +59,7 @@ function runRollup(): void {
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
@@ -86,7 +86,8 @@ async function qualifiedReferralsOnPage(page: Page): Promise<number> {
 
 /** Fills the seller application form the way journey.spec.ts does. */
 async function fillSellerApplication(page: Page, args: { email: string; mobile: string; business: string }) {
-  const field = (name: string) => page.locator(`[name="${name}"]`);
+  // The footer also has a newsletter email field (name="email"), so the form's own field is addressed by id.
+  const field = (name: string) => (name === "email" ? page.locator("input#email") : page.locator(`[name="${name}"]`));
   await field("name").fill("M5 Referred Seller");
   await field("email").fill(args.email);
   await field("mobile").fill(args.mobile);

@@ -38,7 +38,10 @@ export function getClientIp(headers: Headers, trustedProxyCount?: number): strin
     return parts[parts.length - count];
   }
 
-  const realIp = headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
+  // X-Real-IP is only trusted when no proxy is expected. With a proxy, a client could set it directly.
+  if (count === 0) {
+    const realIp = headers.get("x-real-ip")?.trim();
+    if (realIp) return realIp;
+  }
   return "unknown";
 }

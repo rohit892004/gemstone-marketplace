@@ -43,8 +43,12 @@ describe("getClientIp with short or absent headers", () => {
     expect(getClientIp(xff("10.0.0.9"), 2)).toBe("unknown");
   });
 
-  it("falls back to X-Real-IP when X-Forwarded-For is absent", () => {
-    expect(getClientIp(new Headers({ "x-real-ip": "203.0.113.5" }), 1)).toBe("203.0.113.5");
+  it("ignores X-Real-IP when a proxy is expected and X-Forwarded-For is absent", () => {
+    expect(getClientIp(new Headers({ "x-real-ip": "203.0.113.5" }), 1)).toBe("unknown");
+  });
+
+  it("uses X-Real-IP only when no proxy is expected", () => {
+    expect(getClientIp(new Headers({ "x-real-ip": "203.0.113.5" }), 0)).toBe("203.0.113.5");
   });
 
   it("returns unknown when no IP header is present", () => {

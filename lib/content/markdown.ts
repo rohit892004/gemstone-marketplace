@@ -85,6 +85,37 @@ export function markdownToPlainText(source: string): string {
   return parts.join("").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Plain text for email: like markdownToPlainText, but each absolute link keeps its address, as "text (https://...)",
+ * so the reader can follow it. Relative links keep only their text (an email has no base address to resolve them).
+ */
+export function markdownToEmailText(source: string): string {
+  if (source.length > MARKDOWN_MAX_CHARS) throw new MarkdownTooLongError();
+  const parts: string[] = [];
+  for (const token of parser.parse(source, {})) {
+    if (token.type !== "inline" || !token.children) continue;
+    const hrefs: string[] = [];
+    for (const child of token.children) {
+      if (child.type === "link_open") {
+        hrefs.push(String(child.attrGet("href") ?? ""));
+      } else if (child.type === "link_close") {
+        const href = hrefs.pop() ?? "";
+        if (isExternal(href) || href.toLowerCase().startsWith("mailto:")) parts.push(` (${href})`);
+      } else if (child.type === "text" || child.type === "code_inline") {
+        parts.push(child.content);
+      } else if (child.type === "softbreak" || child.type === "hardbreak") {
+        parts.push("\n");
+      }
+    }
+    parts.push("\n\n");
+  }
+  return parts
+    .join("")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 /** Reading time in whole minutes at 200 words per minute. Never less than 1. */
 export function readingMinutes(source: string): number {
   const words = markdownToPlainText(source).split(" ").filter(Boolean).length;
