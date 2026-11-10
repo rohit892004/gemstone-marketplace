@@ -109,7 +109,7 @@ describe("approveListing", () => {
   it("refuses to publish over the seller's listing limit, and does not change the listing", async () => {
     vi.mocked(assertCanPublishListing).mockRejectedValueOnce(new MembershipError("LIMIT", "limit"));
     const result = await approveListing(null, form({ listingId: "g1" }));
-    expect(result.ok).toBe(false);
+    expect(result?.ok).toBe(false);
     expect(db.gemstone.updateMany).not.toHaveBeenCalled();
     expect(audit.recordAudit).not.toHaveBeenCalled();
   });

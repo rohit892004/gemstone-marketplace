@@ -5,10 +5,7 @@ import { runAnalyticsRollup } from "@/lib/analytics/rollup";
 /**
  * Daily analytics rollup: aggregates finished days, deletes raw events past 90 days, runs the tier and referral
  * passes. Schedule it once a day, shortly after midnight UTC: npm run analytics:rollup
- */
-/**
- * Optional --as-of=YYYY-MM-DD runs the job as if it were that day (a backfill, or a test that must see today's events).
- * It processes every finished day before that date.
+ * An optional --as-of=YYYY-MM-DD runs the job as if it were that day (a backfill, or a test that must see today's events).
  */
 function asOf(): Date {
   const arg = process.argv.find((value) => value.startsWith("--as-of="));
