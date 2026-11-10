@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
+import { logout } from "@/app/logout/actions";
 import { requirePageRole } from "@/lib/auth/require-role";
 
 /** Valuator pages are internal staff pages and are never indexed. */
@@ -30,9 +31,12 @@ async function ValuatorShell({ children }: { children: ReactNode }) {
           <Link href="/valuator/queue" className="underline">
             My queue
           </Link>
-          <Link href="/logout" className="underline">
-            Sign out
-          </Link>
+          {/* /logout is a server action, not a page: a form posts to it (a plain link would 404). */}
+          <form action={logout}>
+            <button type="submit" className="underline">
+              Sign out
+            </button>
+          </form>
         </nav>
       </header>
       <main className="min-w-0">{children}</main>
