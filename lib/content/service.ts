@@ -1,7 +1,8 @@
 import { recordAudit } from "@/lib/audit/audit";
 import { AuditAction } from "@/lib/audit/actions";
 import { prisma } from "@/lib/db/client";
-import { markdownToPlainText, readingMinutes, renderMarkdown } from "./markdown";
+import { markdownToPlainText, MARKDOWN_MAX_CHARS, readingMinutes, renderMarkdown } from "./markdown";
+import { referencePublishProblems } from "./reference-sections";
 import {
   canTransition,
   type ContentStatusName,
@@ -190,6 +191,8 @@ export function publicArticleWhere(now: Date) {
 
 export interface ArticleListFilter {
   type?: ContentTypeName;
+  /** One of several types (used by the education list, which must never include NEWS). Ignored when `type` is set. */
+  types?: ContentTypeName[];
   tag?: string;
   category?: string;
   q?: string;
@@ -204,7 +207,7 @@ export async function listPublicArticles(filter: ArticleListFilter = {}) {
   const q = filter.q?.trim();
   const where = {
     ...publicArticleWhere(now),
-    ...(filter.type ? { type: filter.type } : {}),
+    ...(filter.type ? { type: filter.type } : filter.types ? { type: { in: filter.types } } : {}),
     ...(filter.tag ? { tags: { has: filter.tag.toLowerCase() } } : {}),
     ...(filter.category ? { category: filter.category } : {}),
     ...(q
@@ -266,4 +269,138 @@ export async function findPublicReferenceEntry(slug: string, now: Date = new Dat
     priceFactors: renderMarkdown(entry.priceFactors),
   };
   return { ...entry, sections, plainSummary: markdownToPlainText(entry.summary) };
+}
+
+export interface ReferenceEntryInput {
+  name: string;
+  categorySlug: string;
+  summary: string;
+  hardness?: string | null;
+  properties: string;
+  origins: string;
+  treatments: string;
+  qualityGuide: string;
+  care: string;
+  priceFactors: string;
+  metaDescription?: string | null;
+  sortOrder?: number;
+  isDemo?: boolean;
+}
+
+function referenceData(input: ReferenceEntryInput) {
+  return {
+    name: input.name.trim(),
+    categorySlug: input.categorySlug.trim(),
+    summary: input.summary.trim(),
+    hardness: input.hardness?.trim() || null,
+    properties: input.properties,
+    origins: input.origins,
+    treatments: input.treatments,
+    qualityGuide: input.qualityGuide,
+    care: input.care,
+    priceFactors: input.priceFactors,
+    metaDescription: input.metaDescription?.trim() || null,
+    sortOrder: input.sortOrder ?? 0,
+    isDemo: input.isDemo ?? false,
+  };
+}
+
+/** Checks that cannot wait for publishing: markdown size and a real category. */
+async function referenceSaveProblems(input: ReferenceEntryInput): Promise<PublishProblem[]> {
+  const problems: PublishProblem[] = [];
+  const longest = Math.max(input.properties.length, input.origins.length, input.treatments.length, input.qualityGuide.length, input.care.length, input.priceFactors.length);
+  if (longest > MARKDOWN_MAX_CHARS) problems.push({ field: "status", message: `Each section must be under ${MARKDOWN_MAX_CHARS} characters.` });
+  if (input.name.trim() === "") problems.push({ field: "title", message: "Add the gemstone name." });
+  const category = await prisma.category.findUnique({ where: { slug: input.categorySlug.trim() }, select: { id: true } });
+  if (!category) problems.push({ field: "status", message: "Choose a catalogue category that exists." });
+  return problems;
+}
+
+/** Creates a reference page as a DRAFT. Publishing needs every section (see referencePublishProblems). */
+export async function createReferenceEntry(input: ReferenceEntryInput, actorId: string): Promise<{ id: string; slug: string }> {
+  const problems = await referenceSaveProblems(input);
+  if (problems.length > 0) throw new ContentError(problems[0]!.message, problems);
+  const base = slugify(input.name, "gemstone");
+  const taken = await prisma.referenceEntry.findMany({ where: { slug: { startsWith: base } }, select: { slug: true } });
+  const slug = uniqueSlug(base, new Set(taken.map((row) => row.slug)));
+  const entry = await prisma.referenceEntry.create({
+    data: { ...referenceData(input), slug, status: "DRAFT" },
+    select: { id: true, slug: true },
+  });
+  await recordAudit({ action: AuditAction.CONTENT_CREATED, actorId, entityType: "ReferenceEntry", entityId: entry.id, meta: {} });
+  return entry;
+}
+
+/** Edits a reference page. The slug and status do not change here. */
+export async function updateReferenceEntry(id: string, input: ReferenceEntryInput, actorId: string): Promise<void> {
+  const problems = await referenceSaveProblems(input);
+  if (problems.length > 0) throw new ContentError(problems[0]!.message, problems);
+  const current = await prisma.referenceEntry.findUnique({ where: { id }, select: { status: true } });
+  if (!current) throw new ContentError("This page no longer exists.");
+  await prisma.referenceEntry.update({ where: { id }, data: referenceData(input) });
+  await recordAudit({ action: AuditAction.CONTENT_UPDATED, actorId, entityType: "ReferenceEntry", entityId: id, meta: { status: current.status } });
+}
+
+/** Publishes, unpublishes or archives a reference page. Scheduling is not offered for reference pages. */
+export async function changeReferenceEntryStatus(
+  id: string,
+  to: "DRAFT" | "PUBLISHED" | "ARCHIVED",
+  actorId: string | null,
+  now: Date = new Date(),
+): Promise<void> {
+  const current = await prisma.referenceEntry.findUnique({ where: { id } });
+  if (!current) throw new ContentError("This page no longer exists.");
+  const from = current.status as ContentStatusName;
+  if (!canTransition(from, to)) throw new ContentError(`Cannot move from ${from.toLowerCase()} to ${to.toLowerCase()}.`);
+
+  if (to === "PUBLISHED") {
+    const problems = referencePublishProblems({
+      name: current.name,
+      summary: current.summary,
+      categorySlug: current.categorySlug,
+      metaDescription: current.metaDescription,
+      properties: current.properties,
+      origins: current.origins,
+      treatments: current.treatments,
+      qualityGuide: current.qualityGuide,
+      care: current.care,
+      priceFactors: current.priceFactors,
+    });
+    if (problems.length > 0) throw new ContentError(problems[0]!.message, problems.map((p) => ({ field: "status" as const, message: p.message })));
+  }
+
+  const data: Record<string, unknown> = { status: to };
+  if (to === "PUBLISHED") data.publishedAt = now;
+  const result = await prisma.referenceEntry.updateMany({ where: { id, status: from }, data });
+  if (result.count === 0) throw new ContentError("This page was changed by someone else. Reload and try again.");
+
+  const action =
+    to === "PUBLISHED"
+      ? AuditAction.CONTENT_PUBLISHED
+      : to === "ARCHIVED"
+        ? AuditAction.CONTENT_ARCHIVED
+        : from === "PUBLISHED"
+          ? AuditAction.CONTENT_UNPUBLISHED
+          : AuditAction.CONTENT_UPDATED;
+  await recordAudit({ action, actorId, entityType: "ReferenceEntry", entityId: id, meta: { from, to } });
+}
+
+/** Sets or clears the cover key of an article. Returns the previous key so the caller can delete the old object. */
+export async function setArticleCover(
+  id: string,
+  coverKey: string | null,
+  coverAlt: string | null,
+  actorId: string,
+): Promise<{ previousKey: string | null }> {
+  const current = await prisma.article.findUnique({ where: { id }, select: { coverKey: true } });
+  if (!current) throw new ContentError("This item no longer exists.");
+  await prisma.article.update({ where: { id }, data: { coverKey, coverAlt: coverAlt?.trim() || null } });
+  await recordAudit({
+    action: AuditAction.CONTENT_UPDATED,
+    actorId,
+    entityType: "Article",
+    entityId: id,
+    meta: { cover: coverKey ? "set" : "removed" },
+  });
+  return { previousKey: current.coverKey };
 }
