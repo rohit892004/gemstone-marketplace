@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SectionTabs } from "@/components/admin/section-tabs";
 
 const LINKS = [
   { href: "/admin/newsletter", label: "Overview" },
@@ -8,13 +8,5 @@ const LINKS = [
 ];
 
 export function NewsletterNav() {
-  return (
-    <nav aria-label="Newsletter" className="flex flex-wrap gap-3 border-b border-stone-200 pb-3 text-sm">
-      {LINKS.map((link) => (
-        <Link key={link.href} href={link.href} className="rounded px-2 py-1 text-stone-700 hover:bg-stone-100 hover:text-stone-900">
-          {link.label}
-        </Link>
-      ))}
-    </nav>
-  );
+  return <SectionTabs items={LINKS} label="Newsletter" />;
 }

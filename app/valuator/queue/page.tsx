@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { requirePageRole } from "@/lib/auth/require-role";
+import { ClipboardList } from "lucide-react";
 import { formatDate } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { requirePageRole } from "@/lib/auth/require-role";
 import { formatCarat, statusLabel } from "@/lib/valuation/display";
-import { expertReasonLabel, loadValuatorQueue } from "@/lib/valuation/valuator-queue";
+import { loadValuatorQueue, expertReasonLabel } from "@/lib/valuation/valuator-queue";
 import { VALUATION_ROUTES } from "@/lib/valuation/routes";
 
 export const metadata = { title: "My queue" };
@@ -16,60 +21,56 @@ export default function ValuatorQueuePage() {
   );
 }
 
+type QueueRow = Awaited<ReturnType<typeof loadValuatorQueue>>[number];
+
 /** Only the stone and status fields are loaded. The requester is never part of this page. */
 async function QueueList() {
   const user = await requirePageRole(["VALUATOR"]);
   const rows = await loadValuatorQueue(user.id);
 
+  const columns: Column<QueueRow>[] = [
+    { key: "reference", header: "Reference", cell: (row) => <span className="font-mono text-[13px]">{row.reference}</span> },
+    { key: "gemstone", header: "Gemstone", cell: (row) => row.gemstoneType },
+    { key: "carat", header: "Carat", cell: (row) => formatCarat(row.caratMilli) },
+    { key: "status", header: "Status", cell: (row) => <Badge tone="accent">{statusLabel(row.status)}</Badge> },
+    { key: "submitted", header: "Submitted", hideOnMobile: true, cell: (row) => <span className="whitespace-nowrap">{formatDate(row.submittedAt)}</span> },
+    {
+      key: "why",
+      header: "Why it is here",
+      hideOnMobile: true,
+      cell: (row) => (row.expertReasons.length === 0 ? "-" : row.expertReasons.map((r) => expertReasonLabel(r)).join("; ")),
+    },
+    {
+      key: "open",
+      header: "Open",
+      align: "right",
+      cell: (row) => (
+        <Link
+          href={VALUATION_ROUTES.valuatorDetail(row.id)}
+          className="inline-flex min-h-11 items-center text-ink underline underline-offset-4 hover:text-accent-text"
+        >
+          Open<span className="sr-only"> {row.reference}</span>
+        </Link>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">My queue</h1>
-      <p className="text-sm text-stone-600">
-        Requests assigned to you that need an expert decision or an answer. Open a request to review it.
-      </p>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Valuer workspace"
+        title="My queue"
+        lead="Requests assigned to you that need an expert decision or an answer. Open a request to review it."
+      />
 
       {rows.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">
-          Nothing is waiting for you right now.
-        </p>
+        <EmptyState
+          icon={ClipboardList}
+          title="Nothing is waiting for you right now"
+          body="New requests assigned to you appear here. Check back later."
+        />
       ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <caption className="sr-only">Requests assigned to you</caption>
-            <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th scope="col" className="px-3 py-2">Reference</th>
-                <th scope="col" className="px-3 py-2">Gemstone</th>
-                <th scope="col" className="px-3 py-2">Carat</th>
-                <th scope="col" className="px-3 py-2">Status</th>
-                <th scope="col" className="hidden px-3 py-2 md:table-cell">Submitted</th>
-                <th scope="col" className="hidden px-3 py-2 md:table-cell">Why it is here</th>
-                <th scope="col" className="px-3 py-2">
-                  <span className="sr-only">Open</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t border-stone-200 align-top">
-                  <td className="px-3 py-2 font-mono text-xs">{row.reference}</td>
-                  <td className="px-3 py-2">{row.gemstoneType}</td>
-                  <td className="px-3 py-2">{formatCarat(row.caratMilli)}</td>
-                  <td className="px-3 py-2">{statusLabel(row.status)}</td>
-                  <td className="hidden px-3 py-2 md:table-cell">{formatDate(row.submittedAt)}</td>
-                  <td className="hidden px-3 py-2 md:table-cell">
-                    {row.expertReasons.length === 0 ? "-" : row.expertReasons.map((r) => expertReasonLabel(r)).join("; ")}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <Link href={VALUATION_ROUTES.valuatorDetail(row.id)} className="underline">
-                      Open<span className="sr-only"> {row.reference}</span>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable caption="Requests assigned to you" columns={columns} rows={rows} getRowKey={(row) => row.id} />
       )}
     </div>
   );

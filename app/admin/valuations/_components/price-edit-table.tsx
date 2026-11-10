@@ -35,7 +35,7 @@ function Summary({ state }: { state: ValuationActionState }) {
   if (!state || state.ok) return null;
   const items = [state.error, ...(state.errors ?? []), ...Object.values(state.fieldErrors ?? {})].filter(Boolean);
   return (
-    <div role="alert" tabIndex={-1} className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <div role="alert" tabIndex={-1} className="border border-danger bg-surface-raised p-3 text-sm text-danger">
       <p className="font-medium">Please fix the following:</p>
       <ul className="list-disc pl-5">
         {items.map((item, index) => (
@@ -49,7 +49,7 @@ function Summary({ state }: { state: ValuationActionState }) {
 function Notice({ state }: { state: ValuationActionState }) {
   if (!state || !state.ok) return null;
   return (
-    <p role="status" className="text-sm text-green-800">
+    <p role="status" className="text-sm text-success">
       {state.message}
     </p>
   );
@@ -65,10 +65,10 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
     <form action={formAction} className="space-y-3">
       <Summary state={state} />
       <Notice state={state} />
-      <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
+      <div className="relative overflow-x-auto border border-line bg-surface-raised">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Reference prices per carat</caption>
-          <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
+          <thead className="bg-surface text-[11px] uppercase tracking-[0.18em] text-ink-soft">
             <tr>
               <th scope="col" className="px-3 py-2">Gemstone</th>
               <th scope="col" className="px-3 py-2">Currency</th>
@@ -83,7 +83,7 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
               const inputId = `${formId}-price-${row.id}`;
               const error = fieldErrors[row.id];
               return (
-                <tr key={row.id} className="border-t border-stone-200 align-top">
+                <tr key={row.id} className="border-t border-line align-top">
                   <td className="px-3 py-2">{row.gemstoneType}</td>
                   <td className="px-3 py-2">{row.currency}</td>
                   <td className="px-3 py-2">{row.qualityGrade}</td>
@@ -99,19 +99,19 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
                       inputMode="decimal"
                       aria-invalid={error ? true : undefined}
                       aria-describedby={error ? `${inputId}-error` : undefined}
-                      className="w-32 rounded border border-stone-300 p-1.5"
+                      className="block min-h-11 w-32 border border-line bg-surface-raised px-3 py-2"
                     />
                     {error ? (
-                      <p id={`${inputId}-error`} className="mt-1 text-xs text-red-700">
+                      <p id={`${inputId}-error`} className="mt-1 text-[12px] text-danger">
                         {error}
                       </p>
                     ) : null}
                   </td>
                   <td className="px-3 py-2">
                     {row.isDemo ? (
-                      <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">{DEMO_TEXT}</span>
+                      <span className="inline-block border border-accent/60 bg-accent-soft px-2 py-0.5 text-[11px] uppercase tracking-[0.14em] text-accent-text">{DEMO_TEXT}</span>
                     ) : (
-                      <span className="text-xs text-stone-600">Set by admin</span>
+                      <span className="text-[12px] text-ink-soft">Set by admin</span>
                     )}
                   </td>
                 </tr>
@@ -120,7 +120,7 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
           </tbody>
         </table>
       </div>
-      <button type="submit" disabled={pending} className="min-h-11 rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50">
+      <button type="submit" disabled={pending} className="min-h-11 bg-brand px-4 py-2 text-ivory disabled:opacity-50">
         {pending ? "Saving..." : submitLabel}
       </button>
     </form>
@@ -134,10 +134,10 @@ export function MultiplierEditTable({ action, rows }: { action: Action; rows: Mu
     <form action={formAction} className="space-y-3">
       <Summary state={state} />
       <Notice state={state} />
-      <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
+      <div className="relative overflow-x-auto border border-line bg-surface-raised">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Multipliers as percentages of the base price</caption>
-          <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
+          <thead className="bg-surface text-[11px] uppercase tracking-[0.18em] text-ink-soft">
             <tr>
               <th scope="col" className="px-3 py-2">Type</th>
               <th scope="col" className="px-3 py-2">Key</th>
@@ -150,22 +150,22 @@ export function MultiplierEditTable({ action, rows }: { action: Action; rows: Mu
             {rows.map((row) => {
               const inputId = `${formId}-pct-${row.id}`;
               return (
-                <tr key={row.id} className="border-t border-stone-200">
+                <tr key={row.id} className="border-t border-line">
                   <td className="px-3 py-2">{row.kindLabel}</td>
-                  <td className="px-3 py-2 font-mono text-xs">{row.key}</td>
+                  <td className="px-3 py-2 font-mono text-[12px]">{row.key}</td>
                   <td className="px-3 py-2">{row.label}</td>
                   <td className="px-3 py-2">
                     <label htmlFor={inputId} className="sr-only">
                       Percent for {row.label}
                     </label>
-                    <input id={inputId} name={`pct:${row.id}`} defaultValue={row.percent} inputMode="decimal" className="w-24 rounded border border-stone-300 p-1.5" />
+                    <input id={inputId} name={`pct:${row.id}`} defaultValue={row.percent} inputMode="decimal" className="block min-h-11 w-24 border border-line bg-surface-raised px-3 py-2" />
                     <span aria-hidden="true"> %</span>
                   </td>
                   <td className="px-3 py-2">
                     {row.isDemo ? (
-                      <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">{DEMO_TEXT}</span>
+                      <span className="inline-block border border-accent/60 bg-accent-soft px-2 py-0.5 text-[11px] uppercase tracking-[0.14em] text-accent-text">{DEMO_TEXT}</span>
                     ) : (
-                      <span className="text-xs text-stone-600">Set by admin</span>
+                      <span className="text-[12px] text-ink-soft">Set by admin</span>
                     )}
                   </td>
                 </tr>
@@ -174,7 +174,7 @@ export function MultiplierEditTable({ action, rows }: { action: Action; rows: Mu
           </tbody>
         </table>
       </div>
-      <button type="submit" disabled={pending} className="min-h-11 rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50">
+      <button type="submit" disabled={pending} className="min-h-11 bg-brand px-4 py-2 text-ivory disabled:opacity-50">
         {pending ? "Saving..." : "Save multipliers"}
       </button>
     </form>

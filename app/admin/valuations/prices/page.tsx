@@ -50,13 +50,13 @@ async function PricesEditor() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Reference prices</h1>
-        <p className="text-sm text-stone-600">
+        <h1 className="font-heading text-4xl font-medium text-ink">Reference prices</h1>
+        <p className="text-sm text-ink-soft">
           These prices drive the automatic estimate. Rows marked <span className="font-medium">{DEMO_NOTE}</span> are placeholders,
           not market prices. Saving a row makes it real data.
         </p>
         {demoCount > 0 ? (
-          <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+          <p className="border-l-2 border-accent bg-accent-soft px-5 py-4 text-sm">
             {demoCount} row{demoCount === 1 ? " is" : "s are"} still demo data.
           </p>
         ) : null}
@@ -68,16 +68,16 @@ async function PricesEditor() {
       </div>
 
       <section aria-labelledby="prices-heading" className="space-y-3">
-        <h2 id="prices-heading" className="text-lg font-medium">Price per carat</h2>
+        <h2 id="prices-heading" className="font-heading text-2xl text-ink">Price per carat</h2>
         {priceRows.length === 0 ? (
-          <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No price rows yet. Import a CSV or add one below.</p>
+          <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No price rows yet. Import a CSV or add one below.</p>
         ) : (
           <PriceEditTable action={savePricesAction} rows={priceRows} />
         )}
       </section>
 
       <section aria-labelledby="add-price-heading" className="space-y-3">
-        <h2 id="add-price-heading" className="text-lg font-medium">Add or replace one price</h2>
+        <h2 id="add-price-heading" className="font-heading text-2xl text-ink">Add or replace one price</h2>
         <ValuationForm
           title="Add a price row"
           description="If a row already exists for this type, currency, grade and band, its price is replaced."
@@ -94,8 +94,8 @@ async function PricesEditor() {
       </section>
 
       <section aria-labelledby="import-heading" className="space-y-3">
-        <h2 id="import-heading" className="text-lg font-medium">Import a CSV</h2>
-        <p className="text-sm text-stone-600">
+        <h2 id="import-heading" className="font-heading text-2xl text-ink">Import a CSV</h2>
+        <p className="text-sm text-ink-soft">
           Header row, exactly: <code className="break-all font-mono">gemstone_type,currency,quality_grade,carat_band,price_per_carat</code>. The import is
           all or nothing: if any row is wrong, nothing is written and every problem is listed with its line number.
         </p>
@@ -108,12 +108,12 @@ async function PricesEditor() {
       </section>
 
       <section aria-labelledby="multipliers-heading" className="space-y-3">
-        <h2 id="multipliers-heading" className="text-lg font-medium">Multipliers</h2>
-        <p className="text-sm text-stone-600">
+        <h2 id="multipliers-heading" className="font-heading text-2xl text-ink">Multipliers</h2>
+        <p className="text-sm text-ink-soft">
           Each multiplier is a percentage of the base price. 100 means no change, 85 means 15% lower. Stored in basis points.
         </p>
         {multiplierRows.length === 0 ? (
-          <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No multipliers yet.</p>
+          <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No multipliers yet.</p>
         ) : (
           <MultiplierEditTable action={saveMultipliersAction} rows={multiplierRows} />
         )}

@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import type { AdminActionState } from "@/lib/admin/action-state";
+import { adminButtonClass } from "@/components/admin/button-classes";
+import { Input, Textarea } from "@/components/ui/field";
 
 export interface ActionField {
   name: string;
@@ -31,66 +33,59 @@ interface ActionFormProps {
  */
 export function ActionForm({ action, title, description, submitLabel, hidden, fields = [], tone = "primary" }: ActionFormProps) {
   const [state, formAction, pending] = useActionState(action, null);
-  const buttonClass =
-    tone === "danger"
-      ? "rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50"
-      : "rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50";
+  const baseId = useId();
 
   return (
-    <form action={formAction} className="space-y-3 rounded border border-stone-300 bg-white p-4">
-      <div>
-        <h3 className="font-medium">{title}</h3>
-        {description ? <p className="text-sm text-stone-600">{description}</p> : null}
+    <form action={formAction} className="space-y-4 border border-line bg-surface-raised p-5 sm:p-6">
+      <div className="space-y-2">
+        <h3 className="font-heading text-xl text-ink">{title}</h3>
+        {description ? <p className="text-sm leading-relaxed text-ink-soft">{description}</p> : null}
       </div>
       {Object.entries(hidden ?? {}).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      {fields.map((field) => {
+      {fields.map((field, index) => {
+        const id = `${baseId}-${index}`;
         if (field.kind === "checkbox") {
           return (
-            <label key={field.name} className="flex items-start gap-2 text-sm">
+            <label key={field.name} className="flex min-h-11 items-start gap-3 text-sm">
               <input
                 type="checkbox"
                 name={field.name}
                 defaultChecked={field.defaultValue === "on"}
-                className="mt-1"
+                className="mt-1 h-4 w-4 accent-brand"
               />
               <span>
-                <span className="font-medium">{field.label}</span>
-                {field.help ? <span className="block text-stone-600">{field.help}</span> : null}
+                <span className="font-medium text-ink">{field.label}</span>
+                {field.help ? <span className="block text-ink-soft">{field.help}</span> : null}
               </span>
             </label>
           );
         }
-        const common = {
-          name: field.name,
-          defaultValue: field.defaultValue ?? "",
-          required: field.required,
-          maxLength: field.maxLength,
-          className: "w-full rounded border border-stone-300 p-2",
-        };
         return (
-          <label key={field.name} className="block space-y-1 text-sm">
-            <span className="font-medium">{field.label}</span>
-            {field.help ? <span className="block text-stone-600">{field.help}</span> : null}
+          <div key={field.name} className="space-y-2 text-sm">
+            <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
+              {field.label}
+            </label>
+            {field.help ? <p className="text-[12px] text-ink-soft">{field.help}</p> : null}
             {field.kind === "textarea" ? (
-              <textarea rows={4} {...common} />
+              <Textarea id={id} name={field.name} defaultValue={field.defaultValue ?? ""} required={field.required} maxLength={field.maxLength} rows={4} />
             ) : (
-              <input type="text" {...common} />
+              <Input id={id} type="text" name={field.name} defaultValue={field.defaultValue ?? ""} required={field.required} maxLength={field.maxLength} />
             )}
-          </label>
+          </div>
         );
       })}
-      <button type="submit" disabled={pending} className={buttonClass}>
+      <button type="submit" disabled={pending} className={adminButtonClass(tone === "danger")}>
         {pending ? "Saving..." : submitLabel}
       </button>
       {state && !state.ok ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {state.error}
         </p>
       ) : null}
       {state && state.ok ? (
-        <p role="status" className="text-sm text-green-800">
+        <p role="status" className="text-sm text-success">
           {state.message}
         </p>
       ) : null}

@@ -26,8 +26,8 @@ async function NewReference() {
         </Link>{" "}
         / <span>New reference page</span>
       </nav>
-      <h1 className="text-2xl font-semibold">New reference page</h1>
-      <p className="text-sm text-stone-600">
+      <h1 className="font-heading text-4xl font-medium text-ink">New reference page</h1>
+      <p className="text-sm text-ink-soft">
         Every section is needed before the page can be published. The page starts as a draft.
       </p>
       <ReferenceForm

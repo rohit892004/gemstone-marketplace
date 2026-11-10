@@ -35,7 +35,7 @@ interface ValuationFormProps {
   description?: string;
 }
 
-const INPUT_CLASS = "mt-1 w-full rounded border border-stone-300 bg-white p-2 text-base";
+const INPUT_CLASS = "block min-h-11 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none";
 
 /**
  * Generic form for valuation actions. Errors appear in a summary at the top and beside each field. Every field
@@ -58,20 +58,20 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
   }
   const buttonClass =
     tone === "danger"
-      ? "min-h-11 rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50"
-      : "min-h-11 rounded bg-stone-900 px-4 py-2 text-white disabled:opacity-50";
+      ? "inline-flex min-h-11 items-center justify-center border border-danger px-6 py-3 text-sm tracking-wide text-danger hover:bg-danger/5 disabled:opacity-50"
+      : "inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-[#2e2b26] disabled:opacity-50";
 
   return (
-    <form action={formAction} aria-labelledby={`${formId}-title`} className="space-y-3 rounded border border-stone-300 bg-white p-4">
+    <form action={formAction} aria-labelledby={`${formId}-title`} className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
       <div>
-        <h3 id={`${formId}-title`} className="font-medium">
+        <h3 id={`${formId}-title`} className="font-heading text-2xl text-ink">
           {title}
         </h3>
-        {description ? <p className="text-sm text-stone-600">{description}</p> : null}
+        {description ? <p className="text-sm text-ink-soft">{description}</p> : null}
       </div>
 
       {summaryItems.length > 0 ? (
-        <div id={summaryId} role="alert" tabIndex={-1} className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+        <div id={summaryId} role="alert" tabIndex={-1} className="border border-danger bg-surface-raised p-3 text-sm text-danger">
           <p className="font-medium">Please fix the following:</p>
           <ul className="list-disc pl-5">
             {summaryItems.map((item, index) => (
@@ -101,13 +101,13 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
           className: INPUT_CLASS,
         };
         return (
-          <div key={field.name} className="space-y-1 text-sm">
-            <label htmlFor={id} className="block font-medium">
+          <div key={field.name} className="space-y-2 text-sm">
+            <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
               {field.label}
-              {field.required ? <span className="text-stone-600"> (required)</span> : null}
+              {field.required ? <span className="text-ink-soft"> (required)</span> : null}
             </label>
             {field.help ? (
-              <p id={`${id}-help`} className="text-stone-600">
+              <p id={`${id}-help`} className="text-ink-soft">
                 {field.help}
               </p>
             ) : null}
@@ -131,7 +131,7 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
               />
             )}
             {error ? (
-              <p id={errorId} className="text-red-700">
+              <p id={errorId} className="text-danger">
                 {error}
               </p>
             ) : null}
@@ -144,7 +144,7 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
       </button>
 
       {state && state.ok ? (
-        <p role="status" className="text-sm text-green-800">
+        <p role="status" className="text-sm text-success">
           {state.message}
         </p>
       ) : null}

@@ -1,9 +1,16 @@
-import { DemoBadge } from "@/components/catalogue/badges";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Gift } from "lucide-react";
 import type { Prisma } from "@/app/generated/prisma/client";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
 import { ClearFlagForm, VoidReferralForm } from "@/components/membership/admin-forms";
-import { formatDate } from "@/components/admin/admin-ui";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { buttonClasses } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 
@@ -17,6 +24,10 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const PAGE_SIZE = 25;
 const STATUSES = ["ALL", "PENDING", "QUALIFIED", "VOIDED"] as const;
 type StatusFilter = (typeof STATUSES)[number];
+
+const LABEL = "text-[11px] uppercase tracking-[0.18em] text-ink-soft";
+
+const STATUS_TONES: Record<string, BadgeTone> = { PENDING: "warning", QUALIFIED: "success", VOIDED: "neutral" };
 
 function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
@@ -80,134 +91,136 @@ async function ReferralsView({ searchParams }: { searchParams: SearchParams }) {
   const sellerName = (r: { referred: { sellerProfile: { businessName: string } | null } }) =>
     r.referred.sellerProfile?.businessName ?? "No seller profile yet";
 
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Referrals</h1>
-        <Link href="/admin/memberships" className="text-sm underline">
-          Memberships
-        </Link>
-      </div>
+  type Row = (typeof rows)[number];
+  const columns: Column<Row>[] = [
+    { key: "referrer", header: "Referrer", cell: (r) => r.referrer.businessName },
+    {
+      key: "referred",
+      header: "Referred seller",
+      cell: (r) => (
+        <span className="flex flex-wrap items-center gap-2">
+          {sellerName(r)} {r.isDemo ? <AdminDemoTag /> : null}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (r) => (
+        <div className="space-y-1">
+          <Badge tone={STATUS_TONES[r.status] ?? "neutral"}>{r.status === "PENDING" ? "Pending" : r.status === "QUALIFIED" ? "Qualified" : "Voided"}</Badge>
+          {r.status === "QUALIFIED" && r.qualifiedAt ? <span className="block text-[12px] text-ink-soft">{formatDate(r.qualifiedAt)}</span> : null}
+          {r.status === "VOIDED" && r.voidedReason ? <span className="block text-[12px] text-ink-soft">{r.voidedReason}</span> : null}
+        </div>
+      ),
+    },
+    { key: "flag", header: "Flag", hideOnMobile: true, cell: (r) => (r.flagged ? "Flagged" : "None") },
+    { key: "signedUp", header: "Signed up", hideOnMobile: true, cell: (r) => <span className="whitespace-nowrap">{formatDate(r.createdAt)}</span> },
+    {
+      key: "void",
+      header: "Void",
+      cell: (r) => (r.status !== "VOIDED" ? <VoidReferralForm referralId={r.id} /> : <span className="text-ink-soft">Voided</span>),
+    },
+  ];
 
-      <section aria-labelledby="flagged-heading" className="space-y-4">
-        <h2 id="flagged-heading" className="text-lg font-medium">
-          Flagged for review ({flagged.length})
-        </h2>
-        <p className="text-sm text-stone-600">
+  return (
+    <div className="space-y-12">
+      <PageHeader
+        eyebrow="Business"
+        title="Referrals"
+        actions={
+          <Link href="/admin/memberships" className={buttonClasses({ variant: "secondary" })}>
+            Memberships
+          </Link>
+        }
+      />
+
+      <section className="space-y-6">
+        <SectionHeading title={`Flagged for review (${flagged.length})`} />
+        <p className="text-[15px] leading-relaxed text-ink-soft">
           These referrals do not qualify automatically. Clear the flag if the sign-up is genuine, or void the referral.
         </p>
         {flagged.length === 0 ? (
-          <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">Nothing is waiting for review.</p>
+          <EmptyState icon={Gift} title="Nothing is waiting for review" body="Flagged referrals appear here before they can qualify." />
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-6">
             {flagged.map((r) => (
-              <li key={r.id} className="space-y-3 rounded border border-amber-700 bg-white p-4">
-                <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-stone-600">Referrer</dt>
-                    <dd>{r.referrer.businessName}</dd>
+              <li key={r.id}>
+                <Card className="space-y-6 border-accent/60 p-5 sm:p-8">
+                  <dl className="grid gap-6 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Referrer</dt>
+                      <dd className="text-[15px] text-ink">{r.referrer.businessName}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Referred seller</dt>
+                      <dd className="flex flex-wrap items-center gap-2 text-[15px] text-ink">
+                        {sellerName(r)} {r.isDemo ? <AdminDemoTag /> : null}
+                      </dd>
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <dt className={LABEL}>Flag reason</dt>
+                      <dd className="text-[15px] text-ink">{r.flagReason ?? "Flagged"}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className={LABEL}>Signed up</dt>
+                      <dd className="text-[15px] text-ink">{formatDate(r.createdAt)}</dd>
+                    </div>
+                  </dl>
+                  <div className="grid gap-6 border-t border-line pt-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <h3 className="font-heading text-lg text-ink">Clear flag</h3>
+                      <ClearFlagForm referralId={r.id} />
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="font-heading text-lg text-ink">Void</h3>
+                      <VoidReferralForm referralId={r.id} />
+                    </div>
                   </div>
-                  <div>
-                    <dt className="text-stone-600">Referred seller</dt>
-                    <dd>{sellerName(r)} {r.isDemo ? <DemoBadge /> : null}</dd>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <dt className="text-stone-600">Flag reason</dt>
-                    <dd>{r.flagReason ?? "Flagged"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-stone-600">Signed up</dt>
-                    <dd>{formatDate(r.createdAt)}</dd>
-                  </div>
-                </dl>
-                <div className="grid gap-4 border-t border-stone-200 pt-3 md:grid-cols-2">
-                  <div>
-                    <h3 className="mb-2 text-sm font-medium">Clear flag</h3>
-                    <ClearFlagForm referralId={r.id} />
-                  </div>
-                  <div>
-                    <h3 className="mb-2 text-sm font-medium">Void</h3>
-                    <VoidReferralForm referralId={r.id} />
-                  </div>
-                </div>
+                </Card>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section aria-labelledby="all-heading" className="space-y-4">
-        <h2 id="all-heading" className="text-lg font-medium">
-          All referrals ({total})
-        </h2>
-        <nav aria-label="Filter by status" className="flex flex-wrap gap-2 text-sm">
-          {STATUSES.map((s) => (
-            <Link
-              key={s}
-              href={hrefFor(s, 1)}
-              aria-current={s === status ? "page" : undefined}
-              className={`rounded border px-3 py-1 ${s === status ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"}`}
-            >
-              {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
-            </Link>
-          ))}
-        </nav>
+      <section className="space-y-6">
+        <SectionHeading title={`All referrals (${total})`} />
+        <Tabs
+          label="Filter by status"
+          items={STATUSES.map((s) => ({
+            href: hrefFor(s, 1),
+            label: s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase(),
+            active: s === status,
+          }))}
+        />
 
-        {rows.length === 0 ? (
-          <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No referrals match this filter.</p>
-        ) : (
-          <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
-                <tr>
-                  <th scope="col" className="px-3 py-2">Referrer</th>
-                  <th scope="col" className="px-3 py-2">Referred seller</th>
-                  <th scope="col" className="px-3 py-2">Status</th>
-                  <th scope="col" className="px-3 py-2">Flag</th>
-                  <th scope="col" className="px-3 py-2">Signed up</th>
-                  <th scope="col" className="px-3 py-2">Void</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-t border-stone-200 align-top">
-                    <td className="px-3 py-2">{r.referrer.businessName}</td>
-                    <td className="px-3 py-2">{sellerName(r)} {r.isDemo ? <DemoBadge /> : null}</td>
-                    <td className="px-3 py-2">
-                      {r.status === "PENDING" ? "Pending" : r.status === "QUALIFIED" ? "Qualified" : "Voided"}
-                      {r.status === "QUALIFIED" && r.qualifiedAt ? <span className="block text-xs text-stone-600">{formatDate(r.qualifiedAt)}</span> : null}
-                      {r.status === "VOIDED" && r.voidedReason ? <span className="block text-xs text-stone-600">{r.voidedReason}</span> : null}
-                    </td>
-                    <td className="px-3 py-2">{r.flagged ? "Flagged" : "None"}</td>
-                    <td className="px-3 py-2">{formatDate(r.createdAt)}</td>
-                    <td className="px-3 py-2 min-w-56">
-                      {r.status !== "VOIDED" ? <VoidReferralForm referralId={r.id} /> : <span className="text-stone-600">Voided</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          caption="All referrals"
+          columns={columns}
+          rows={rows}
+          getRowKey={(r) => r.id}
+          empty={<span>No referrals match this filter.</span>}
+        />
 
         {pageCount > 1 ? (
-          <nav aria-label="Pagination" className="flex items-center gap-4 text-sm">
+          <nav aria-label="Pagination" className="flex flex-wrap items-center gap-6 text-sm">
             {page > 1 ? (
-              <Link href={hrefFor(status, page - 1)} className="underline">
+              <Link href={hrefFor(status, page - 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
                 Previous
               </Link>
             ) : (
-              <span className="text-stone-400">Previous</span>
+              <span className="text-ink-soft">Previous</span>
             )}
-            <span>
+            <span className="text-ink-soft">
               Page {page} of {pageCount}
             </span>
             {page < pageCount ? (
-              <Link href={hrefFor(status, page + 1)} className="underline">
+              <Link href={hrefFor(status, page + 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
                 Next
               </Link>
             ) : (
-              <span className="text-stone-400">Next</span>
+              <span className="text-ink-soft">Next</span>
             )}
           </nav>
         ) : null}

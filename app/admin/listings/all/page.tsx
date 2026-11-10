@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Gem } from "lucide-react";
 import { ActionForm } from "@/components/admin/action-form";
-import { formatDate } from "@/components/admin/admin-ui";
-import { DemoBadge } from "@/components/catalogue/badges";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
+import { Button, buttonClasses } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input, Select } from "@/components/ui/field";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   ADMIN_PAGE_SIZE,
   AVAILABILITY_FILTERS,
@@ -40,6 +45,8 @@ function href(filters: ListingFilters, page: number): string {
   return `/admin/listings/all?${query.toString()}`;
 }
 
+const LABEL = "block text-[13px] tracking-wide text-ink";
+
 async function AllListings({ searchParams }: { searchParams: SearchParams }) {
   await requirePageRole(["ADMIN"]);
   const filters = parseListingFilters(await searchParams);
@@ -70,100 +77,123 @@ async function AllListings({ searchParams }: { searchParams: SearchParams }) {
     },
   });
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">All listings</h1>
+  type Row = (typeof listings)[number];
+  const columns: Column<Row>[] = [
+    {
+      key: "listing",
+      header: "Listing",
+      cell: (l) => (
+        <span className="flex flex-wrap items-center gap-2">
+          <Link href={`/admin/listings/${l.id}`} className="font-heading text-lg text-ink underline-offset-4 hover:underline">
+            {l.title}
+          </Link>
+          {l.isDemo ? <AdminDemoTag /> : null}
+        </span>
+      ),
+    },
+    { key: "seller", header: "Seller", cell: (l) => l.seller.businessName },
+    { key: "status", header: "Status", cell: (l) => <span className="capitalize">{l.status.replace(/_/g, " ").toLowerCase()}</span> },
+    { key: "availability", header: "Availability", hideOnMobile: true, cell: (l) => <span className="capitalize">{l.availability.toLowerCase()}</span> },
+    {
+      key: "price",
+      header: "Price",
+      hideOnMobile: true,
+      cell: (l) => (l.priceOnRequest ? "On request" : formatMoney(l.priceMinor, l.currency) ?? "-"),
+    },
+    { key: "published", header: "Published", hideOnMobile: true, cell: (l) => <span className="whitespace-nowrap">{formatDate(l.publishedAt)}</span> },
+    {
+      key: "featured",
+      header: "Featured",
+      cell: (l) =>
+        l.status === "PUBLISHED" ? (
+          <ActionForm
+            action={setListingFeatured}
+            hidden={{ listingId: l.id, featured: String(!l.featured) }}
+            title={l.featured ? "Featured" : "Not featured"}
+            submitLabel={l.featured ? "Unfeature" : "Feature"}
+          />
+        ) : (
+          <span className="text-ink-soft">{l.featured ? "Yes" : "No"}</span>
+        ),
+    },
+  ];
 
-      <form method="get" action="/admin/listings/all" className="grid gap-3 rounded border border-stone-300 bg-white p-4 text-sm md:grid-cols-5">
-        <label className="space-y-1">
-          <span className="font-medium">Status</span>
-          <select name="status" defaultValue={filters.status} className="w-full rounded border border-stone-300 p-2">
+  return (
+    <div className="space-y-10">
+      <PageHeader eyebrow="Marketplace" title="All listings" lead={`${total} listing${total === 1 ? "" : "s"}`} />
+
+      <form method="get" action="/admin/listings/all" className="grid gap-6 border border-line bg-surface-raised p-5 sm:p-6 md:grid-cols-5">
+        <label className="space-y-2">
+          <span className={LABEL}>Status</span>
+          <Select name="status" defaultValue={filters.status}>
             {LISTING_STATUS_FILTERS.map((v) => (
-              <option key={v} value={v}>{v === "all" ? "All" : v.replace(/_/g, " ").toLowerCase()}</option>
+              <option key={v} value={v}>
+                {v === "all" ? "All" : v.replace(/_/g, " ").toLowerCase()}
+              </option>
             ))}
-          </select>
+          </Select>
         </label>
-        <label className="space-y-1">
-          <span className="font-medium">Availability</span>
-          <select name="availability" defaultValue={filters.availability} className="w-full rounded border border-stone-300 p-2">
+        <label className="space-y-2">
+          <span className={LABEL}>Availability</span>
+          <Select name="availability" defaultValue={filters.availability}>
             {AVAILABILITY_FILTERS.map((v) => (
-              <option key={v} value={v}>{v === "all" ? "All" : v.toLowerCase()}</option>
+              <option key={v} value={v}>
+                {v === "all" ? "All" : v.toLowerCase()}
+              </option>
             ))}
-          </select>
+          </Select>
         </label>
-        <label className="space-y-1">
-          <span className="font-medium">Featured</span>
-          <select name="featured" defaultValue={filters.featured} className="w-full rounded border border-stone-300 p-2">
+        <label className="space-y-2">
+          <span className={LABEL}>Featured</span>
+          <Select name="featured" defaultValue={filters.featured}>
             {FEATURED_FILTERS.map((v) => (
-              <option key={v} value={v}>{v === "all" ? "All" : v === "yes" ? "Featured" : "Not featured"}</option>
+              <option key={v} value={v}>
+                {v === "all" ? "All" : v === "yes" ? "Featured" : "Not featured"}
+              </option>
             ))}
-          </select>
+          </Select>
         </label>
-        <label className="space-y-1">
-          <span className="font-medium">Seller (business name)</span>
-          <input name="seller" defaultValue={filters.seller} maxLength={80} className="w-full rounded border border-stone-300 p-2" />
+        <label className="space-y-2">
+          <span className={LABEL}>Seller (business name)</span>
+          <Input name="seller" defaultValue={filters.seller} maxLength={80} />
         </label>
-        <div className="flex items-end gap-2">
-          <button type="submit" className="rounded bg-stone-900 px-4 py-2 text-white">Apply</button>
-          <Link href="/admin/listings/all" className="px-2 py-2 underline">Clear</Link>
+        <div className="flex flex-wrap items-end gap-3">
+          <Button type="submit">Apply</Button>
+          <Link href="/admin/listings/all" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
+            Clear
+          </Link>
         </div>
       </form>
 
-      <p className="text-sm text-stone-600">
-        {total} listing{total === 1 ? "" : "s"}
-      </p>
-
       {listings.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No listings match these filters.</p>
+        <EmptyState
+          icon={Gem}
+          title="No listings match these filters"
+          body="Clear the filters to see every listing, or try another status."
+          action={
+            <Link href="/admin/listings/all" className={buttonClasses({ variant: "secondary" })}>
+              Clear filters
+            </Link>
+          }
+        />
       ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-stone-300 bg-stone-50 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th className="px-3 py-2">Listing</th>
-                <th className="px-3 py-2">Seller</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Availability</th>
-                <th className="px-3 py-2">Price</th>
-                <th className="px-3 py-2">Published</th>
-                <th className="px-3 py-2">Featured</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.map((l) => (
-                <tr key={l.id} className="border-b border-stone-200 align-top last:border-0">
-                  <td className="px-3 py-2">
-                    <Link href={`/admin/listings/${l.id}`} className="font-medium underline">{l.title}</Link>{" "}
-                    {l.isDemo ? <DemoBadge /> : null}
-                  </td>
-                  <td className="px-3 py-2">{l.seller.businessName}</td>
-                  <td className="px-3 py-2">{l.status.replace(/_/g, " ").toLowerCase()}</td>
-                  <td className="px-3 py-2">{l.availability.toLowerCase()}</td>
-                  <td className="px-3 py-2">{l.priceOnRequest ? "On request" : formatMoney(l.priceMinor, l.currency) ?? "-"}</td>
-                  <td className="px-3 py-2 whitespace-nowrap">{formatDate(l.publishedAt)}</td>
-                  <td className="px-3 py-2">
-                    {l.status === "PUBLISHED" ? (
-                      <ActionForm
-                        action={setListingFeatured}
-                        hidden={{ listingId: l.id, featured: String(!l.featured) }}
-                        title={l.featured ? "Featured" : "Not featured"}
-                        submitLabel={l.featured ? "Unfeature" : "Feature"}
-                      />
-                    ) : (
-                      <span className="text-stone-500">{l.featured ? "Yes" : "No"}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable caption="All listings" columns={columns} rows={listings} getRowKey={(l) => l.id} />
       )}
 
-      <nav aria-label="Pagination" className="flex items-center gap-4 text-sm">
-        {page > 1 ? <Link href={href(filters, page - 1)} className="underline">Previous</Link> : null}
-        <span>Page {page} of {pageCount}</span>
-        {page < pageCount ? <Link href={href(filters, page + 1)} className="underline">Next</Link> : null}
+      <nav aria-label="Pagination" className="flex flex-wrap items-center gap-6 text-sm">
+        {page > 1 ? (
+          <Link href={href(filters, page - 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
+            Previous
+          </Link>
+        ) : null}
+        <span className="text-ink-soft">
+          Page {page} of {pageCount}
+        </span>
+        {page < pageCount ? (
+          <Link href={href(filters, page + 1)} className="inline-flex min-h-11 items-center underline underline-offset-4">
+            Next
+          </Link>
+        ) : null}
       </nav>
     </div>
   );

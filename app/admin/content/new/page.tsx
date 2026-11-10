@@ -24,8 +24,8 @@ async function NewArticle() {
         </Link>{" "}
         / <span>New article</span>
       </nav>
-      <h1 className="text-2xl font-semibold">New article or news</h1>
-      <p className="text-sm text-stone-600">
+      <h1 className="font-heading text-4xl font-medium text-ink">New article or news</h1>
+      <p className="text-sm text-ink-soft">
         The item starts as a draft. You can add a cover image and change the status after the first save.
       </p>
       <ArticleForm

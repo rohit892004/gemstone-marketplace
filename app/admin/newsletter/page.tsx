@@ -7,7 +7,7 @@ export const metadata = { title: "Newsletter", robots: { index: false, follow: f
 
 export default function AdminNewsletterPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-stone-600">Loading newsletter overview...</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-soft">Loading newsletter overview...</p>}>
       <Overview />
     </Suspense>
   );
@@ -25,11 +25,11 @@ async function Overview() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Newsletter</h1>
+      <h1 className="font-heading text-4xl font-medium text-ink">Newsletter</h1>
       <NewsletterNav />
 
       <section aria-labelledby="subs-heading" className="space-y-3">
-        <h2 id="subs-heading" className="text-lg font-semibold">Subscribers</h2>
+        <h2 id="subs-heading" className="font-heading text-2xl text-ink">Subscribers</h2>
         <dl className="grid gap-3 sm:grid-cols-4">
           <Stat label="Confirmed" value={subCount("CONFIRMED")} />
           <Stat label="Pending confirmation" value={subCount("PENDING")} />
@@ -39,7 +39,7 @@ async function Overview() {
       </section>
 
       <section aria-labelledby="campaigns-heading" className="space-y-3">
-        <h2 id="campaigns-heading" className="text-lg font-semibold">Campaigns</h2>
+        <h2 id="campaigns-heading" className="font-heading text-2xl text-ink">Campaigns</h2>
         <dl className="grid gap-3 sm:grid-cols-5">
           {(["DRAFT", "SCHEDULED", "SENDING", "SENT", "CANCELLED"] as const).map((status) => (
             <Stat key={status} label={status.toLowerCase()} value={campaigns.find((c) => c.status === status)?._count._all ?? 0} />
@@ -48,8 +48,8 @@ async function Overview() {
       </section>
 
       <section aria-labelledby="digest-heading" className="space-y-2">
-        <h2 id="digest-heading" className="text-lg font-semibold">Weekly digest</h2>
-        <p className="text-sm text-stone-700">
+        <h2 id="digest-heading" className="font-heading text-2xl text-ink">Weekly digest</h2>
+        <p className="text-sm text-ink-soft">
           {lastDigest
             ? `Last run: ${lastDigest.periodKey}, ${lastDigest.recipientCount} recipients, ${lastDigest.sentAt.toISOString()}.`
             : "No digest has been sent yet."}
@@ -61,9 +61,9 @@ async function Overview() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded border border-stone-300 bg-white p-4">
-      <dt className="text-sm text-stone-600">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+    <div className="border border-line bg-surface-raised p-4">
+      <dt className="text-sm text-ink-soft">{label}</dt>
+      <dd className="font-heading text-4xl font-medium text-ink tabular-nums">{value}</dd>
     </div>
   );
 }

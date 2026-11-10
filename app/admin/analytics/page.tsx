@@ -1,13 +1,22 @@
 import { Suspense } from "react";
+import { BarChart3, Download, Users } from "lucide-react";
 import { LineChart } from "@/components/analytics/line-chart";
-import { formatCount, KpiTile, RangeNav, RollupNote } from "@/components/analytics/ui";
+import { formatCount, RollupNote } from "@/components/analytics/ui";
+import { AdminDemoTag } from "@/components/admin/admin-ui";
+import { Card, StatTile } from "@/components/ui/card";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { loadPlatformDashboard, type PlatformDashboard } from "@/lib/analytics/platform-dashboard";
 import type { PlatformKpiKey } from "@/lib/analytics/platform-summary";
-import { DemoBadge } from "@/components/catalogue/badges";
-import { dayToUnixSeconds, parseRange } from "@/lib/analytics/seller-trends";
+import { dayToUnixSeconds, formatChange, parseRange, RANGE_OPTIONS } from "@/lib/analytics/seller-trends";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const INK = "#1c1a17";
+const GOLD = "#8a6d43";
 
 export default function AdminAnalyticsPage({ searchParams }: { searchParams: SearchParams }) {
   return (
@@ -23,23 +32,31 @@ async function AdminAnalyticsView({ searchParams }: { searchParams: SearchParams
   const data = await loadPlatformDashboard({ requestedRange: requested });
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Platform analytics</h1>
-        <p className="text-sm text-stone-600">Marketplace totals by day. Figures come from the daily rollup, not live tables.</p>
-      </header>
+    <div className="space-y-10">
+      <PageHeader eyebrow="Business" title="Platform analytics" lead="Marketplace totals by day. Figures come from the daily rollup, not live tables." />
 
-      <div className="space-y-3">
-        <RangeNav basePath="/admin/analytics" selected={requested} capDays={requested} />
+      <div className="space-y-6">
+        <Tabs
+          label="Date range"
+          items={RANGE_OPTIONS.map((days) => ({
+            href: `/admin/analytics?range=${days}`,
+            label: `Last ${days} days`,
+            active: requested === days,
+          }))}
+        />
         <RollupNote lastFigureDay={data.lastFigureDay} today={data.today} behind={data.behind} />
         {data.hasDemo ? (
-          <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            <DemoBadge /> The totals in this window include demo history. Demo rows are labelled and are not real activity.
+          <p className="flex flex-wrap items-center gap-3 border-l-2 border-accent bg-surface-raised px-5 py-4 text-sm leading-relaxed text-ink">
+            <AdminDemoTag /> The totals in this window include demo history. Demo rows are labelled and are not real activity.
           </p>
         ) : null}
         {data.lastFigureDay !== null ? (
           <p>
-            <a href={`/admin/analytics/export?range=${requested}`} className="font-medium underline underline-offset-4">
+            <a
+              href={`/admin/analytics/export?range=${requested}`}
+              className="inline-flex min-h-11 items-center gap-2 font-medium text-ink underline underline-offset-4 hover:text-accent-text"
+            >
+              <Download className="h-4 w-4" strokeWidth={1.25} aria-hidden />
               Download CSV for the last {requested} days
             </a>
           </p>
@@ -60,60 +77,67 @@ function Figures({ data }: { data: PlatformDashboard }) {
 
   if (empty) {
     return (
-      <p className="rounded-md border border-dashed border-stone-300 bg-white p-6 text-center text-stone-700">
-        No platform activity recorded in the last {data.range} days.
-      </p>
+      <EmptyState
+        icon={BarChart3}
+        title="No platform activity yet"
+        body={`No platform activity recorded in the last ${data.range} days. Figures appear here after the next daily rollup.`}
+      />
     );
   }
 
   return (
     <>
-      <section aria-labelledby="platform-kpis" className="space-y-3">
-        <h2 id="platform-kpis" className="text-lg font-semibold">
-          Totals
-        </h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      <section className="space-y-6">
+        <SectionHeading title="Totals" />
+        <div className="grid grid-cols-2 gap-px border border-line bg-line xl:grid-cols-5">
           {tiles.map((k) => (
-            <KpiTile
-              key={k.key}
-              label={k.label}
-              value={formatCount(k.value)}
-              change={k.change}
-              note={k.key === "activeUsers" ? "Sum of daily active users" : undefined}
-            />
+            <div key={k.key} className="min-w-0 bg-surface-raised">
+              <StatTile
+                className="h-full border-0"
+                label={k.label}
+                value={formatCount(k.value)}
+                icon={<Users className="h-5 w-5" strokeWidth={1.25} aria-hidden />}
+                note={
+                  <>
+                    {k.change !== undefined ? <span className="block">{`${formatChange(k.change)} on the previous period`}</span> : null}
+                    {k.key === "activeUsers" ? <span className="block">Sum of daily active users</span> : null}
+                  </>
+                }
+              />
+            </div>
           ))}
         </div>
       </section>
 
-      <section aria-labelledby="signups-chart" className="space-y-3 rounded border border-stone-300 bg-white p-4">
-        <h2 id="signups-chart" className="text-lg font-semibold">
-          Signups
-        </h2>
-        <LineChart
-          ariaLabel={`Buyer and seller signups per day for the last ${data.range} days`}
-          times={times}
-          series={[
-            { label: "Buyer signups", values: kpi("signupBuyers")?.series ?? [], color: "#1f6f5c" },
-            { label: "Seller signups", values: kpi("signupSellers")?.series ?? [], color: "#b45309" },
-          ]}
-        />
+      <section className="space-y-6">
+        <SectionHeading title="Signups" />
+        <Card className="p-5 sm:p-8">
+          <LineChart
+            ariaLabel={`Buyer and seller signups per day for the last ${data.range} days`}
+            times={times}
+            series={[
+              { label: "Buyer signups", values: kpi("signupBuyers")?.series ?? [], color: INK },
+              { label: "Seller signups", values: kpi("signupSellers")?.series ?? [], color: GOLD },
+            ]}
+          />
+        </Card>
       </section>
 
-      <section aria-labelledby="activity-chart" className="space-y-3 rounded border border-stone-300 bg-white p-4">
-        <h2 id="activity-chart" className="text-lg font-semibold">
-          Listings and enquiries
-        </h2>
-        <LineChart
-          ariaLabel={`Listings published and enquiries per day for the last ${data.range} days`}
-          times={times}
-          series={[
-            { label: "Listings published", values: kpi("listingsPublished")?.series ?? [], color: "#1f6f5c" },
-            { label: "Enquiries", values: kpi("enquiries")?.series ?? [], color: "#b45309" },
-          ]}
-        />
+      <section className="space-y-6">
+        <SectionHeading title="Listings and enquiries" />
+        <Card className="p-5 sm:p-8">
+          <LineChart
+            ariaLabel={`Listings published and enquiries per day for the last ${data.range} days`}
+            times={times}
+            series={[
+              { label: "Listings published", values: kpi("listingsPublished")?.series ?? [], color: INK },
+              { label: "Enquiries", values: kpi("enquiries")?.series ?? [], color: GOLD },
+            ]}
+          />
+        </Card>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-12 lg:grid-cols-2">
         <RankTable caption="Top categories" heading="Category" countHeading="Listing views" rows={data.topCategories} />
         <RankTable caption="Top searches" heading="Search" countHeading="Searches" rows={data.topTerms} />
       </div>
@@ -132,38 +156,15 @@ function RankTable({
   countHeading: string;
   rows: PlatformDashboard["topCategories"];
 }) {
+  type Row = PlatformDashboard["topCategories"][number];
+  const columns: Column<Row>[] = [
+    { key: "name", header: heading, cell: (row) => <span className="break-words">{row.name}</span> },
+    { key: "count", header: countHeading, align: "right", cell: (row) => formatCount(row.count) },
+  ];
   return (
-    <section aria-labelledby={`rank-${caption.replace(/\s+/g, "-").toLowerCase()}`} className="space-y-3">
-      <h2 id={`rank-${caption.replace(/\s+/g, "-").toLowerCase()}`} className="text-lg font-semibold">
-        {caption}
-      </h2>
-      {rows.length === 0 ? (
-        <p className="text-sm text-stone-600">Nothing recorded in this range yet.</p>
-      ) : (
-        <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[320px] text-left text-sm">
-            <caption className="sr-only">{caption}</caption>
-            <thead className="border-b border-stone-300 text-stone-600">
-              <tr>
-                <th scope="col" className="py-2 pr-4 font-medium">
-                  {heading}
-                </th>
-                <th scope="col" className="py-2 text-right font-medium">
-                  {countHeading}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-200">
-              {rows.map((row) => (
-                <tr key={row.key}>
-                  <td className="py-2 pr-4 break-words">{row.name}</td>
-                  <td className="py-2 text-right">{formatCount(row.count)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+    <section className="space-y-6">
+      <SectionHeading title={caption} />
+      <DataTable caption={caption} columns={columns} rows={rows} getRowKey={(row) => row.key} empty={<span>Nothing recorded in this range yet.</span>} />
     </section>
   );
 }

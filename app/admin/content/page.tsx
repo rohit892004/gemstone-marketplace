@@ -2,6 +2,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DemoNotice } from "@/components/content/content-ui";
 import { formatDate } from "@/components/admin/admin-ui";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { CONTENT_STATUSES, type ContentStatusName } from "@/lib/content/status";
@@ -12,6 +17,13 @@ const FILTERS = ["ALL", ...CONTENT_STATUSES] as const;
 type Filter = (typeof FILTERS)[number];
 
 const KIND_LABELS: Record<string, string> = { EDUCATION: "Education", GUIDE: "Guide", RESEARCH: "Research", NEWS: "News", REFERENCE: "Reference page" };
+
+const STATUS_TONES: Record<ContentStatusName, BadgeTone> = {
+  DRAFT: "neutral",
+  SCHEDULED: "accent",
+  PUBLISHED: "success",
+  ARCHIVED: "neutral",
+};
 
 export default function AdminContentPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   return (
@@ -68,75 +80,69 @@ async function ContentList({ searchParams }: { searchParams: Promise<{ status?: 
     })),
   ].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
+  const columns: Column<(typeof rows)[number]>[] = [
+    { key: "kind", header: "Kind", cell: (row) => <span className="whitespace-nowrap">{row.kind}</span> },
+    {
+      key: "title",
+      header: "Title",
+      cell: (row) => (
+        <div className="space-y-2">
+          <Link href={row.href} className="font-heading text-lg text-ink underline-offset-4 hover:underline">
+            {row.title}
+          </Link>
+          {row.isDemo ? (
+            <div>
+              <DemoNotice />
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => <Badge tone={STATUS_TONES[row.status]}>{row.status.charAt(0) + row.status.slice(1).toLowerCase()}</Badge>,
+    },
+    { key: "dates", header: "Dates", hideOnMobile: true, cell: (row) => <span className="whitespace-nowrap text-ink-soft">{row.when}</span> },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Content</h1>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/admin/content/new" className="rounded bg-stone-900 px-4 py-2 text-sm text-white">
-            New article or news
-          </Link>
-          <Link href="/admin/content/reference/new" className="rounded border border-stone-400 px-4 py-2 text-sm">
-            New reference page
-          </Link>
-        </div>
-      </div>
-      <p className="text-sm text-stone-600">
-        Articles, news and gemstone reference pages. Demo items are marked &quot;Demo – needs expert review&quot;. Drafts and
-        archived items are never shown on the public site.
-      </p>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Admin"
+        title="Content"
+        lead={
+          <>
+            Articles, news and gemstone reference pages. Demo items are marked &quot;Demo – needs expert review&quot;. Drafts and archived items are never
+            shown on the public site.
+          </>
+        }
+        actions={
+          <>
+            <ButtonLink href="/admin/content/new">New article or news</ButtonLink>
+            <ButtonLink href="/admin/content/reference/new" variant="secondary">
+              New reference page
+            </ButtonLink>
+          </>
+        }
+      />
 
-      <nav aria-label="Filter by status" className="flex flex-wrap gap-2 text-sm">
-        {FILTERS.map((option) => {
-          const active = option === filter;
-          return (
-            <Link
-              key={option}
-              href={option === "ALL" ? "/admin/content" : `/admin/content?status=${option}`}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-full border px-3 py-1 ${active ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"}`}
-            >
-              {option === "ALL" ? "All" : option.charAt(0) + option.slice(1).toLowerCase()}
-            </Link>
-          );
-        })}
-      </nav>
+      <Tabs
+        label="Filter by status"
+        items={FILTERS.map((option) => ({
+          href: option === "ALL" ? "/admin/content" : `/admin/content?status=${option}`,
+          label: option === "ALL" ? "All" : option.charAt(0) + option.slice(1).toLowerCase(),
+          active: option === filter,
+        }))}
+      />
 
-      {rows.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No content matches this filter.</p>
-      ) : (
-        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-stone-300 bg-stone-50 text-xs uppercase tracking-wide text-stone-600">
-              <tr>
-                <th scope="col" className="px-3 py-2">Kind</th>
-                <th scope="col" className="px-3 py-2">Title</th>
-                <th scope="col" className="px-3 py-2">Status</th>
-                <th scope="col" className="px-3 py-2">Dates</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.key} className="border-b border-stone-200 last:border-0">
-                  <td className="whitespace-nowrap px-3 py-2">{row.kind}</td>
-                  <td className="px-3 py-2">
-                    <Link href={row.href} className="font-medium underline">
-                      {row.title}
-                    </Link>
-                    {row.isDemo ? (
-                      <div className="mt-1">
-                        <DemoNotice />
-                      </div>
-                    ) : null}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2">{row.status.charAt(0) + row.status.slice(1).toLowerCase()}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-stone-600">{row.when}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        caption="Content"
+        columns={columns}
+        rows={rows}
+        getRowKey={(row) => row.key}
+        empty={<span>No content matches this filter.</span>}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ContentActionState } from "@/app/admin/content/actions";
 import type { ContentStatusName } from "@/lib/content/status";
+import { Badge } from "@/components/ui/badge";
 
 type Action = (prev: ContentActionState, formData: FormData) => Promise<ContentActionState>;
 
@@ -39,21 +40,21 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
   const scheduledIso = when ? new Date(when).toISOString() : "";
   const invalidWhen = !when || Number.isNaN(new Date(when).getTime());
 
-  const buttonBase = "rounded-md px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50";
-  const primary = `${buttonBase} bg-brand text-white hover:bg-brand-strong`;
-  const secondary = `${buttonBase} border border-line bg-surface-raised text-ink hover:border-ink-soft`;
-  const danger = `${buttonBase} border border-red-300 bg-surface-raised text-red-800 hover:border-red-500`;
+  const buttonBase = "inline-flex min-h-11 items-center justify-center px-5 py-2.5 text-sm tracking-wide transition duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
+  const primary = `${buttonBase} bg-brand text-ivory hover:bg-[#2e2b26]`;
+  const secondary = `${buttonBase} border border-brand text-brand hover:bg-brand/5`;
+  const danger = `${buttonBase} border border-danger text-danger hover:bg-danger/5`;
 
   return (
-    <section aria-labelledby={`status-${id}`} className="space-y-4 rounded-lg border border-line bg-surface-raised p-5">
+    <section aria-labelledby={`status-${id}`} className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={`status-${id}`} className="text-lg font-semibold text-ink">
+        <h2 id={`status-${id}`} className="font-heading text-2xl text-ink">
           Status
         </h2>
-        <span className="rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-brand-strong">{STATUS_LABELS[status]}</span>
+        <Badge tone={status === "PUBLISHED" ? "success" : status === "SCHEDULED" ? "accent" : "neutral"}>{STATUS_LABELS[status]}</Badge>
       </div>
       {scheduledFor && status === "SCHEDULED" ? (
-        <p className="text-sm text-ink-soft">
+        <p className="text-[15px] text-ink-soft">
           Publishes at{" "}
           <time dateTime={scheduledFor}>{new Date(scheduledFor).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</time>.
         </p>
@@ -62,11 +63,11 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
       <form action={formAction} className="space-y-4" aria-describedby={`status-help-${id}`}>
         <input type="hidden" name="id" value={id} />
         {canSchedule ? (
-          <div className="space-y-1">
-            <label htmlFor={`when-${id}`} className="block text-sm font-medium text-ink">
+          <div className="space-y-2">
+            <label htmlFor={`when-${id}`} className="block text-[13px] tracking-wide text-ink">
               Publish at
             </label>
-            <p id={`status-help-${id}`} className="text-xs text-ink-soft">
+            <p id={`status-help-${id}`} className="text-[12px] text-ink-soft">
               Pick a future time. Times are in your browser&apos;s time zone. Use &quot;Publish now&quot; to publish immediately.
             </p>
             <input
@@ -75,12 +76,12 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
               min={minimum}
               value={when}
               onChange={(event) => setWhen(event.target.value)}
-              className="rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
+              className="block min-h-11 border border-line bg-surface-raised px-3 py-2 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
             <input type="hidden" name="scheduledForIso" value={scheduledIso} />
           </div>
         ) : (
-          <p id={`status-help-${id}`} className="text-xs text-ink-soft">
+          <p id={`status-help-${id}`} className="text-[12px] text-ink-soft">
             Reference pages publish straight away. Unpublish to take a page off the site.
           </p>
         )}
@@ -119,7 +120,7 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
           ) : null}
         </div>
         {state && !state.ok ? (
-          <div role="alert" className="space-y-1 text-sm text-red-700">
+          <div role="alert" className="space-y-1 text-sm text-danger">
             <p>{state.error}</p>
             {state.problems && state.problems.length > 1 ? (
               <ul className="list-inside list-disc">
@@ -131,7 +132,7 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
           </div>
         ) : null}
         {state && state.ok ? (
-          <p role="status" className="text-sm text-green-800">
+          <p role="status" className="text-sm text-success">
             {state.message}
           </p>
         ) : null}

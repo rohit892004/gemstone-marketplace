@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
+import { TriangleAlert, ClipboardList, FileText, Flag, Gem, MessageSquare, Star, Users } from "lucide-react";
 import type { ApprovalStatus } from "@/app/generated/prisma/client";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { Card, StatTile } from "@/components/ui/card";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 
@@ -13,6 +18,18 @@ export default function AdminDashboardPage() {
 }
 
 const STATUSES: ApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED", "SUSPENDED"];
+
+const ICON = "h-5 w-5";
+
+interface QueueItem {
+  href: string;
+  label: string;
+  count: number;
+  icon: ReactNode;
+  /** Pending work is shown as a warning badge; an empty queue is neutral. */
+  tone: BadgeTone;
+  note: string;
+}
 
 async function DashboardStats() {
   await requirePageRole(["ADMIN"]);
@@ -32,54 +49,80 @@ async function DashboardStats() {
   const sellerCounts: Record<ApprovalStatus, number> = { PENDING: 0, APPROVED: 0, REJECTED: 0, SUSPENDED: 0 };
   for (const group of groups) sellerCounts[group.approvalStatus] = group._count._all;
 
+  const queues: QueueItem[] = [
+    { href: "/admin/listings", label: "Listings pending review", count: listingsPending, icon: <Gem className={ICON} strokeWidth={1.25} aria-hidden />, tone: listingsPending > 0 ? "warning" : "neutral", note: "Check before publishing" },
+    { href: "/admin/documents", label: "Documents pending", count: documentsPending, icon: <FileText className={ICON} strokeWidth={1.25} aria-hidden />, tone: documentsPending > 0 ? "warning" : "neutral", note: "Verify certificates and IDs" },
+    { href: "/admin/reviews", label: "Reviews pending", count: reviewsPending, icon: <Star className={ICON} strokeWidth={1.25} aria-hidden />, tone: reviewsPending > 0 ? "warning" : "neutral", note: "Approve or reject buyer reviews" },
+    { href: "/admin/moderation", label: "Flagged messages open", count: flagsOpen, icon: <MessageSquare className={ICON} strokeWidth={1.25} aria-hidden />, tone: flagsOpen > 0 ? "danger" : "neutral", note: "Messages flagged by the filter" },
+    { href: "/admin/reports?status=OPEN", label: "Reports open", count: reportsOpen, icon: <Flag className={ICON} strokeWidth={1.25} aria-hidden />, tone: reportsOpen > 0 ? "danger" : "neutral", note: "Reports from members" },
+  ];
+
+  const pendingSellers = sellerCounts.PENDING;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        {STATUSES.map((status) => (
-          <Link
-            key={status}
-            href={`/admin/sellers?status=${status}`}
-            className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500"
-          >
-            <p className="text-xs uppercase tracking-wide text-stone-600">Sellers, {status.toLowerCase()}</p>
-            <p className="text-2xl font-semibold">{sellerCounts[status]}</p>
-          </Link>
-        ))}
-        <div className="rounded border border-stone-300 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Buyers</p>
-          <p className="text-2xl font-semibold">{buyerCount}</p>
+    <div className="space-y-12">
+      <PageHeader eyebrow="Admin" title="Dashboard" lead="Sellers, listings and moderation at a glance. Start with the queues that have work waiting." />
+
+      <section aria-labelledby="sellers-heading" className="space-y-6">
+        <h2 id="sellers-heading" className="sr-only">
+          Sellers
+        </h2>
+        <div className="grid grid-cols-2 gap-px border border-line bg-line md:grid-cols-5">
+          {STATUSES.map((status) => (
+            <Link
+              key={status}
+              href={`/admin/sellers?status=${status}`}
+              className="block bg-surface-raised transition duration-300 hover:bg-accent-soft/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+            >
+              <StatTile
+                className="h-full border-0"
+                label={`Sellers, ${status.toLowerCase()}`}
+                value={sellerCounts[status]}
+                icon={<Users className={ICON} strokeWidth={1.25} aria-hidden />}
+                note={<Badge tone={status === "PENDING" ? "warning" : status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : "neutral"}>{status.charAt(0) + status.slice(1).toLowerCase()}</Badge>}
+              />
+            </Link>
+          ))}
+          <div className="bg-surface-raised">
+            <StatTile className="h-full border-0" label="Buyers" value={buyerCount} icon={<ClipboardList className={ICON} strokeWidth={1.25} aria-hidden />} />
+          </div>
         </div>
+        {pendingSellers > 0 ? (
+          <Card className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+            <p className="flex items-center gap-3 text-[15px] text-ink">
+              <TriangleAlert className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.25} aria-hidden />
+              {pendingSellers} seller application{pendingSellers === 1 ? "" : "s"} waiting for a decision.
+            </p>
+            <ButtonLink href="/admin/sellers?status=PENDING" variant="secondary">
+              Review {pendingSellers} pending seller application{pendingSellers === 1 ? "" : "s"}
+            </ButtonLink>
+          </Card>
+        ) : null}
       </section>
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <Link href="/admin/listings" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Listings pending review</p>
-          <p className="text-2xl font-semibold">{listingsPending}</p>
-        </Link>
-        <Link href="/admin/documents" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Documents pending</p>
-          <p className="text-2xl font-semibold">{documentsPending}</p>
-        </Link>
-        <Link href="/admin/reviews" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Reviews pending</p>
-          <p className="text-2xl font-semibold">{reviewsPending}</p>
-        </Link>
-        <Link href="/admin/moderation" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Flagged messages open</p>
-          <p className="text-2xl font-semibold">{flagsOpen}</p>
-        </Link>
-        <Link href="/admin/reports?status=OPEN" className="rounded border border-stone-300 bg-white p-4 hover:border-stone-500">
-          <p className="text-xs uppercase tracking-wide text-stone-600">Reports open</p>
-          <p className="text-2xl font-semibold">{reportsOpen}</p>
-        </Link>
+
+      <section aria-labelledby="queues-heading" className="space-y-6">
+        <SectionHeading eyebrow="Work queues" title="What needs attention" />
+        <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+          {queues.map((queue) => (
+            <li key={queue.href} className="bg-surface-raised">
+              <Link
+                href={queue.href}
+                className="flex h-full min-h-11 items-start gap-4 p-5 transition duration-300 hover:bg-accent-soft/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:p-6"
+              >
+                <span className="text-accent">{queue.icon}</span>
+                <span className="flex-1 space-y-3">
+                  <span className="block text-[11px] uppercase tracking-[0.2em] text-ink-soft">{queue.label}</span>
+                  <span className="flex flex-wrap items-center gap-3">
+                    <span className="font-heading text-3xl text-ink tabular-nums">{queue.count}</span>
+                    <Badge tone={queue.tone}>{queue.count > 0 ? "Waiting" : "Clear"}</Badge>
+                  </span>
+                  <span className="block text-[12px] text-ink-soft">{queue.note}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
-      {sellerCounts.PENDING > 0 ? (
-        <p className="text-sm">
-          <Link href="/admin/sellers?status=PENDING" className="underline">
-            Review {sellerCounts.PENDING} pending seller application{sellerCounts.PENDING === 1 ? "" : "s"}
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

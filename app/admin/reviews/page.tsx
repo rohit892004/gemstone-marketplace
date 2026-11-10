@@ -1,7 +1,10 @@
 import { Suspense } from "react";
+import { MessageSquareQuote } from "lucide-react";
 import { ActionForm } from "@/components/admin/action-form";
-import { formatDate } from "@/components/admin/admin-ui";
-import { DemoBadge } from "@/components/catalogue/badges";
+import { AdminDemoTag, formatDate } from "@/components/admin/admin-ui";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { approveReview, rejectReview } from "./actions";
@@ -36,48 +39,59 @@ async function ReviewQueue() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Review moderation</h1>
-      <p className="text-sm text-stone-600">
-        Only approved reviews count toward a seller&apos;s rating. Approving or rejecting recalculates that rating.
-        {reviews.length} pending, oldest first.
-      </p>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Queue"
+        title="Review moderation"
+        lead={
+          <>
+            Only approved reviews count toward a seller&apos;s rating. Approving or rejecting recalculates that rating. {reviews.length} pending, oldest
+            first.
+          </>
+        }
+      />
 
       {reviews.length === 0 ? (
-        <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No reviews are waiting for moderation.</p>
+        <EmptyState
+          icon={MessageSquareQuote}
+          title="No reviews are waiting for moderation"
+          body="Buyer reviews appear here before they count toward a seller's rating."
+        />
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {reviews.map((review) => (
-            <li key={review.id} className="space-y-3 rounded border border-stone-300 bg-white p-4 text-sm">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{review.seller.businessName}</span>
-                {review.isDemo ? <DemoBadge /> : null}
-                <span className="text-stone-600">
-                  {review.rating}/5 by {review.authorName} · {formatDate(review.createdAt)}
-                </span>
-              </div>
-              {review.title ? <p className="font-medium">{review.title}</p> : null}
-              <p className="whitespace-pre-line">{review.body}</p>
-              <div className="grid gap-4 md:grid-cols-2">
-                <ActionForm
-                  action={approveReview}
-                  hidden={{ reviewId: review.id }}
-                  title="Approve"
-                  description="The review is published and counted in the seller's rating."
-                  submitLabel="Approve review"
-                />
-                <ActionForm
-                  action={rejectReview}
-                  hidden={{ reviewId: review.id }}
-                  title="Reject"
-                  description="The review is hidden and not counted. Record why it was rejected."
-                  submitLabel="Reject review"
-                  tone="danger"
-                  fields={[
-                    { name: "reason", label: "Reason (at least 10 characters)", kind: "textarea", required: true, maxLength: 1000 },
-                  ]}
-                />
-              </div>
+            <li key={review.id}>
+              <Card className="space-y-5 p-5 text-sm sm:p-8">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-heading text-xl text-ink">{review.seller.businessName}</span>
+                  {review.isDemo ? <AdminDemoTag /> : null}
+                  <span className="text-ink-soft">
+                    {review.rating}/5 by {review.authorName} · {formatDate(review.createdAt)}
+                  </span>
+                </div>
+                {review.title ? <p className="font-medium text-ink">{review.title}</p> : null}
+                <p className="whitespace-pre-line leading-relaxed text-ink">{review.body}</p>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <ActionForm
+                    action={approveReview}
+                    hidden={{ reviewId: review.id }}
+                    title="Approve"
+                    description="The review is published and counted in the seller's rating."
+                    submitLabel="Approve review"
+                  />
+                  <ActionForm
+                    action={rejectReview}
+                    hidden={{ reviewId: review.id }}
+                    title="Reject"
+                    description="The review is hidden and not counted. Record why it was rejected."
+                    submitLabel="Reject review"
+                    tone="danger"
+                    fields={[
+                      { name: "reason", label: "Reason (at least 10 characters)", kind: "textarea", required: true, maxLength: 1000 },
+                    ]}
+                  />
+                </div>
+              </Card>
             </li>
           ))}
         </ul>

@@ -50,13 +50,13 @@ export function MarkdownEditor({ name, label, defaultValue, rows = 12, required,
   }, [value]);
 
   return (
-    <div className="grid gap-3 xl:grid-cols-2">
-      <div className="space-y-1">
-        <label htmlFor={id} className="block text-sm font-medium text-ink">
+    <div className="grid gap-6 xl:grid-cols-2">
+      <div className="space-y-2">
+        <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
           {label}
         </label>
         {help ? (
-          <p id={`${id}-help`} className="text-xs text-ink-soft">
+          <p id={`${id}-help`} className="text-[12px] text-ink-soft">
             {help}
           </p>
         ) : null}
@@ -69,16 +69,16 @@ export function MarkdownEditor({ name, label, defaultValue, rows = 12, required,
           onChange={(event) => setValue(event.target.value)}
           aria-describedby={help ? `${id}-help` : undefined}
           spellCheck
-          className="w-full rounded-md border border-line bg-surface-raised p-3 font-mono text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="block w-full border border-line bg-surface-raised px-4 py-3 font-mono text-[14px] text-ink transition duration-300 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         />
-        <p className="text-xs text-ink-soft">Markdown: ## headings, **bold**, *italic*, [links](https://...), - lists. Raw HTML is shown as text.</p>
+        <p className="text-[12px] text-ink-soft">Markdown: ## headings, **bold**, *italic*, [links](https://...), - lists. Raw HTML is shown as text.</p>
       </div>
-      <section aria-labelledby={`${id}-preview`} className="space-y-1">
-        <h3 id={`${id}-preview`} className="text-sm font-medium text-ink">
+      <section aria-labelledby={`${id}-preview`} className="space-y-2">
+        <h3 id={`${id}-preview`} className="text-[13px] tracking-wide text-ink">
           Live preview
         </h3>
-        <div aria-live="polite" className="min-h-32 rounded-md border border-dashed border-line bg-surface p-4">
-          {previewError ? <p className="text-sm text-red-700">{previewError}</p> : null}
+        <div aria-live="polite" className="min-h-32 border border-dashed border-line bg-surface p-5">
+          {previewError ? <p className="text-sm text-danger">{previewError}</p> : null}
           {!previewError && html !== null ? (
             html.trim() === "" ? (
               <p className="text-sm text-ink-soft">Nothing to preview yet.</p>
