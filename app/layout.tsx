@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CookieNotice } from "@/components/legal/cookie-notice";
 import { getEnv } from "@/lib/config/env";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Luxury type system: a high-contrast serif for headings, a clean sans for body text (self-hosted at build time).
+const headingFont = Cormorant_Garamond({ variable: "--font-lux-serif", subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"] });
+const bodyFont = Inter({ variable: "--font-lux-sans", subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
   // Absolute URLs for Open Graph and sitemap entries.
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${headingFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <a

@@ -1,24 +1,44 @@
 @import "tailwindcss";
 
+/* Headings use the serif. Body text uses the sans. Small uppercase labels get wide tracking. */
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /*
  * Design tokens. Brand palette is a placeholder (deep emerald + gold) until
  * the client's brand assets arrive; change values here, not in components.
  */
 @theme inline {
-  --color-ink: #0f1f1a;
-  --color-ink-soft: #3d4f48;
-  --color-surface: #fbfaf7;
+  /* Luxury palette: warm ivory, near-black charcoal, one muted gold accent used sparingly. */
+  --color-ink: #1c1a17;
+  --color-ink-soft: #5f5a50;
+  --color-surface: #f7f4ee;
   --color-surface-raised: #ffffff;
-  --color-line: #e4e1d8;
-  --color-brand: #0b5d4b;
-  --color-brand-strong: #074538;
-  --color-accent: #b8892b;
-  --color-accent-soft: #f5ecd7;
-  /* Gold for small text on light surfaces: 6.3:1 on white. The brand accent is for shapes and large type. */
-  --color-accent-text: #7a5a1c;
+  --color-line: #e3ddd2;
+  --color-brand: #1c1a17;
+  --color-brand-strong: #0e0d0b;
+  --color-accent: #8a6d43;
+  --color-accent-soft: #efe6d6;
+  /* Small gold text on light surfaces: keeps contrast above 4.5:1. */
+  --color-accent-text: #7a5f35;
+  --color-champagne: #d8c39b;
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-lux-sans);
+  --font-heading: var(--font-lux-serif);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-card: 4px;
 }
 
 @layer base {
