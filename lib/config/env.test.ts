@@ -27,7 +27,19 @@ describe("parseEnv APP_URL", () => {
   });
 
   it("accepts production with a full APP_URL", () => {
-    const env = parseEnv({ ...base, NODE_ENV: "production", APP_URL: "https://gemstones.example" });
+    const env = parseEnv({
+      ...base,
+      NODE_ENV: "production",
+      APP_URL: "https://gemstones.example",
+      AUTH_SECRET: "x".repeat(40),
+      EMAIL_PROVIDER: "resend",
+      RESEND_API_KEY: "re_live",
+      EMAIL_FROM: "Gemstone Selections <no-reply@example.com>",
+      SMS_PROVIDER: "msg91",
+      MSG91_AUTH_KEY: "key",
+      MSG91_SENDER_ID: "GEMSEL",
+      MSG91_TEMPLATE_ID: "flow-1",
+    });
     expect(env.APP_URL).toBe("https://gemstones.example");
   });
 
@@ -88,5 +100,83 @@ describe("parseEnv provider settings", () => {
     expect(env.MSG91_AUTH_KEY).toBe("msg91-test-key");
     expect(env.MSG91_SENDER_ID).toBe("GEMSEL");
     expect(env.MSG91_TEMPLATE_ID).toBe("flow-123");
+  });
+});
+
+describe("production rule set", () => {
+  const secret = "x".repeat(40);
+  const good = {
+    DATABASE_URL: "postgresql://x@y/z",
+    NODE_ENV: "production",
+    APP_URL: "https://gemstones.example",
+    AUTH_SECRET: secret,
+    EMAIL_PROVIDER: "resend",
+    RESEND_API_KEY: "re_live",
+    EMAIL_FROM: "Gemstone Selections <no-reply@example.com>",
+    SMS_PROVIDER: "msg91",
+    MSG91_AUTH_KEY: "key",
+    MSG91_SENDER_ID: "GEMSEL",
+    MSG91_TEMPLATE_ID: "flow-1",
+  };
+
+  it("accepts a complete production configuration", () => {
+    expect(() => parseEnv(good)).not.toThrow();
+  });
+
+  it("refuses console email and SMS providers in production", () => {
+    expect(() => parseEnv({ ...good, EMAIL_PROVIDER: "console" })).toThrow(/EMAIL_PROVIDER=console/);
+    expect(() => parseEnv({ ...good, SMS_PROVIDER: "console" })).toThrow(/SMS_PROVIDER=console/);
+  });
+
+  it("allows console providers only with the e2e opt-in flag", () => {
+    const env = parseEnv({
+      ...good,
+      EMAIL_PROVIDER: "console",
+      SMS_PROVIDER: "console",
+      ALLOW_NON_DELIVERING_PROVIDERS: "true",
+      APP_URL: "http://localhost:3200",
+      AUTH_SECRET: secret,
+    });
+    expect(env.EMAIL_PROVIDER).toBe("console");
+  });
+
+  it("refuses ALLOW_DEMO_SEED=true in production", () => {
+    expect(() => parseEnv({ ...good, ALLOW_DEMO_SEED: "true" })).toThrow(/ALLOW_DEMO_SEED=true/);
+  });
+
+  it("requires AUTH_SECRET of at least 32 characters in production", () => {
+    expect(() => parseEnv({ ...good, AUTH_SECRET: undefined })).toThrow(/AUTH_SECRET is required in production/);
+    expect(() => parseEnv({ ...good, AUTH_SECRET: "short" })).toThrow(/AUTH_SECRET/);
+  });
+
+  it("requires an https APP_URL in production", () => {
+    expect(() => parseEnv({ ...good, APP_URL: "http://gemstones.example" })).toThrow(/https/);
+  });
+
+  it("validates RESEND_WEBHOOK_SECRET prefix when set", () => {
+    expect(() => parseEnv({ ...good, RESEND_WEBHOOK_SECRET: "abc" })).toThrow(/whsec_/);
+    expect(parseEnv({ ...good, RESEND_WEBHOOK_SECRET: "whsec_abc" }).RESEND_WEBHOOK_SECRET).toBe("whsec_abc");
+    expect(parseEnv(good).RESEND_WEBHOOK_SECRET).toBeUndefined();
+  });
+
+  it("refuses s3 storage without bucket and keys in production", () => {
+    expect(() => parseEnv({ ...good, STORAGE_PROVIDER: "s3" })).toThrow(/S3_BUCKET/);
+  });
+
+  it("lists every problem in one error", () => {
+    let message = "";
+    try {
+      parseEnv({ DATABASE_URL: "postgresql://x@y/z", NODE_ENV: "production" });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toMatch(/APP_URL is required/);
+    expect(message).toMatch(/AUTH_SECRET is required/);
+    expect(message).toMatch(/EMAIL_PROVIDER=console/);
+    expect(message).toMatch(/SMS_PROVIDER=console/);
+  });
+
+  it("does not apply production rules outside production", () => {
+    expect(() => parseEnv({ DATABASE_URL: "postgresql://x@y/z", NODE_ENV: "development" })).not.toThrow();
   });
 });
