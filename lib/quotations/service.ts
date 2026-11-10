@@ -1,5 +1,6 @@
 import { AuditAction } from "@/lib/audit/actions";
 import { recordAudit } from "@/lib/audit/audit";
+import { trackServerForSellerUser } from "@/lib/analytics/server";
 import { prisma } from "@/lib/db/client";
 import { isBlockedEitherWay, getConversationForParticipant } from "@/lib/messaging/access";
 import { assertCanMessage, MessagingError } from "@/lib/messaging/service";
@@ -121,6 +122,8 @@ export async function createQuotation(input: CreateQuotationInput): Promise<{ qu
     entityId: created.quotationId,
     meta: { conversationId: input.conversationId, currency: value.currency, flagged: false },
   });
+  // The seller is the actor here, so no owner is passed: the owner rule would otherwise hide every send.
+  void trackServerForSellerUser({ kind: "QUOTATION_SENT", sellerUserId: input.sellerId, gemstoneId: input.gemstoneId ?? null });
 
   await notify({
     userId: sides.buyerId,
@@ -244,6 +247,9 @@ export async function respondToQuotation(input: {
     body: `The buyer ${status === "ACCEPTED" ? "accepted" : "declined"} your quotation on Gemstone Selections.`,
     href: `/conversations/${quotation.conversationId}`,
   });
+  if (status === "ACCEPTED") {
+    void trackServerForSellerUser({ kind: "QUOTATION_ACCEPTED", sellerUserId: quotation.sellerId, gemstoneId: quotation.gemstoneId });
+  }
   return { status, conversationId: quotation.conversationId };
 }
 

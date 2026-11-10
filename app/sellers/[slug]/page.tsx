@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackView } from "@/components/analytics/track";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -57,6 +58,7 @@ async function SellerPortfolio({ params, searchParams }: Props) {
 
   return (
     <>
+      <TrackView kind="PROFILE_VIEW" sellerSlug={slug} />
       <div className="relative h-40 bg-gradient-to-r from-accent-soft to-surface-raised sm:h-52" aria-hidden="true">
         {seller.hasBanner ? (
           <Image

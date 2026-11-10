@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ListingCard as ListingCardData } from "@/lib/listings/search";
 import type { CatalogueQuery } from "@/lib/listings/schema";
+import { ImpressionScope } from "@/components/analytics/track";
 import { ListingCard } from "./listing-card";
 import { buildPageHref } from "./query-params";
 
@@ -50,13 +51,15 @@ export function CatalogueResults({
         </p>
       </div>
 
-      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((item, i) => (
-          <li key={item.id}>
-            <ListingCard listing={item} priority={i < 3} />
-          </li>
-        ))}
-      </ul>
+      <ImpressionScope>
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((item, i) => (
+            <li key={item.id}>
+              <ListingCard listing={item} priority={i < 3} />
+            </li>
+          ))}
+        </ul>
+      </ImpressionScope>
 
       <nav aria-label="Pagination" className="flex items-center justify-between gap-4 text-sm">
         {page > 1 ? (
