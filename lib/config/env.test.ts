@@ -19,6 +19,23 @@ describe("parseEnv", () => {
   });
 });
 
+describe("parseEnv APP_URL", () => {
+  const base = { DATABASE_URL: "postgresql://x@y/z" };
+
+  it("refuses production without APP_URL, with a message that names it", () => {
+    expect(() => parseEnv({ ...base, NODE_ENV: "production" })).toThrow(/APP_URL is required in production/);
+  });
+
+  it("accepts production with a full APP_URL", () => {
+    const env = parseEnv({ ...base, NODE_ENV: "production", APP_URL: "https://gemstones.example" });
+    expect(env.APP_URL).toBe("https://gemstones.example");
+  });
+
+  it("keeps the localhost default outside production", () => {
+    expect(parseEnv({ ...base, NODE_ENV: "test" }).APP_URL).toBe("http://localhost:3000");
+  });
+});
+
 describe("parseEnv provider settings", () => {
   const base = { DATABASE_URL: "postgresql://x@y/z" };
 

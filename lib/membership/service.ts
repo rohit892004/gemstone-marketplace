@@ -38,6 +38,8 @@ export class MembershipError extends Error {
 const RESPONSE_WINDOW_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+/** Listings that use up a seller's tier limit: live ones and ones waiting for review. DRAFT does not count. */
+export const LIMIT_COUNTED_STATUSES = ["PUBLISHED", "PENDING_REVIEW"] as const;
 
 /** The tier rules the server enforces: the table when it has rows, otherwise the placeholder defaults. */
 export async function loadTierRules(): Promise<TierRule[]> {
@@ -132,7 +134,7 @@ export async function membershipSnapshot(sellerId: string, now: Date = new Date(
     loadTierRules(),
     metricsFor([sellerId], now),
     prisma.sellerMembership.findUnique({ where: { sellerId } }),
-    prisma.gemstone.count({ where: { sellerId, status: "PUBLISHED" } }),
+    prisma.gemstone.count({ where: { sellerId, status: { in: [...LIMIT_COUNTED_STATUSES] } } }),
     prisma.gemstone.count({ where: { sellerId, sellerFeatured: true, status: "PUBLISHED" } }),
   ]);
   const tier: Tier = row?.tier ?? "FREE";
@@ -154,10 +156,17 @@ export async function membershipSnapshot(sellerId: string, now: Date = new Date(
   };
 }
 
-/** The server check for every publish of a new listing. Throws LIMIT with a message the seller can act on. */
-export async function assertCanPublishListing(sellerId: string): Promise<void> {
+/**
+ * The server check for every publish of a new listing. Throws LIMIT with a message the seller can act on.
+ * `excludeGemstoneId` is the listing being published, so it is not counted against itself (an admin approving a
+ * PENDING_REVIEW listing, or a seller resubmitting one).
+ */
+export async function assertCanPublishListing(sellerId: string, excludeGemstoneId?: string): Promise<void> {
   const snapshot = await membershipSnapshot(sellerId);
-  const check = canPublishNewListing(snapshot.rule, snapshot.publishedListings);
+  const others = excludeGemstoneId
+    ? await prisma.gemstone.count({ where: { sellerId, status: { in: [...LIMIT_COUNTED_STATUSES] }, NOT: { id: excludeGemstoneId } } })
+    : snapshot.publishedListings;
+  const check = canPublishNewListing(snapshot.rule, others);
   if (!check.ok) {
     throw new MembershipError("LIMIT", `Your ${snapshot.tier.toLowerCase()} membership allows ${check.limit} active listings. Archive one to publish another.`);
   }

@@ -52,7 +52,7 @@ export async function approveListing(_prev: AdminActionState, formData: FormData
   const target = await prisma.gemstone.findUnique({ where: { id: listingId }, select: { sellerId: true } });
   if (!target) return { ok: false, error: "Listing not found." };
   try {
-    await assertCanPublishListing(target.sellerId);
+    await assertCanPublishListing(target.sellerId, listingId);
   } catch (error) {
     if (error instanceof MembershipError) {
       return { ok: false, error: "The seller is at the active listing limit for their membership. Ask them to archive a listing, or change their membership tier." };

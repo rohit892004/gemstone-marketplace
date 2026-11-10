@@ -28,6 +28,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 180_000,
     // Lets the console email provider run under NODE_ENV=production so the log captures links.
-    env: { ALLOW_NON_DELIVERING_PROVIDERS: "true" },
+    // APP_URL matches the port the server runs on, so referral links and emails point at the e2e server.
+    env: { ALLOW_NON_DELIVERING_PROVIDERS: "true", APP_URL: "http://localhost:3200" },
   },
 });

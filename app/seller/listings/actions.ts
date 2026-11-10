@@ -140,7 +140,7 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   const wantsFeatured = formData.get("sellerFeatured") === "on";
   const featuredSent = text(formData, "sellerFeaturedSet") === "1";
   try {
-    if (becomesLive) await assertCanPublishListing(seller.id);
+    if (becomesLive) await assertCanPublishListing(seller.id, current?.id);
     if (featuredSent && wantsFeatured) await assertFeaturedSlot(seller.id, current?.id ?? "new-listing");
   } catch (error) {
     if (error instanceof MembershipError) {

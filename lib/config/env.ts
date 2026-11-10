@@ -12,7 +12,8 @@ const schema = z
   .object({
     DATABASE_URL: z.string().url({ message: "DATABASE_URL must be a valid URL" }),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    APP_URL: z.string().url().default("http://localhost:3000"),
+    /** Public address of the site (links in email, metadata, referral links). Required in production. */
+    APP_URL: z.string().url({ message: "APP_URL must be a full URL, e.g. https://gemstones.example" }).optional(),
 
     // Auth.js signs session cookies with this. Required in production.
     AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters").optional(),
@@ -46,7 +47,17 @@ const schema = z
 
     /** Demo seed opt-in. Demo data is refused unless this is "true", in addition to the NODE_ENV check. */
     ALLOW_DEMO_SEED: z.enum(["true", "false"]).default("false"),
-  });
+  })
+  .superRefine((env, ctx) => {
+    if (env.NODE_ENV === "production" && !env.APP_URL) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["APP_URL"],
+        message: "APP_URL is required in production (the public address, e.g. https://gemstones.example). Links in email and referral codes depend on it.",
+      });
+    }
+  })
+  .transform((env) => ({ ...env, APP_URL: env.APP_URL ?? "http://localhost:3000" }));
 // Production-only rules (console providers, AUTH_SECRET) are enforced where the
 // feature is used, not here. Validating them at import would break `next build`,
 // which imports route modules while collecting pages.
