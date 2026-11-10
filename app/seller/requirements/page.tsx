@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
+import { ClipboardList } from "lucide-react";
+import { Badge, DemoTag } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, Input, Select } from "@/components/ui/field";
+import { PageHeader } from "@/components/ui/page-header";
+import { Suspense } from "react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { requireRole } from "@/lib/auth/require-role";
 import { loadRequirementBoard } from "@/lib/requirements/board";
@@ -35,75 +41,86 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
   const f = data.filters;
 
   return (
-    <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 sm:px-6">
-      <div>
-        <p className="text-sm uppercase tracking-widest text-accent-text">Requirements board</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Buyer requirements</h1>
-        <p className="mt-2 text-sm text-ink-soft">
-          Open requirements in your gemstone categories. Buyer details stay hidden. Respond to start a conversation on the platform.
-        </p>
-        <p className="mt-3 flex flex-wrap gap-4 text-sm">
-          <Link href="/seller/requirements/new" className="font-medium text-brand-strong underline underline-offset-4">
-            Post a requirement
-          </Link>
-          <Link href="/seller/requirements/mine" className="font-medium text-brand-strong underline underline-offset-4">
-            Your requirements
-          </Link>
-        </p>
+    <div className="space-y-10">
+      <div className="space-y-4">
+        <PageHeader
+          eyebrow="Requirements board"
+          title="Buyer requirements"
+          lead={
+            <>
+              Open requirements in your gemstone categories. Buyer details stay hidden. Respond to start a conversation on the platform.
+            </>
+          }
+          actions={
+            <>
+              <ButtonLink href="/seller/requirements/new" variant="gold">
+                Post a requirement
+              </ButtonLink>
+              <ButtonLink href="/seller/requirements/mine" variant="secondary">
+                Your requirements
+              </ButtonLink>
+            </>
+          }
+        />
       </div>
 
       {data.categories.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line bg-surface-raised p-6 text-sm text-ink-soft">
-          Your profile has no gemstone categories yet, so no requirements match. Add categories to your business profile to see requirements.
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title="No gemstone categories yet"
+          body="Your profile has no gemstone categories yet, so no requirements match. Add categories to your business profile to see requirements."
+          action={
+            <ButtonLink href="/seller/portfolio" variant="secondary">
+              Edit your business profile
+            </ButtonLink>
+          }
+        />
       ) : (
-        <form method="get" className="grid gap-3 rounded-lg border border-line bg-surface-raised p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <form method="get" className="grid gap-5 border border-line bg-surface-raised p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
           <Field id="f-category" label="Category">
-            <select id="f-category" name="category" defaultValue={f.categoryId ?? ""} className={inputClass}>
+            <Select id="f-category" name="category" defaultValue={f.categoryId ?? ""}>
               <option value="">All my categories</option>
               {data.categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field id="f-type" label="Gemstone type">
-            <input id="f-type" name="type" defaultValue={f.gemstoneType ?? ""} placeholder="e.g. Sapphire" maxLength={60} className={inputClass} />
+            <Input id="f-type" name="type" defaultValue={f.gemstoneType ?? ""} placeholder="e.g. Sapphire" maxLength={60} />
           </Field>
           <Field id="f-carat-min" label="Carat from">
-            <input id="f-carat-min" name="caratMin" inputMode="decimal" defaultValue={one(raw.caratMin)} className={inputClass} />
+            <Input id="f-carat-min" name="caratMin" inputMode="decimal" defaultValue={one(raw.caratMin)} />
           </Field>
           <Field id="f-carat-max" label="Carat to">
-            <input id="f-carat-max" name="caratMax" inputMode="decimal" defaultValue={one(raw.caratMax)} className={inputClass} />
+            <Input id="f-carat-max" name="caratMax" inputMode="decimal" defaultValue={one(raw.caratMax)} />
           </Field>
           <Field id="f-currency" label="Budget currency">
-            <select id="f-currency" name="currency" defaultValue={f.currency} className={inputClass}>
+            <Select id="f-currency" name="currency" defaultValue={f.currency}>
               {QUOTATION_CURRENCIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
           <Field id="f-budget-min" label="Budget from">
-            <input id="f-budget-min" name="budgetMin" inputMode="decimal" defaultValue={one(raw.budgetMin)} className={inputClass} />
+            <Input id="f-budget-min" name="budgetMin" inputMode="decimal" defaultValue={one(raw.budgetMin)} />
           </Field>
           <Field id="f-budget-max" label="Budget to">
-            <input id="f-budget-max" name="budgetMax" inputMode="decimal" defaultValue={one(raw.budgetMax)} className={inputClass} />
+            <Input id="f-budget-max" name="budgetMax" inputMode="decimal" defaultValue={one(raw.budgetMax)} />
           </Field>
           <Field id="f-deadline" label="Deadline on or before">
-            <input id="f-deadline" name="deadlineBy" type="date" defaultValue={one(raw.deadlineBy)} className={inputClass} />
+            <Input id="f-deadline" name="deadlineBy" type="date" defaultValue={one(raw.deadlineBy)} />
           </Field>
-          <label className="flex items-center gap-2 text-sm text-ink sm:col-span-2 lg:col-span-2">
-            <input type="checkbox" name="certificate" value="yes" defaultChecked={f.certificateNeeded === true} />
+          <label className="flex min-h-11 items-center gap-3 text-sm text-ink sm:col-span-2 lg:col-span-2">
+            <input type="checkbox" name="certificate" value="yes" defaultChecked={f.certificateNeeded === true} className="h-5 w-5" />
             Certificate needed
           </label>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-4">
-            <button type="submit" className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong">
-              Apply filters
-            </button>
-            <Link href="/seller/requirements" className="text-sm text-brand underline">
+            <Button type="submit">Apply filters</Button>
+            <Link href="/seller/requirements" className="inline-flex min-h-11 items-center text-sm text-ink underline underline-offset-4">
               Clear
             </Link>
           </div>
@@ -111,7 +128,7 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
       )}
 
       {data.errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-700">
+        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-danger">
           {data.errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
@@ -119,27 +136,34 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
       )}
 
       {data.categories.length > 0 && data.rows.length === 0 ? (
-        <p className="text-ink-soft">No open requirements match these filters right now.</p>
+        <EmptyState
+          icon={ClipboardList}
+          title="No open requirements match these filters"
+          body="Clear the filters to see every open requirement in your categories."
+          action={
+            <ButtonLink href="/seller/requirements" variant="secondary">
+              Clear filters
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className="grid gap-px border border-line bg-line sm:grid-cols-2">
           {data.rows.map((row) => (
-            <li key={row.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface-raised p-4">
+            <li key={row.id} className="flex flex-col gap-4 bg-surface-raised p-5 sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-widest text-accent-text">{row.category?.name ?? "Category"}</p>
-                  <h2 className="mt-1 text-lg font-semibold text-ink">
+                  <p className="text-[11px] uppercase tracking-[0.25em] text-accent-text">{row.category?.name ?? "Category"}</p>
+                  <h2 className="mt-2 font-heading text-2xl text-ink">
                     {row.gemstoneType}
                     {row.shape ? <span className="font-normal text-ink-soft"> · {row.shape}</span> : null}
                   </h2>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {row.isDemo && <span className="rounded bg-accent-soft px-1.5 py-0.5 text-xs text-ink">Demo</span>}
-                  {row.responses.length > 0 && (
-                    <span className="rounded-full border border-line px-2 py-0.5 text-xs text-ink-soft">Responded</span>
-                  )}
+                  {row.isDemo && <DemoTag />}
+                  {row.responses.length > 0 && <Badge tone="success">Responded</Badge>}
                 </div>
               </div>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[14px]">
                 <dt className="text-ink-soft">Carat</dt>
                 <dd className="text-ink">{caratLabel(row.caratMin?.toString() ?? null, row.caratMax?.toString() ?? null)}</dd>
                 <dt className="text-ink-soft">Budget</dt>
@@ -154,7 +178,7 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
                 </dd>
               </dl>
               <div className="mt-auto">
-                <Link href={`/seller/requirements/${row.id}`} className="text-sm font-medium text-brand underline">
+                <Link href={`/seller/requirements/${row.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4 hover:text-accent-text">
                   {row.responses.length > 0 ? "View requirement" : "View and respond"}
                 </Link>
               </div>
@@ -162,20 +186,6 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
           ))}
         </ul>
       )}
-    </section>
-  );
-}
-
-const inputClass =
-  "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none";
-
-function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm text-ink-soft">
-        {label}
-      </label>
-      {children}
     </div>
   );
 }

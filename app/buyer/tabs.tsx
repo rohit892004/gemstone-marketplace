@@ -1,32 +1,26 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BadgeCheck, BarChart3, ClipboardList, Heart, LayoutDashboard, MessagesSquare, Send } from "lucide-react";
+import { Sidebar, type SidebarItem } from "@/components/ui/sidebar";
 import { BUYER_TABS } from "./tab-list";
 
-/** Tab nav shared by /buyer/* and /account. */
+const icons: Record<string, SidebarItem["icon"]> = {
+  "/buyer/wishlist": Heart,
+  "/buyer/enquiries": Send,
+  "/buyer/conversations": MessagesSquare,
+  "/buyer/requirements": ClipboardList,
+  "/buyer/valuations": BadgeCheck,
+  "/buyer/reports": BarChart3,
+};
+
+/** Buyer sidebar. Two columns on lg, horizontal scroller on phones. */
 export function BuyerTabs() {
   const pathname = usePathname();
-  return (
-    <nav aria-label="Buyer account sections" className="mt-8 border-b border-line">
-      <ul className="-mb-px flex gap-1 overflow-x-auto">
-        {BUYER_TABS.map((tab) => {
-          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
-          return (
-            <li key={tab.href}>
-              <Link
-                href={tab.href}
-                aria-current={active ? "page" : undefined}
-                className={`inline-block whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${
-                  active ? "border-brand-strong text-ink" : "border-transparent text-ink-soft hover:text-ink"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const items: SidebarItem[] = [
+    { href: "/buyer", label: "Overview", icon: LayoutDashboard, active: pathname === "/buyer" },
+    ...BUYER_TABS.map((tab) => ({ href: tab.href, label: tab.label, icon: icons[tab.href], active: isActive(tab.href) })),
+  ];
+  return <Sidebar label="Buyer account sections" groups={[{ heading: "Buyer", items }]} />;
 }

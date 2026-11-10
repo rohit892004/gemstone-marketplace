@@ -29,12 +29,12 @@ export function CloseRequirementButton({ requirementId }: { requirementId: strin
         type="button"
         onClick={close}
         disabled={pending}
-        className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface disabled:opacity-60"
+        className=" border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-accent-soft/40 disabled:opacity-60"
       >
         {pending ? "Closing..." : "Close requirement"}
       </button>
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       ) : null}

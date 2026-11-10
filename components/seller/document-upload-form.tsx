@@ -7,7 +7,7 @@ import { ImageFileField, FieldFrame } from "@/components/seller/catalogue-fields
 const initialState: DocumentUploadState = {};
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none";
+  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const documentTypes = [
   { value: "CERTIFICATE", label: "Certificate" },
@@ -66,7 +66,7 @@ export function DocumentUploadForm({
           {state.message}
         </p>
       ) : null}
-      <button type="submit" disabled={pending} className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white disabled:opacity-60">
+      <button type="submit" disabled={pending} className=" bg-brand px-4 py-2 text-sm font-medium text-ivory disabled:opacity-60">
         {pending ? "Uploading..." : "Upload document"}
       </button>
     </form>

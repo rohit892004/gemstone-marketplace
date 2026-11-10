@@ -11,7 +11,7 @@ export function ProgressBar({ label, current, required, met, format }: { label: 
   return (
     <div className="space-y-1">
       <p className="text-sm text-ink">{text}</p>
-      <progress className="h-2 w-full overflow-hidden rounded-full" value={percent} max={100} aria-label={`${label} progress`}>
+      <progress className="h-2 w-full overflow-hidden accent-accent" value={percent} max={100} aria-label={`${label} progress`}>
         {percent}%
       </progress>
     </div>

@@ -39,7 +39,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
   return (
     <div className="space-y-2">
       {notice ? (
-        <p role="status" className="rounded-md bg-accent-soft px-3 py-2 text-sm text-ink">
+        <p role="status" className=" bg-accent-soft px-3 py-2 text-sm text-ink">
           {notice}
         </p>
       ) : null}
@@ -48,7 +48,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
           ref={formRef}
           noValidate
           aria-label="Make an offer"
-          className="space-y-3 rounded-md border border-line bg-surface p-3"
+          className="space-y-3 border border-line bg-surface p-3"
           onSubmit={(e) => {
             e.preventDefault();
             submit(e.currentTarget);
@@ -65,7 +65,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
                 inputMode="decimal"
                 placeholder="For example 12,500"
                 required
-                className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+                className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
               />
             </div>
             <div className="space-y-1">
@@ -76,7 +76,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
                 id={`${ids}-currency`}
                 name="currency"
                 defaultValue="INR"
-                className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+                className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
               >
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
@@ -93,7 +93,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
               rows={2}
               maxLength={500}
               placeholder="Terms or conditions for this offer"
-              className="block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+              className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
             />
           </div>
           <p className="text-xs text-ink-soft">
@@ -103,20 +103,20 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
             <button
               type="submit"
               disabled={pending}
-              className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+              className=" bg-brand px-4 py-2 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
             >
               {pending ? "Sending offer..." : "Send offer"}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-2 text-sm text-ink-soft hover:text-ink"
+              className=" px-3 py-2 text-sm text-ink-soft hover:text-ink"
             >
               Cancel
             </button>
           </div>
           {error ? (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-danger">
               {error}
             </p>
           ) : null}
@@ -129,7 +129,7 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
             setNotice(null);
           }}
           aria-expanded={open}
-          className="rounded-md border border-brand px-3 py-1.5 text-sm font-medium text-brand-strong hover:bg-accent-soft"
+          className=" border border-brand min-h-11 px-4 py-2.5 text-sm font-medium text-brand-strong hover:bg-accent-soft"
         >
           Make an offer
         </button>

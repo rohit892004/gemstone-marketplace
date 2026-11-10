@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { FileText } from "lucide-react";
+import { Badge, DemoTag } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Suspense } from "react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { requireRole } from "@/lib/auth/require-role";
@@ -47,42 +51,48 @@ async function SellerQuotations() {
   });
 
   return (
-    <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
+    <div className="max-w-4xl space-y-8">
       <div>
-        <p className="text-sm uppercase tracking-widest text-accent-text">Quotations</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Quotations you have sent</h1>
+        <p className="text-[11px] uppercase tracking-[0.28em] text-accent-text">Quotations</p>
+        <h1 className="mt-2 font-heading text-4xl text-ink">Quotations you have sent</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Quotations are sent inside a conversation. Open the conversation to withdraw a quotation or download its PDF.
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line bg-surface-raised p-8 text-center">
-          <h2 className="text-lg font-semibold text-ink">No quotations yet</h2>
-          <p className="mt-2 text-sm text-ink-soft">Send a quotation from an enquiry or requirement conversation.</p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="No quotations yet"
+          body="Send a quotation from an enquiry or requirement conversation."
+          action={
+            <ButtonLink href="/seller/inbox" variant="secondary">
+              Open your inbox
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface-raised">
+        <ul className="divide-y divide-line border border-line bg-surface-raised">
           {rows.map((row) => {
             const status = effectiveQuotationStatus(row, now);
             const buyer = row.conversation.participants.find((p) => p.userId !== user.id)?.user.name ?? "Buyer";
             return (
-              <li key={row.id} className="space-y-2 px-4 py-4">
+              <li key={row.id} className="space-y-3 px-4 py-5 sm:px-6">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-medium text-ink">
+                    <p className="font-heading text-xl text-ink">
                       {row.itemTitle}
                       {row.conversation.isDemo && (
-                        <span className="ml-2 rounded bg-accent-soft px-1.5 py-0.5 text-xs font-normal text-ink">Demo</span>
+                        <DemoTag />
                       )}
                     </p>
                     <p className="text-sm text-ink-soft">
                       {row.quantity} × {formatMoney(row.amountMinor, row.currency)} · {buyer}
                     </p>
                   </div>
-                  <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-soft">
+                  <Badge tone={status === "ACCEPTED" ? "success" : status === "DECLINED" || status === "WITHDRAWN" || status === "EXPIRED" ? "danger" : "neutral"}>
                     {QUOTATION_STATUS_LABELS[status] ?? status}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-xs text-ink-soft">
                   Valid until{" "}
@@ -91,13 +101,13 @@ async function SellerQuotations() {
                     : "not set"}{" "}
                   · Sent {row.createdAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}
                 </p>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <Link href={`/conversations/${row.conversationId}`} className="font-medium text-brand underline">
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                  <Link href={`/conversations/${row.conversationId}`} className="inline-flex min-h-11 items-center font-medium text-ink underline underline-offset-4 hover:text-accent-text">
                     Open conversation
                   </Link>
                   <a
                     href={`/api/conversations/${row.conversationId}/quotations/${row.id}/pdf`}
-                    className="font-medium text-brand underline"
+                    className="inline-flex min-h-11 items-center font-medium text-ink underline underline-offset-4 hover:text-accent-text"
                   >
                     Download PDF
                   </a>
@@ -107,6 +117,6 @@ async function SellerQuotations() {
           })}
         </ul>
       )}
-    </section>
+    </div>
   );
 }

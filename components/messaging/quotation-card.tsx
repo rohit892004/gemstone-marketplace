@@ -47,9 +47,9 @@ export function QuotationCard({
   }
 
   return (
-    <div className="mt-2 rounded-md border border-line bg-surface-raised p-3 text-ink">
-      <p className="text-xs uppercase tracking-widest text-accent-text">Quotation</p>
-      <p className="mt-1 break-words text-base font-semibold">{quotation.itemTitle}</p>
+    <div className="mt-3 space-y-2 border border-line bg-surface-raised p-4 text-ink sm:p-5">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-accent-text">Quotation</p>
+      <p className="break-words font-heading text-2xl text-ink">{quotation.itemTitle}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-ink-soft">Quantity</dt>
         <dd>{quotation.quantity}</dd>
@@ -73,7 +73,7 @@ export function QuotationCard({
               type="button"
               disabled={pending}
               onClick={() => run(acceptQuotationAction, "ACCEPTED")}
-              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+              className=" bg-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
             >
               Accept
             </button>
@@ -81,7 +81,7 @@ export function QuotationCard({
               type="button"
               disabled={pending}
               onClick={() => run(declineQuotationAction, "DECLINED")}
-              className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50"
+              className=" border border-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft/40 disabled:opacity-50"
             >
               Decline
             </button>
@@ -92,16 +92,16 @@ export function QuotationCard({
             type="button"
             disabled={pending}
             onClick={() => run(withdrawQuotationAction, "WITHDRAWN")}
-            className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50"
+            className=" border border-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft/40 disabled:opacity-50"
           >
             Withdraw
           </button>
         )}
-        <a href={pdfHref} className="ml-auto text-sm font-medium text-brand underline underline-offset-2">
+        <a href={pdfHref} className="ml-auto text-sm font-medium text-ink underline underline-offset-4">
           Download PDF
         </a>
       </div>
-      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }

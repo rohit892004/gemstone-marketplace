@@ -38,15 +38,15 @@ async function NewRequirement() {
   ]);
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <div className="space-y-2">
+    <div className="max-w-3xl space-y-10">
+      <div className="space-y-3">
         <p className="text-sm">
-          <Link href="/buyer/requirements" className="text-ink-soft hover:text-ink">
+          <Link href="/buyer/requirements" className="text-ink-soft underline underline-offset-4 hover:text-ink">
             Requirements
           </Link>{" "}
           <span className="text-ink-soft">/ Post</span>
         </p>
-        <h2 className="text-lg font-semibold text-ink">Post a requirement</h2>
+        <h2 className="font-heading text-3xl text-ink">Post a requirement</h2>
         <p className="text-sm text-ink-soft">
           Sellers in matching categories are notified. You can edit or close the requirement at any time. You may post up to 5
           requirements in 24 hours.

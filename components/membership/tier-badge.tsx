@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { Tier } from "@/lib/membership/tiers";
 
 const TIER_NAME: Record<Tier, string> = {
@@ -13,9 +14,7 @@ const TIER_NAME: Record<Tier, string> = {
 export function TierBadge({ tier, hasBadge }: { tier: Tier; hasBadge: boolean }) {
   if (tier === "FREE" || !hasBadge) return null;
   return (
-    <span className="inline-flex items-center rounded-full border border-brand px-2.5 py-0.5 text-xs font-medium text-brand-strong">
-      {TIER_NAME[tier]} member
-    </span>
+    <Badge tone="accent">{TIER_NAME[tier]} member</Badge>
   );
 }
 

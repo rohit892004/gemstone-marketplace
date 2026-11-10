@@ -9,7 +9,7 @@ interface BaseProps {
 }
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink shadow-sm focus:border-brand focus:outline-none aria-[invalid=true]:border-red-700";
+  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
 
 function describedBy(name: string, hasHint: boolean, hasError: boolean): string | undefined {
   const ids = [hasHint ? `${name}-hint` : null, hasError ? `${name}-error` : null].filter(Boolean);
@@ -21,7 +21,7 @@ function FieldShell({ name, label, error, hint, required, children }: BaseProps 
     <div className="space-y-1">
       <label htmlFor={name} className="block text-sm font-medium text-ink">
         {label}
-        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </label>
       {children}
       {hint ? (
@@ -30,7 +30,7 @@ function FieldShell({ name, label, error, hint, required, children }: BaseProps 
         </p>
       ) : null}
       {error ? (
-        <p id={`${name}-error`} className="text-sm text-red-700">
+        <p id={`${name}-error`} className="text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -130,7 +130,7 @@ export function CheckboxGroupField({
     <fieldset className="space-y-2" aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}>
       <legend className="text-sm font-medium text-ink">
         {label}
-        {required ? <span className="text-red-700" aria-hidden="true"> *</span> : null}
+        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </legend>
       {hint ? (
         <p id={hintId} className="text-xs text-ink-soft">
@@ -141,7 +141,7 @@ export function CheckboxGroupField({
         {options.map((option) => (
           <label
             key={option.value}
-            className="flex items-center gap-3 rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink"
+            className="flex items-center gap-3 border border-line bg-surface-raised px-3 py-2 text-sm text-ink"
           >
             <input
               type="checkbox"
@@ -155,7 +155,7 @@ export function CheckboxGroupField({
         ))}
       </div>
       {error ? (
-        <p id={errorId} className="text-sm text-red-700">
+        <p id={errorId} className="text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -174,7 +174,7 @@ export function FileField({ name, label, error, hint, required }: BaseProps) {
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(name, Boolean(hint), Boolean(error))}
-        className="mt-1 block w-full text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
+        className="mt-1 block w-full text-sm text-ink file:mr-3 file: file:border-0 file:bg-accent-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink"
       />
     </FieldShell>
   );

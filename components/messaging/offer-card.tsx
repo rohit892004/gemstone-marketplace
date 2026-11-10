@@ -67,9 +67,9 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
   }
 
   return (
-    <div className="mt-2 rounded-md border border-line bg-surface-raised p-3 text-ink">
-      <p className="text-xs uppercase tracking-widest text-accent-text">{offer.counterOfId ? "Counter offer" : "Offer"}</p>
-      <p className="mt-1 text-base font-semibold">{amount}</p>
+    <div className="mt-3 space-y-2 border border-line bg-surface-raised p-4 text-ink sm:p-5">
+      <p className="text-[11px] uppercase tracking-[0.2em] text-accent-text">{offer.counterOfId ? "Counter offer" : "Offer"}</p>
+      <p className="font-heading text-2xl text-ink">{amount}</p>
       {offer.note && <p className="mt-1 whitespace-pre-wrap break-words text-sm text-ink-soft">{offer.note}</p>}
       <p className="mt-2 text-sm">
         <span className="text-ink-soft">Status: </span>
@@ -82,7 +82,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
             type="button"
             disabled={pending}
             onClick={() => decide(acceptOfferAction, "Offer accepted.")}
-            className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+            className=" bg-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
           >
             Accept
           </button>
@@ -90,7 +90,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
             type="button"
             disabled={pending}
             onClick={() => setShowCounter(true)}
-            className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50"
+            className=" border border-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft/40 disabled:opacity-50"
           >
             Counter
           </button>
@@ -98,7 +98,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
             type="button"
             disabled={pending}
             onClick={() => decide(declineOfferAction, "Offer declined.")}
-            className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface disabled:opacity-50"
+            className=" border border-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft/40 disabled:opacity-50"
           >
             Decline
           </button>
@@ -123,7 +123,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
             inputMode="decimal"
             placeholder="e.g. 115000"
             required
-            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="w-full border border-line bg-surface px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
           <label className="text-sm text-ink-soft" htmlFor={`counter-note-${offer.id}`}>
             Note (optional)
@@ -134,20 +134,20 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
             onChange={(e) => setCounterNote(e.target.value)}
             maxLength={500}
             rows={2}
-            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none"
+            className="w-full border border-line bg-surface px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
           />
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
               disabled={pending || counterAmount.trim().length === 0}
-              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
+              className=" bg-brand min-h-11 px-4 py-2.5 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-50"
             >
               {pending ? "Sending..." : "Send counter"}
             </button>
             <button
               type="button"
               onClick={() => setShowCounter(false)}
-              className="rounded-md px-3 py-1.5 text-sm text-ink-soft hover:text-ink"
+              className=" min-h-11 px-4 py-2.5 text-sm text-ink-soft hover:text-ink"
             >
               Cancel
             </button>
@@ -156,7 +156,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
       )}
 
       {notice && <p role="status" className="mt-2 text-sm text-ink-soft">{notice}</p>}
-      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }

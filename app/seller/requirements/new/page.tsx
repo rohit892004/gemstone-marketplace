@@ -47,7 +47,7 @@ async function NewRequirement() {
   ]);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="max-w-3xl space-y-8">
       <div className="space-y-2">
         <p className="text-sm">
           <Link href="/seller/requirements/mine" className="text-ink-soft hover:text-ink">
@@ -55,7 +55,7 @@ async function NewRequirement() {
           </Link>{" "}
           <span className="text-ink-soft">/ Post</span>
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Post a requirement</h1>
+        <h1 className="font-heading text-4xl text-ink">Post a requirement</h1>
         <p className="text-sm text-ink-soft">
           Post a stone you are looking for, as a buyer. Other approved sellers in matching categories are notified. Your own
           listings are not affected. You may post up to 5 requirements in 24 hours.
@@ -69,6 +69,6 @@ async function NewRequirement() {
         gemstoneTypeOptions={facets.species}
         shapeOptions={facets.shapes}
       />
-    </section>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { DemoBadge } from "@/components/catalogue/badges";
+import { DemoTag } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import { LineChart } from "@/components/analytics/line-chart";
 import { EmptyAnalytics, formatCount, KpiTile, RangeNav, RollupNote } from "@/components/analytics/ui";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
@@ -43,16 +44,15 @@ async function SellerAnalyticsView({ searchParams }: { searchParams: SearchParam
   const isDemo = profile.isDemo || (data.kpis?.hasDemo ?? false);
 
   return (
-    <section className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">Analytics</h1>
-          {isDemo ? <DemoBadge /> : null}
-        </div>
-        <p className="text-sm text-ink-soft">How buyers find and contact you. Only your own figures are shown.</p>
-      </header>
+    <div className="space-y-10">
+      <PageHeader
+        eyebrow="Performance"
+        title="Analytics"
+        lead="How buyers find and contact you. Only your own figures are shown."
+        actions={isDemo ? <DemoTag /> : null}
+      />
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <RangeNav basePath="/seller/analytics" selected={requested} capDays={data.range.days} />
         {data.range.capped ? (
           <p className="text-sm text-ink-soft">
@@ -71,26 +71,29 @@ async function SellerAnalyticsView({ searchParams }: { searchParams: SearchParam
         <Figures data={data} kpis={data.kpis} responseRate={snapshot.metrics.responseRate} />
       )}
 
-      <section aria-labelledby="export-heading" className="space-y-2">
-        <h2 id="export-heading" className="text-lg font-semibold text-ink">
+      <section aria-labelledby="export-heading" className="space-y-3 border-t border-line pt-8">
+        <h2 id="export-heading" className="font-heading text-2xl text-ink">
           Export
         </h2>
         {canExportCsv(snapshot.tier) ? (
           <p>
-            <a href={`/seller/analytics/export?range=${requested}`} className="font-medium text-brand underline underline-offset-4">
+            <a
+              href={`/seller/analytics/export?range=${requested}`}
+              className="inline-flex min-h-11 items-center font-medium text-ink underline underline-offset-4 hover:text-accent-text"
+            >
               Download CSV for the last {data.range.days} days
             </a>
           </p>
         ) : (
           <p className="text-sm text-ink-soft">
             CSV export is an Elite benefit.{" "}
-            <Link href="/seller/membership" className="font-medium text-brand underline underline-offset-4">
+            <Link href="/seller/membership" className="font-medium text-ink underline underline-offset-4 hover:text-accent-text">
               See membership
             </Link>
           </p>
         )}
       </section>
-    </section>
+    </div>
   );
 }
 
@@ -106,11 +109,11 @@ function Figures({
   const median = data.responseMedian;
   return (
     <>
-      <section aria-labelledby="kpi-heading" className="space-y-3">
-        <h2 id="kpi-heading" className="text-lg font-semibold text-ink">
+      <section aria-labelledby="kpi-heading" className="space-y-4">
+        <h2 id="kpi-heading" className="font-heading text-2xl text-ink sm:text-3xl">
           Key figures
         </h2>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           <KpiTile label="Profile visits" value={formatCount(kpis.profileViews.value)} change={kpis.profileViews.change} />
           <KpiTile label="Listing views" value={formatCount(kpis.listingViews.value)} change={kpis.listingViews.change} />
           <KpiTile label="Impressions" value={formatCount(kpis.impressions.value)} change={kpis.impressions.change} />
@@ -149,57 +152,57 @@ function Figures({
         </div>
       </section>
 
-      <section aria-labelledby="trend-heading" className="space-y-3 rounded-lg border border-line bg-surface-raised p-4">
-        <h2 id="trend-heading" className="text-lg font-semibold text-ink">
+      <section aria-labelledby="trend-heading" className="space-y-4 border border-line bg-surface-raised p-5 sm:p-6">
+        <h2 id="trend-heading" className="font-heading text-2xl text-ink sm:text-3xl">
           Daily trend
         </h2>
         <LineChart
           ariaLabel={`Daily listing views and enquiries for the last ${data.range.days} days`}
           times={data.days.map(dayToUnixSeconds)}
           series={[
-            { label: "Listing views", values: data.viewsSeries, color: "#1f6f5c" },
-            { label: "Enquiries", values: data.enquirySeries, color: "#b45309" },
+            { label: "Listing views", values: data.viewsSeries, color: "#1c1a17" },
+            { label: "Enquiries", values: data.enquirySeries, color: "#8a6d43" },
           ]}
         />
       </section>
 
-      <section aria-labelledby="listings-heading" className="space-y-3">
-        <h2 id="listings-heading" className="text-lg font-semibold text-ink">
+      <section aria-labelledby="listings-heading" className="space-y-4">
+        <h2 id="listings-heading" className="font-heading text-2xl text-ink sm:text-3xl">
           Top listings
         </h2>
         {data.listings.length === 0 ? (
-          <p className="text-sm text-ink-soft">No listing views in this range yet.</p>
+          <p className="border border-dashed border-line p-5 text-sm text-ink-soft">No listing views in this range yet.</p>
         ) : (
-          <div className="relative overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
+          <div className="overflow-x-auto border border-line bg-surface-raised">
+            <table className="w-full min-w-[560px] border-collapse text-left text-[14px]">
               <caption className="sr-only">Your top listings in the last {data.range.days} days</caption>
-              <thead className="border-b border-line text-ink-soft">
-                <tr>
-                  <th scope="col" className="py-2 pr-4 font-medium">
+              <thead>
+                <tr className="border-b border-line">
+                  <th scope="col" className="px-4 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-ink-soft">
                     Listing
                   </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                  <th scope="col" className="px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.18em] text-ink-soft">
                     Views
                   </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                  <th scope="col" className="px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.18em] text-ink-soft">
                     Impressions
                   </th>
-                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                  <th scope="col" className="px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.18em] text-ink-soft">
                     Enquiries
                   </th>
-                  <th scope="col" className="py-2 text-right font-medium">
+                  <th scope="col" className="px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.18em] text-ink-soft">
                     Valuation requests
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {data.listings.map((row) => (
-                  <tr key={row.gemstoneId}>
-                    <td className="py-3 pr-4 font-medium text-ink">{row.title}</td>
-                    <td className="py-3 pr-4 text-right text-ink-soft">{formatCount(row.views)}</td>
-                    <td className="py-3 pr-4 text-right text-ink-soft">{formatCount(row.impressions)}</td>
-                    <td className="py-3 pr-4 text-right text-ink-soft">{formatCount(row.enquiries)}</td>
-                    <td className="py-3 text-right text-ink-soft">{formatCount(row.valuationRequests)}</td>
+                  <tr key={row.gemstoneId} className="border-b border-line last:border-b-0">
+                    <td className="px-4 py-3.5 font-heading text-lg text-ink">{row.title}</td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink">{formatCount(row.views)}</td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink">{formatCount(row.impressions)}</td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink">{formatCount(row.enquiries)}</td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink">{formatCount(row.valuationRequests)}</td>
                   </tr>
                 ))}
               </tbody>

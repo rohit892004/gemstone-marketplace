@@ -1,4 +1,4 @@
-import { DemoBadge } from "@/components/catalogue/badges";
+import { DemoTag } from "@/components/ui/badge";
 import { Suspense } from "react";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { CopyLink } from "@/components/membership/copy-button";
@@ -83,24 +83,24 @@ async function MembershipView() {
   const nextRule = nextTier ? rules.find((r) => r.tier === nextTier) ?? null : null;
 
   return (
-    <section className="mx-auto max-w-5xl space-y-12 px-4 py-10 sm:px-6">
+    <div className="max-w-5xl space-y-12">
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Membership {seller?.isDemo ? <DemoBadge /> : null}
+        <h1 className="font-heading text-4xl text-ink sm:text-5xl">
+          Membership {seller?.isDemo ? <DemoTag /> : null}
         </h1>
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-lg text-ink">
-            Current membership: <strong className="font-semibold">{tierName(tier)}</strong>
+          <p className="font-heading text-2xl text-ink">
+            Current membership: <strong className="font-medium">{tierName(tier)}</strong>
           </p>
           <TierBadge tier={tier} hasBadge={rule.hasBadge} />
         </div>
         {snapshot.graceUntil ? (
-          <p role="status" className="rounded-md border border-amber-700 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p role="status" className="border border-accent/60 bg-accent-soft px-4 py-3 text-sm text-ink">
             Your membership stays the same until {dateFormat.format(snapshot.graceUntil)}, then changes unless you qualify again.
           </p>
         ) : null}
         {snapshot.manualOverride ? (
-          <p role="status" className="rounded-md border border-line bg-surface-raised px-4 py-3 text-sm text-ink">
+          <p role="status" className="border border-line bg-surface-raised px-4 py-3 text-sm text-ink">
             Set by the Gemstone Selections team.
             {snapshot.overrideReason ? ` Reason: ${snapshot.overrideReason}` : ""}
           </p>
@@ -113,17 +113,17 @@ async function MembershipView() {
       </header>
 
       <section aria-labelledby="progress-heading" className="space-y-6">
-        <h2 id="progress-heading" className="text-xl font-semibold text-ink">
+        <h2 id="progress-heading" className="font-heading text-3xl text-ink">
           Progress to the next tier
         </h2>
         {nextTier && nextUnlock && nextRule ? (
-          <div className="space-y-6 rounded-lg border border-line bg-surface-raised p-5">
+          <div className="space-y-6 border border-line bg-surface-raised p-5 sm:p-6">
             <p className="text-sm text-ink-soft">
               Next tier: <strong className="font-medium text-ink">{tierName(nextTier)}</strong>. Status: {summarise(nextUnlock)}.
             </p>
             {nextUnlock.reachCriteria.length > 0 ? (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-ink">Reach one of these</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-accent-text">Reach one of these</h3>
                 {nextUnlock.reachCriteria.map((c) => (
                   <CriterionProgress key={c.key} criterion={c} format={criterionFormat(c.key)} />
                 ))}
@@ -131,7 +131,7 @@ async function MembershipView() {
             ) : null}
             {nextUnlock.qualityCriteria.length > 0 ? (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-ink">All of these</h3>
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-accent-text">All of these</h3>
                 {nextUnlock.qualityCriteria.map((c) => (
                   <CriterionProgress key={c.key} criterion={c} format={criterionFormat(c.key)} />
                 ))}
@@ -140,13 +140,13 @@ async function MembershipView() {
             <p className="text-xs text-ink-soft">Requirements: {unlockText(nextRule)}. {PENDING_CONFIRMATION}.</p>
           </div>
         ) : (
-          <p className="rounded-lg border border-line bg-surface-raised p-5 text-sm text-ink">You are on the top membership tier.</p>
+          <p className="border border-line bg-surface-raised p-5 text-sm text-ink">You are on the top membership tier.</p>
         )}
       </section>
 
       <section aria-labelledby="benefits-heading" className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="benefits-heading" className="text-xl font-semibold text-ink">
+          <h2 id="benefits-heading" className="font-heading text-3xl text-ink">
             Benefits by tier
           </h2>
           <p className="text-xs text-ink-soft">{PENDING_CONFIRMATION}</p>
@@ -154,28 +154,8 @@ async function MembershipView() {
         <BenefitsTable rules={rules} current={tier} />
       </section>
 
-      <section aria-labelledby="upcoming-heading" className="space-y-4">
-        <h2 id="upcoming-heading" className="text-xl font-semibold text-ink">
-          Upcoming benefits
-        </h2>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-ink-soft">
-          <li>Membership rewards. Details are to be confirmed.</li>
-          <li>Further seller tools. Details are to be confirmed.</li>
-        </ul>
-        <p className="text-sm text-ink-soft">These are not yet available and may change before launch.</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="button" disabled className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink-soft">
-            Upgrade
-          </button>
-          <button type="button" disabled className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink-soft">
-            Rewards
-          </button>
-          <span className="text-sm text-ink-soft">Coming soon</span>
-        </div>
-      </section>
-
-      <section aria-labelledby="referral-heading" className="space-y-5 rounded-lg border border-line bg-surface-raised p-5">
-        <h2 id="referral-heading" className="text-xl font-semibold text-ink">
+      <section aria-labelledby="referral-heading" className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
+        <h2 id="referral-heading" className="font-heading text-3xl text-ink">
           Refer a seller
         </h2>
         <p className="text-sm text-ink-soft">
@@ -187,18 +167,18 @@ async function MembershipView() {
         ) : (
           <p className="text-sm text-ink-soft">Your referral link is available once your account is approved.</p>
         )}
-        <dl className="grid grid-cols-2 gap-4 text-sm sm:max-w-md">
-          <div>
-            <dt className="text-ink-soft">Qualified referrals</dt>
-            <dd className="text-2xl font-semibold text-ink">{qualified}</dd>
+        <dl className="grid grid-cols-2 gap-px border border-line bg-line sm:max-w-md">
+          <div className="bg-surface-raised p-5">
+            <dt className="text-[11px] uppercase tracking-[0.2em] text-ink-soft">Qualified referrals</dt>
+            <dd className="mt-2 font-heading text-4xl text-ink">{qualified}</dd>
           </div>
-          <div>
-            <dt className="text-ink-soft">Pending referrals</dt>
-            <dd className="text-2xl font-semibold text-ink">{pending}</dd>
+          <div className="bg-surface-raised p-5">
+            <dt className="text-[11px] uppercase tracking-[0.2em] text-ink-soft">Pending referrals</dt>
+            <dd className="mt-2 font-heading text-4xl text-ink">{pending}</dd>
           </div>
         </dl>
       </section>
-    </section>
+    </div>
   );
 }
 
@@ -214,9 +194,9 @@ function BenefitsTable({ rules, current }: { rules: readonly TierRule[]; current
     rowFor("Analytics CSV export", (r) => (canExportCsv(r.tier) ? "Yes" : "No")),
   ];
   return (
-    <div className="relative overflow-x-auto rounded-lg border border-line bg-surface-raised">
+    <div className="relative overflow-x-auto border border-line bg-surface-raised">
       <table className="w-full text-left text-sm">
-        <thead className="bg-surface text-xs uppercase tracking-wide text-ink-soft">
+        <thead className="bg-surface text-[11px] uppercase tracking-[0.18em] text-ink-soft">
           <tr>
             <th scope="col" className="px-4 py-3">
               Benefit
@@ -224,7 +204,7 @@ function BenefitsTable({ rules, current }: { rules: readonly TierRule[]; current
             {TIERS.map((t) => (
               <th key={t} scope="col" className="px-4 py-3">
                 {tierName(t)}
-                {t === current ? <span className="ml-2 normal-case text-brand-strong">(your tier)</span> : null}
+                {t === current ? <span className="ml-2 normal-case tracking-normal text-accent-text">(your tier)</span> : null}
               </th>
             ))}
           </tr>

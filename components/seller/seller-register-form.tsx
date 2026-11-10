@@ -33,18 +33,18 @@ export function SellerRegisterForm({
     <form action={formAction} encType="multipart/form-data" noValidate className="space-y-10">
       {referralCode ? <input type="hidden" name="ref" value={referralCode} /> : null}
       {state.formError ? (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className=" border border-danger/40 bg-surface-raised px-4 py-3 text-sm text-danger">
           {state.formError}
         </p>
       ) : null}
       {Object.keys(errors).length > 0 ? (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className=" border border-danger/40 bg-surface-raised px-4 py-3 text-sm text-danger">
           Please correct the highlighted fields. Re-attach any files you selected.
         </p>
       ) : null}
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Account</legend>
+        <legend className="font-heading text-2xl text-ink">Account</legend>
         <TextField name="name" label="Full name" required autoComplete="name" defaultValue={values.name} error={errors.name} />
         <TextField name="email" label="Email" type="email" required autoComplete="email" defaultValue={values.email} error={errors.email} />
         <TextField
@@ -72,7 +72,7 @@ export function SellerRegisterForm({
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Business</legend>
+        <legend className="font-heading text-2xl text-ink">Business</legend>
         <TextField name="businessName" label="Business name" required defaultValue={values.businessName} error={errors.businessName} />
         <SelectField
           name="businessType"
@@ -126,18 +126,18 @@ export function SellerRegisterForm({
       </fieldset>
 
       <fieldset className="space-y-5">
-        <legend className="text-lg font-semibold text-ink">Documents</legend>
+        <legend className="font-heading text-2xl text-ink">Documents</legend>
         <p className="text-sm text-ink-soft">
           Upload PDF, JPEG or PNG files. Documents are private and used only to verify your application.
         </p>
         <FileField name="idProof" label="ID proof" required hint="Passport, Aadhaar, driving licence or similar." error={errors.idProof} />
         <FileField name="businessProof" label="Business proof" required hint="GST certificate, trade licence or registration." error={errors.businessProof} />
-        {errors.certificates ? <p className="text-sm text-red-700">{errors.certificates}</p> : null}
+        {errors.certificates ? <p className="text-sm text-danger">{errors.certificates}</p> : null}
 
         <div className="space-y-6">
           <p className="text-sm font-medium text-ink">Gemstone certificates (optional, up to {CERTIFICATE_SLOTS})</p>
           {Array.from({ length: CERTIFICATE_SLOTS }, (_, index) => (
-            <div key={index} className="space-y-4 rounded-md border border-line bg-surface-raised p-4">
+            <div key={index} className="space-y-4 border border-line bg-surface-raised p-4">
               <FileField name={`certificate_${index}_file`} label={`Certificate ${index + 1}`} error={errors[`certificate_${index}_file`]} />
               <SelectField
                 name={`certificate_${index}_lab`}
@@ -164,7 +164,7 @@ export function SellerRegisterForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-brand px-5 py-3 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
+          className=" bg-brand px-5 py-3 text-sm font-medium text-ivory hover:bg-brand-strong disabled:opacity-60"
         >
           {pending ? "Submitting..." : "Submit application"}
         </button>

@@ -1,6 +1,10 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { BarChart3 } from "lucide-react";
 import { formatChange, RANGE_OPTIONS, type RangeDays } from "@/lib/analytics/seller-trends";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatTile } from "@/components/ui/card";
+import { Tabs } from "@/components/ui/tabs";
 
 /** Shared pieces of the analytics pages. Server components: no client state. */
 
@@ -22,36 +26,25 @@ export function KpiTile({
   change?: number | null;
   note?: string;
 }) {
-  return (
-    <div className="min-w-0 rounded-lg border border-line bg-surface-raised p-4">
-      <p className="text-xs uppercase tracking-wide text-ink-soft">{label}</p>
-      <p className="mt-1 break-words text-2xl font-semibold text-ink">{value}</p>
-      {change !== undefined ? <p className="mt-1 text-xs text-ink-soft">{formatChange(change)} on the previous period</p> : null}
-      {note ? <p className="mt-1 text-xs text-ink-soft">{note}</p> : null}
-    </div>
-  );
+  const lines = [change !== undefined ? `${formatChange(change)} on the previous period` : null, note ?? null].filter(Boolean);
+  return <StatTile label={label} value={<span className="break-words">{value}</span>} note={lines.length ? lines.join(". ") : undefined} className="min-w-0" />;
 }
 
 export function RangeNav({ basePath, selected, capDays }: { basePath: string; selected: RangeDays; capDays: number }) {
   return (
-    <nav aria-label="Date range">
-      <ul className="flex flex-wrap items-center gap-2">
-        {RANGE_OPTIONS.map((days) => (
-          <li key={days}>
-            <Link
-              href={`${basePath}?range=${days}`}
-              aria-current={selected === days ? "page" : undefined}
-              className={`rounded-full border px-3 py-1 text-sm ${
-                selected === days ? "border-brand bg-brand text-white" : "border-line text-ink-soft"
-              }`}
-            >
-              Last {days} days
-              {days > capDays ? <span className="sr-only"> (capped by your plan)</span> : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <Tabs
+      label="Date range"
+      items={RANGE_OPTIONS.map((days) => ({
+        href: `${basePath}?range=${days}`,
+        active: selected === days,
+        label: (
+          <>
+            Last {days} days
+            {days > capDays ? <span className="sr-only"> (capped by your plan)</span> : null}
+          </>
+        ),
+      }))}
+    />
   );
 }
 
@@ -68,7 +61,7 @@ export function RollupNote({
 }) {
   if (lastFigureDay === null) {
     return (
-      <p className="rounded-md border border-dashed border-line p-3 text-sm text-ink-soft">
+      <p className="border border-dashed border-line p-4 text-sm text-ink-soft">
         The daily rollup has not processed a finished day yet, so there are no figures to show.
       </p>
     );
@@ -85,8 +78,16 @@ export function RollupNote({
 
 export function EmptyAnalytics({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-line bg-surface-raised p-6 text-center">
-      <p className="text-ink">{children}</p>
-    </div>
+    <EmptyState
+      icon={BarChart3}
+      title="No activity in this range yet"
+      body={children}
+      action={
+        <ButtonLink href="/seller/listings" variant="secondary">
+          Review your listings
+        </ButtonLink>
+      }
+    />
   );
 }
+

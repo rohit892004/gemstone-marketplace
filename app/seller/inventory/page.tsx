@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Boxes } from "lucide-react";
 import { InventoryBulkForm } from "@/components/seller/inventory-bulk-form";
 import { InventoryQuantityForm } from "@/components/seller/inventory-quantity-form";
 import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { DataTable, type Column } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { requireRole } from "@/lib/auth/require-role";
 import { gateApprovedSeller } from "@/lib/seller/approved-gate";
 import { availabilityLabels, listingStatusLabels } from "@/lib/seller-catalogue/labels";
@@ -12,6 +18,12 @@ import { loadSellerInventory } from "@/lib/seller-catalogue/load";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const BULK_FORM_ID = "inventory-bulk";
+
+const statusTone: Record<string, BadgeTone> = {
+  PUBLISHED: "success",
+  PENDING_REVIEW: "warning",
+  REJECTED: "danger",
+};
 
 export default function SellerInventoryPage({ searchParams }: { searchParams: SearchParams }) {
   return (
@@ -29,68 +41,75 @@ async function SellerInventoryView({ searchParams }: { searchParams: SearchParam
   const { page } = parseListingsQuery(await searchParams);
   const data = await loadSellerInventory(user.id, { page });
 
+  type Row = (typeof data.rows)[number];
+  const columns: Column<Row>[] = [
+    {
+      key: "select",
+      header: "Select",
+      cell: (row) => (
+        <input
+          type="checkbox"
+          name="ids"
+          value={row.id}
+          form={BULK_FORM_ID}
+          aria-label={`Select ${row.title}`}
+          className="h-5 w-5"
+        />
+      ),
+    },
+    {
+      key: "title",
+      header: "Title",
+      cell: (row) => (
+        <Link href={`/seller/listings/${row.id}/edit`} className="font-heading text-lg text-ink underline underline-offset-4 hover:text-accent-text">
+          {row.title}
+        </Link>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      hideOnMobile: true,
+      cell: (row) => <Badge tone={statusTone[row.status] ?? "neutral"}>{listingStatusLabels[row.status] ?? row.status}</Badge>,
+    },
+    { key: "availability", header: "Availability", hideOnMobile: true, cell: (row) => availabilityLabels[row.availability] ?? row.availability },
+    { key: "quantity", header: "Quantity", cell: (row) => <InventoryQuantityForm listingId={row.id} quantity={row.quantity} title={row.title} /> },
+  ];
+
   return (
-    <section className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Inventory</h1>
-        <p className="text-sm text-ink-soft">
-          Change availability for several listings at once, or edit quantities. Changes apply immediately to your listings.
-        </p>
-      </header>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Catalogue"
+        title="Inventory"
+        lead="Change availability for several listings at once, or edit quantities. Changes apply immediately to your listings."
+      />
 
       <InventoryBulkForm formId={BULK_FORM_ID} />
 
-      {data.rows.length === 0 ? (
-        <p className="text-ink-soft">You have no listings yet.</p>
-      ) : (
-        <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <caption className="sr-only">Listing inventory</caption>
-            <thead className="border-b border-line text-ink-soft">
-              <tr>
-                <th scope="col" className="py-2 pr-4 font-medium">
-                  <span className="sr-only">Select</span>
-                </th>
-                <th scope="col" className="py-2 pr-4 font-medium">Title</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Status</th>
-                <th scope="col" className="py-2 pr-4 font-medium">Availability</th>
-                <th scope="col" className="py-2 font-medium">Quantity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {data.rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="py-3 pr-4">
-                    <input
-                      type="checkbox"
-                      name="ids"
-                      value={row.id}
-                      form={BULK_FORM_ID}
-                      aria-label={`Select ${row.title}`}
-                      className="h-4 w-4"
-                    />
-                  </td>
-                  <td className="py-3 pr-4 font-medium text-ink">
-                    <Link href={`/seller/listings/${row.id}/edit`} className="underline">
-                      {row.title}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-4 text-ink-soft">{listingStatusLabels[row.status] ?? row.status}</td>
-                  <td className="py-3 pr-4 text-ink-soft">{availabilityLabels[row.availability] ?? row.availability}</td>
-                  <td className="py-3">
-                    <InventoryQuantityForm listingId={row.id} quantity={row.quantity} title={row.title} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        caption="Listing inventory"
+        columns={columns}
+        rows={data.rows}
+        getRowKey={(row) => row.id}
+        empty={
+          <EmptyState
+            icon={Boxes}
+            title="You have no listings yet"
+            body="Inventory appears here once you have added a listing."
+            action={
+              <ButtonLink href="/seller/listings/new" variant="secondary">
+                New listing
+              </ButtonLink>
+            }
+            className="border-0 p-6 text-left sm:p-8"
+          />
+        }
+      />
 
       {data.pages > 1 ? (
         <nav aria-label="Pagination" className="flex items-center justify-between text-sm">
           {data.page > 1 ? (
-            <Link href={`/seller/inventory?page=${data.page - 1}`} className="text-brand underline">
+            <Link href={`/seller/inventory?page=${data.page - 1}`} className="inline-flex min-h-11 items-center text-ink underline underline-offset-4">
               Previous
             </Link>
           ) : (
@@ -100,7 +119,7 @@ async function SellerInventoryView({ searchParams }: { searchParams: SearchParam
             Page {data.page} of {pageCount(data.total)}
           </span>
           {data.page < data.pages ? (
-            <Link href={`/seller/inventory?page=${data.page + 1}`} className="text-brand underline">
+            <Link href={`/seller/inventory?page=${data.page + 1}`} className="inline-flex min-h-11 items-center text-ink underline underline-offset-4">
               Next
             </Link>
           ) : (
@@ -108,6 +127,6 @@ async function SellerInventoryView({ searchParams }: { searchParams: SearchParam
           )}
         </nav>
       ) : null}
-    </section>
+    </div>
   );
 }

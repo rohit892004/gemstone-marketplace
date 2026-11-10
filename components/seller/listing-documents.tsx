@@ -31,7 +31,7 @@ const statusLabels: Record<EditorDocument["verificationStatus"], string> = {
   REJECTED: "Rejected",
 };
 
-const buttonClass = "rounded-md border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink";
+const buttonClass = " border border-line bg-surface-raised px-3 py-1 text-xs font-medium text-ink";
 
 export function ListingDocuments({
   listingId,
@@ -44,7 +44,7 @@ export function ListingDocuments({
 }) {
   return (
     <section aria-labelledby="documents-heading" className="space-y-5">
-      <h2 id="documents-heading" className="text-lg font-semibold text-ink">
+      <h2 id="documents-heading" className="font-heading text-2xl text-ink">
         Documents
       </h2>
       <p className="text-sm text-ink-soft">
@@ -53,7 +53,7 @@ export function ListingDocuments({
 
       {documents.length === 0 ? <p className="text-sm text-ink-soft">No documents yet.</p> : null}
 
-      <ul className="divide-y divide-line rounded-md border border-line bg-surface-raised">
+      <ul className="divide-y divide-line border border-line bg-surface-raised">
         {documents.map((doc) => (
           <li key={doc.id} className="space-y-2 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -63,7 +63,7 @@ export function ListingDocuments({
               </p>
             </div>
             {doc.verificationStatus === "REJECTED" && doc.verificationReason ? (
-              <p className="text-sm text-red-700">Reason: {doc.verificationReason}</p>
+              <p className="text-sm text-danger">Reason: {doc.verificationReason}</p>
             ) : null}
             <p className="text-xs text-ink-soft">
               File: {doc.fileName} · {doc.isPublic ? "Public when verified" : "Private"}

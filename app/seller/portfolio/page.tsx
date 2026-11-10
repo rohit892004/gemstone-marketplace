@@ -24,22 +24,22 @@ async function SellerPortfolioView() {
   if (!seller) notFound();
 
   return (
-    <section className="mx-auto max-w-4xl space-y-10 px-4 py-10 sm:px-6">
+    <div className="max-w-4xl space-y-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">Portfolio</h1>
+          <h1 className="font-heading text-4xl text-ink">Portfolio</h1>
           <p className="text-sm text-ink-soft">
             Edit what buyers see on your public page. Only you can see this page.
           </p>
         </div>
         {/* Owner-only preview. The public page is built separately. */}
-        <Link href={`/sellers/${seller.slug}`} className="text-sm font-medium text-brand underline">
+        <Link href={`/sellers/${seller.slug}`} className="text-sm font-medium text-ink underline underline-offset-4">
           Preview public page
         </Link>
       </header>
 
-      <section aria-labelledby="business-heading" className="space-y-3 rounded-md border border-line bg-surface-raised p-5">
-        <h2 id="business-heading" className="text-lg font-semibold text-ink">
+      <section aria-labelledby="business-heading" className="space-y-3 border border-line bg-surface-raised p-5">
+        <h2 id="business-heading" className="font-heading text-2xl text-ink">
           Business details
         </h2>
         <p className="text-sm text-ink-soft">These details are set during registration. Contact an administrator to change them.</p>
@@ -68,6 +68,6 @@ async function SellerPortfolioView() {
         hasLogo={Boolean(seller.logoKey)}
         hasBanner={Boolean(seller.bannerKey)}
       />
-    </section>
+    </div>
   );
 }

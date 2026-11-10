@@ -4,6 +4,7 @@ import { AwaitingApprovalPage } from "@/components/seller/seller-pages";
 import { ListingForm } from "@/components/seller/listing-form";
 import { ListingMedia } from "@/components/seller/listing-media";
 import { ListingDocuments } from "@/components/seller/listing-documents";
+import { PageHeader } from "@/components/ui/page-header";
 import { requireRole } from "@/lib/auth/require-role";
 import { loadActiveCertificateLabs } from "@/lib/seller/labs";
 import { gateApprovedSeller } from "@/lib/seller/approved-gate";
@@ -36,19 +37,21 @@ async function EditListingView({ params, searchParams }: { params: Params; searc
   const saved = query.saved === "submit" ? "submit" : query.saved === "draft" ? "draft" : undefined;
 
   return (
-    <section className="mx-auto max-w-4xl space-y-12 px-4 py-10 sm:px-6">
-      <header className="space-y-2">
-        <p className="text-sm text-ink-soft">Status: {listingStatusLabels[listing.status] ?? listing.status}</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">{listing.title}</h1>
-        {listing.status === "REJECTED" && listing.rejectionReason ? (
-          <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-            Rejected: {listing.rejectionReason}
-          </p>
-        ) : null}
-        {listing.status === "PUBLISHED" ? (
-          <p className="text-sm text-ink-soft">Saving changes returns this listing to draft until it is submitted again.</p>
-        ) : null}
-      </header>
+    <div className="max-w-4xl space-y-12">
+      <PageHeader
+        eyebrow={`Status: ${listingStatusLabels[listing.status] ?? listing.status}`}
+        title={listing.title}
+        lead={
+          <>
+            {listing.status === "REJECTED" && listing.rejectionReason ? (
+              <span role="alert" className="mb-4 block border border-danger/40 px-4 py-3 text-sm text-danger">
+                Rejected: {listing.rejectionReason}
+              </span>
+            ) : null}
+            {listing.status === "PUBLISHED" ? <span className="block">Saving changes returns this listing to draft until it is submitted again.</span> : null}
+          </>
+        }
+      />
 
       <ListingForm
         listingId={listing.id}
@@ -70,6 +73,6 @@ async function EditListingView({ params, searchParams }: { params: Params; searc
       />
 
       <ListingDocuments listingId={listing.id} documents={listing.documents} labs={labs} />
-    </section>
+    </div>
   );
 }
