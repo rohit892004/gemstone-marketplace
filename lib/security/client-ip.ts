@@ -1,6 +1,18 @@
 import { getEnv } from "@/lib/config/env";
 
 /**
+ * The configured count. An invalid environment is already rejected at server start (instrumentation.ts), so the
+ * fallback to the default only keeps request handling alive in tests and tooling that do not set the env.
+ */
+function configuredProxyCount(): number {
+  try {
+    return getEnv().TRUSTED_PROXY_COUNT;
+  } catch {
+    return 1;
+  }
+}
+
+/**
  * Best-effort client IP for audit logs and rate limits.
  *
  * X-Forwarded-For is a list. Each trusted proxy APPENDS the address it received, so the entry
@@ -17,7 +29,7 @@ import { getEnv } from "@/lib/config/env";
  * entry; too low a value reads a proxy address and merges every user into one bucket.
  */
 export function getClientIp(headers: Headers, trustedProxyCount?: number): string {
-  const count = trustedProxyCount ?? getEnv().TRUSTED_PROXY_COUNT;
+  const count = trustedProxyCount ?? configuredProxyCount();
   const forwarded = headers.get("x-forwarded-for");
 
   if (count > 0 && forwarded !== null) {
