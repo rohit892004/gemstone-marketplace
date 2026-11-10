@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireBuyerPage } from "@/app/buyer/guard";
 import { BUYER_TABS } from "@/app/buyer/tab-list";
+import { NewsletterSettings } from "@/components/newsletter/newsletter-settings";
+import { accountNewsletterState } from "@/lib/newsletter/account";
 
 /**
  * Account home for buyer features. Sellers reach the same buyer tabs from here, since they can
@@ -36,6 +38,8 @@ async function AccountContent() {
           </li>
         ))}
       </ul>
+
+      <NewsletterSettings current={await accountNewsletterState(user)} />
 
       {user.role === "SELLER" ? (
         <p className="mt-8 text-sm text-ink-soft">
