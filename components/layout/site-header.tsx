@@ -22,17 +22,17 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-10">
-        <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="Gemstone Selections, home">
+        <Link href="/" className="group flex min-w-0 items-center gap-3">
           <span className="block h-8 w-px bg-accent transition duration-500 group-hover:h-9" aria-hidden />
           <span className="flex min-w-0 flex-col leading-none">
-            <span className="truncate font-heading text-xl font-medium text-brand-strong sm:text-2xl">Gemstone Selections</span>
+            <span className="whitespace-nowrap font-heading text-xl font-medium text-brand-strong sm:text-2xl">Gemstone Selections</span>
             <span className="mt-1 hidden text-[10px] uppercase tracking-[0.3em] text-ink-soft sm:block">Verified stones, India</span>
           </span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-5 xl:gap-7 lg:flex">
           {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="text-[12px] uppercase tracking-[0.18em] text-ink-soft transition duration-300 hover:text-ink">
+            <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] uppercase tracking-[0.18em] text-ink-soft transition duration-300 hover:text-ink">
               {item.label}
             </Link>
           ))}

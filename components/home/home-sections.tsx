@@ -171,7 +171,7 @@ export async function CategoryGrid() {
       ) : null}
       <ul className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
         {categories.map((category) => (
-          <li key={category.id}>
+          <li key={category.id} className="last:odd:col-span-2 last:odd:sm:col-span-3">
             <Link
               href={`/categories/${category.slug}`}
               className="group relative block overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"

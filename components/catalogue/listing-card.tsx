@@ -13,7 +13,7 @@ export function ListingCard({ listing, priority = false }: { listing: ListingCar
     .join(" · ");
   return (
     <article data-impression-id={listing.id} className="group flex h-full flex-col">
-      <Link href={`/gemstones/${listing.slug}`} className="block focus-visible:outline-none">
+      <Link href={`/gemstones/${listing.slug}`} className="block focus-visible:outline-none" aria-label={listing.coverUrl ? undefined : listing.title}>
         <Photo
           src={listing.coverUrl ?? ""}
           alt={listing.coverUrl ? listing.title : ""}

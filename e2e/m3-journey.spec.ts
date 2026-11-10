@@ -21,13 +21,13 @@ const BUYER_MOBILE = randomMobile();
 const ADMIN_EMAIL = "admin@gemstone.local";
 const ADMIN_PASSWORD = "ChangeMe-Local-1";
 // Demo sellers are approved and carry categories. Seller A (Sapphire, Ruby) owns the listing used for
-// enquiries. Seller B (Emerald, Tourmaline) responds to requirements and enquires with A.
+// enquiries. Seller B (Emerald, Diamond) responds to requirements and enquires with A.
 const SELLER_A = { slug: "himalaya-gem-house", email: "himalaya-gem-house@demo.gemstone.local", name: "Himalaya Gem House" };
 const SELLER_B = { slug: "deccan-stone-works", email: "deccan-stone-works@demo.gemstone.local", name: "Deccan Stone Works" };
 const DEMO_SELLER_PASSWORD = process.env.DEMO_SELLER_PASSWORD ?? "Demo-Seller-Pass-1";
 
 const BUYER_REQ_TYPE = `Emerald ${stamp}`;
-const SELLER_REQ_TYPE = `Tourmaline ${stamp}`;
+const SELLER_REQ_TYPE = `Diamond ${stamp}`;
 
 let buyerCtx: BrowserContext;
 let sellerACtx: BrowserContext;
@@ -176,7 +176,7 @@ test.describe.serial("M3 journey", () => {
   test("a seller posts a requirement, another seller responds, and the poster never sees it on the board", async () => {
     await sellerA.goto("/seller/requirements/new");
     await sellerA.locator('input[name="gemstoneType"]').fill(SELLER_REQ_TYPE);
-    await sellerA.locator('select[name="categoryId"]').selectOption({ label: "Tourmaline" });
+    await sellerA.locator('select[name="categoryId"]').selectOption({ label: "Diamond" });
     await sellerA.locator('input[name="caratMin"]').fill("2");
     await sellerA.locator('input[name="caratMax"]').fill("5");
     await sellerA.getByRole("button", { name: "Post requirement" }).click();
@@ -185,15 +185,15 @@ test.describe.serial("M3 journey", () => {
 
     // Seller A's own board does not show it, not even to the poster.
     await sellerA.goto(`/seller/requirements?type=${encodeURIComponent(SELLER_REQ_TYPE)}`);
-    await expect(sellerA.getByText("No open requirements match these filters right now.")).toBeVisible();
+    await expect(sellerA.getByText("No open requirements match these filters")).toBeVisible();
     await expect(sellerA.getByText(SELLER_REQ_TYPE)).toHaveCount(0);
 
-    // Seller B (Tourmaline) responds.
+    // Seller B (Diamond) responds.
     await sellerB.goto(`/seller/requirements?type=${encodeURIComponent(SELLER_REQ_TYPE)}`);
     await sellerB.locator("li", { hasText: SELLER_REQ_TYPE }).getByRole("link", { name: "View and respond" }).click();
     await sellerB.waitForURL(/\/seller\/requirements\/[^/]+$/);
     const requirementUrl = sellerB.url();
-    await sellerB.locator("#requirement-response").fill("I can offer Tourmaline in this carat range.");
+    await sellerB.locator("#requirement-response").fill("I can offer Diamond in this carat range.");
     await sellerB.getByRole("button", { name: "Send response" }).click();
     await sellerB.waitForURL(/\/conversations\/[^/]+$/);
 

@@ -58,7 +58,6 @@ async function QueueList() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Valuer workspace"
         title="My queue"
         lead="Requests assigned to you that need an expert decision or an answer. Open a request to review it."
       />

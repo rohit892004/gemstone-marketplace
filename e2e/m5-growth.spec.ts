@@ -67,9 +67,9 @@ async function login(page: Page, email: string, password: string) {
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
 }
 
-/** The number shown under a KPI label (the tile renders the label and value as sibling paragraphs). */
+/** The number shown under a KPI label (the tile puts the label in a header row, and the value is the paragraph after that row). */
 async function kpiNumber(page: Page, label: string): Promise<number> {
-  const text = await page.getByText(label, { exact: true }).first().locator("xpath=following-sibling::p[1]").innerText();
+  const text = await page.getByText(label, { exact: true }).first().locator("xpath=../following-sibling::p[1]").innerText();
   return Number(text.replace(/[^0-9]/g, ""));
 }
 
@@ -273,7 +273,7 @@ test.describe.serial("M5 growth", () => {
     const setFreeLimit = async (value: number) => {
       await admin.goto("/admin/memberships/rules");
       await admin.waitForLoadState("networkidle");
-      await admin.locator("#FREE-activeListingLimit").fill(String(value));
+      await admin.locator('input[name="FREE.activeListingLimit"]').fill(String(value));
       await admin.getByRole("button", { name: "Save tier rules" }).click();
       await expect
         .poll(async () => (await scalar<{ limit: number | null }>(`SELECT "activeListingLimit" AS limit FROM "TierRule" WHERE tier = 'FREE'`)).limit)
@@ -312,7 +312,7 @@ test.describe.serial("M5 growth", () => {
     try {
       const admin = await adminCtx.newPage();
       await login(admin, ADMIN_EMAIL, ADMIN_PASSWORD);
-      await admin.goto("/admin/memberships");
+      await admin.goto("/admin/memberships?tier=PREMIUM");
       await admin.waitForLoadState("networkidle");
       const card = admin.locator("li").filter({ has: admin.getByRole("heading", { name: sellerRow.businessName, exact: true }) }).first();
       await card.locator(`#tier-${sellerRow.id}`).selectOption("ELITE");
@@ -328,7 +328,7 @@ test.describe.serial("M5 growth", () => {
       await expect(seller.locator("p", { hasText: "Current membership:" })).toContainText("Elite");
       await expect(seller.getByText("Set by the Gemstone Selections team.")).toBeVisible();
 
-      await admin.goto("/admin/memberships");
+      await admin.goto("/admin/memberships?tier=ELITE");
       await admin.waitForLoadState("networkidle");
       const cardAgain = admin.locator("li").filter({ has: admin.getByRole("heading", { name: sellerRow.businessName, exact: true }) }).first();
       await cardAgain.getByRole("button", { name: "Clear override", exact: true }).click();
