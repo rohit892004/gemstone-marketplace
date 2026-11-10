@@ -121,6 +121,8 @@ test("no page scrolls sideways at 390px", async ({ browser }) => {
       "/seller/requirements/mine",
       "/seller/valuations",
       "/seller/reports",
+      "/seller/analytics",
+      "/seller/membership",
       "/conversations",
     ]);
     await sellerContext.close();
@@ -146,6 +148,10 @@ test("no page scrolls sideways at 390px", async ({ browser }) => {
       "/admin/valuations/prices",
       "/admin/valuations/settings",
       "/admin/valuations/stats",
+      "/admin/analytics",
+      "/admin/memberships",
+      "/admin/memberships/rules",
+      "/admin/referrals",
       reference ? `/admin/valuations/${(await db.query('SELECT id FROM "Valuation" WHERE reference = $1', [reference])).rows[0]?.id}` : "/admin/valuations",
     ]);
     await adminContext.close();
