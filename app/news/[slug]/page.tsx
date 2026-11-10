@@ -66,7 +66,7 @@ async function NewsItem({ params }: Props) {
       </nav>
 
       <header className="space-y-4">
-        <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent">
+        <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent-text">
           {item.category ? <span>{item.category}</span> : <span>Market news</span>}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{item.title}</h1>

@@ -8,6 +8,10 @@ import { SPECIALTY_MAX_COUNT, SPECIALTY_MAX_LENGTH } from "@/lib/seller/portfoli
 
 const initialState: PortfolioFormState = {};
 
+// Kept here rather than imported from lib/media/pipeline: that module loads sharp, which the browser bundle must not include.
+const PORTFOLIO_IMAGE_HINT =
+  "JPEG, PNG or WebP, up to 15 MB. iPhone HEIC photos must be converted to JPEG first. Location data is removed on upload.";
+
 export interface PortfolioFormProps {
   tagline: string;
   description: string;
@@ -66,13 +70,13 @@ export function PortfolioForm({ tagline, description, specialties, hasLogo, hasB
           name="logo"
           label={hasLogo ? "Replace logo" : "Logo"}
           error={errors.logo}
-          hint="JPEG, PNG or WebP, up to 15 MB. Location data is removed on upload."
+          hint={PORTFOLIO_IMAGE_HINT}
         />
         <ImageFileField
           name="banner"
           label={hasBanner ? "Replace banner" : "Banner"}
           error={errors.banner}
-          hint="JPEG, PNG or WebP, up to 15 MB. Location data is removed on upload."
+          hint={PORTFOLIO_IMAGE_HINT}
         />
       </fieldset>
 

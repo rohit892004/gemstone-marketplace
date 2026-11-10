@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
 import { MEDIA_LIMITS } from "@/lib/listings/schema";
-import { MEDIA_ERROR_TEXT, processMedia } from "@/lib/media/pipeline";
+import { IMAGE_TOO_LARGE_TEXT, MEDIA_ERROR_TEXT, processMedia } from "@/lib/media/pipeline";
 import { portfolioImageKey } from "@/lib/seller-catalogue/keys";
 import { recordBlockedPublicText } from "@/lib/moderation/public-text";
 import { publicTextBlockedMessage, scanPublicText } from "@/lib/moderation/scan";
@@ -31,7 +31,7 @@ async function readImage(
 ): Promise<{ ok: true; key: string | null } | { ok: false; error: string }> {
   const file = formData.get(key);
   if (!(file instanceof File) || file.size === 0) return { ok: true, key: null };
-  if (file.size > MEDIA_LIMITS.maxImageBytes) return { ok: false, error: "Images must be 15 MB or smaller." };
+  if (file.size > MEDIA_LIMITS.maxImageBytes) return { ok: false, error: IMAGE_TOO_LARGE_TEXT };
 
   const result = await processMedia(Buffer.from(await file.arrayBuffer()));
   if (!result.ok) return { ok: false, error: MEDIA_ERROR_TEXT[result.reason] };

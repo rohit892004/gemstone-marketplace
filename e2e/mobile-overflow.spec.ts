@@ -2,6 +2,7 @@ import "dotenv/config";
 import { expect, test, type Page } from "@playwright/test";
 import { Client } from "pg";
 import { hashPassword } from "../lib/auth/password";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * No page may scroll sideways at a 390px phone width. Every page the journeys use is visited here, signed in as
@@ -23,6 +24,7 @@ const SELLER_SLUG = "himalaya-gem-house";
 const offenders: string[] = [];
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
@@ -30,16 +32,30 @@ async function login(page: Page, email: string, password: string) {
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
 }
 
+async function measureWhenStable(page: Page): Promise<{ scroll: number; client: number }> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+    } catch (error) {
+      if (!String(error).includes("Execution context was destroyed")) throw error;
+      await page.waitForLoadState("load", { timeout: 15_000 });
+    }
+  }
+  throw new Error("The page kept navigating; could not measure it.");
+}
+
 /** Visits each path, waits for the page to settle, and records any sideways overflow. */
 async function checkPages(page: Page, paths: string[]) {
   for (const path of paths) {
-    const response = await page.goto(path);
-    await page.waitForLoadState("networkidle");
+    // "networkidle" can never settle on a page that keeps a connection open, so wait for load with a bound instead.
+    const response = await page.goto(path, { waitUntil: "load", timeout: 45_000 });
+    await page.waitForLoadState("load", { timeout: 15_000 });
     const status = response?.status() ?? 0;
-    const measure = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth,
-      client: document.documentElement.clientWidth,
-    }));
+    // A page can redirect after load (client-side). Measure again once the new page has loaded.
+    const measure = await measureWhenStable(page);
     if (measure.scroll > measure.client + 1) offenders.push(`${path} (status ${status}): ${measure.scroll}px > ${measure.client}px`);
   }
 }

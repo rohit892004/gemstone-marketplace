@@ -14,6 +14,8 @@
   --color-brand-strong: #074538;
   --color-accent: #b8892b;
   --color-accent-soft: #f5ecd7;
+  /* Gold for small text on light surfaces: 6.3:1 on white. The brand accent is for shapes and large type. */
+  --color-accent-text: #7a5a1c;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

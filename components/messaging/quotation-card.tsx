@@ -48,7 +48,7 @@ export function QuotationCard({
 
   return (
     <div className="mt-2 rounded-md border border-line bg-surface-raised p-3 text-ink">
-      <p className="text-xs uppercase tracking-widest text-accent">Quotation</p>
+      <p className="text-xs uppercase tracking-widest text-accent-text">Quotation</p>
       <p className="mt-1 break-words text-base font-semibold">{quotation.itemTitle}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-ink-soft">Quantity</dt>

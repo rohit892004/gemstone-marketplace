@@ -11,7 +11,7 @@ export default function NewsletterPage() {
   return (
     <section className="mx-auto max-w-3xl space-y-10 px-4 py-16 sm:px-6">
       <header className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-widest text-accent">Newsletter</p>
+        <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Newsletter</p>
         <h1 className="text-3xl font-semibold tracking-tight text-ink">The Gemstone Selections newsletter</h1>
         <p className="text-ink-soft">
           A short email, sent weekly when there is something to say. You choose the topics. Nothing is sent until you

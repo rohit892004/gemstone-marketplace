@@ -88,7 +88,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
           {heading}
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          At least one clear photo of the stone is needed. Use JPEG, PNG or WebP photos, up to {PHOTO_LIMIT}. You can add one MP4 or WebM video.
+          At least one clear photo of the stone is needed. Use JPEG, PNG or WebP photos, up to {PHOTO_LIMIT}. iPhone HEIC photos must be converted to JPEG first. You can add one MP4 or WebM video.
           Photos are for the expert valuer. The automatic estimate does not look at them.
         </p>
       </div>

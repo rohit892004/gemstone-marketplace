@@ -21,7 +21,7 @@ export function MediaUploadForm({ listingId, imageCount, videoCount }: { listing
         label="Add images or videos"
         multiple
         accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-        hint={`${Math.max(imagesLeft, 0)} image slot(s) and ${Math.max(videosLeft, 0)} video slot(s) left. Images up to 15 MB, videos up to 60 MB.`}
+        hint={`${Math.max(imagesLeft, 0)} image slot(s) and ${Math.max(videosLeft, 0)} video slot(s) left. Photos: JPEG, PNG or WebP, up to 15 MB. Videos: MP4 or WebM, up to 60 MB. iPhone HEIC photos must be converted to JPEG first.`}
         error={state.error}
       />
       {state.message ? (

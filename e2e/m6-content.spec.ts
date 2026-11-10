@@ -3,6 +3,7 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import { type APIResponse, type Page, expect, test } from "@playwright/test";
 import { serverLog } from "./helpers";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * M6 content and newsletter journeys: a scheduled education article published by the worker step, the newsletter
@@ -23,6 +24,7 @@ const SCHEDULED_TITLE = `M6 scheduled guide ${stamp}`;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
@@ -53,7 +55,7 @@ async function nextEmailTo(to: string, before: number, timeoutMs = 20_000): Prom
 }
 
 function tokenFrom(message: string, pathPart: "confirm" | "preferences"): string {
-  const match = message.match(new RegExp(`/newsletter/${pathPart}\\?token=([A-Za-z0-9_-]+)`));
+  const match = message.match(new RegExp(`/newsletter/${pathPart}\\?token=([A-Za-z0-9_.-]+)`));
   if (!match) throw new Error(`No ${pathPart} link in the email`);
   return match[1]!;
 }
@@ -67,10 +69,10 @@ function localInputValue(date: Date): string {
 /** Signs up on /newsletter with one topic and consent. Returns once the page shows the generic message. */
 async function signUp(page: Page, email: string, topic: RegExp) {
   await page.goto("/newsletter");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByRole("checkbox", { name: topic }).check();
-  await page.getByRole("checkbox", { name: /I agree/ }).check();
-  await page.getByRole("button", { name: "Sign up" }).click();
+  await page.getByLabel("Email address").first().fill(email);
+  await page.getByRole("checkbox", { name: topic }).first().check();
+  await page.getByRole("checkbox", { name: /I agree/ }).first().check();
+  await page.getByRole("button", { name: "Sign up" }).first().click();
 }
 
 test.describe.serial("M6 content and newsletter", () => {
@@ -143,13 +145,14 @@ test.describe.serial("M6 content and newsletter", () => {
     expect(alreadyMail).toContain("You already receive");
     await page.goto(`/newsletter/preferences?token=${tokenFrom(alreadyMail, "preferences")}`);
 
+    const prefs = page.getByRole("form", { name: "Your topics" });
     // Add a second topic and save. Reloading shows the saved state.
-    await expect(page.getByRole("checkbox", { name: /^Education/ })).toBeChecked();
-    await page.getByRole("checkbox", { name: /^Market news/ }).check();
-    await page.getByRole("button", { name: "Save my topics" }).click();
+    await expect(prefs.getByRole("checkbox", { name: /^Education/ })).toBeChecked();
+    await prefs.getByRole("checkbox", { name: /^Market news/ }).check();
+    await prefs.getByRole("button", { name: "Save my topics" }).click();
     await page.reload();
-    await expect(page.getByRole("checkbox", { name: /^Market news/ })).toBeChecked({ timeout: 20_000 });
-    await expect(page.getByRole("checkbox", { name: /^Education/ })).toBeChecked();
+    await expect(prefs.getByRole("checkbox", { name: /^Market news/ })).toBeChecked({ timeout: 20_000 });
+    await expect(prefs.getByRole("checkbox", { name: /^Education/ })).toBeChecked();
 
     // Unsubscribe from everything. The page confirms the change.
     await page.getByRole("button", { name: "Unsubscribe from everything" }).click();
@@ -157,6 +160,7 @@ test.describe.serial("M6 content and newsletter", () => {
   });
 
   test("c. admin sends a test campaign to themself", async ({ page }) => {
+    const form = page.getByRole("form", { name: "Campaign" });
     test.setTimeout(180_000);
     const subject = `M6 test campaign ${stamp}`;
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
@@ -164,7 +168,7 @@ test.describe.serial("M6 content and newsletter", () => {
 
     await page.goto("/admin/newsletter/campaigns/new");
     await page.getByLabel("Subject", { exact: true }).fill(subject);
-    await page.getByRole("checkbox", { name: /^Education/ }).check();
+    await form.getByRole("checkbox", { name: /^Education/ }).check();
     await page.getByLabel("Body (Markdown)").fill("## Hello\n\nThis is a **test** of the M6 newsletter.\n");
     await page.getByRole("button", { name: "Save draft" }).click();
     await page.waitForURL(/\/admin\/newsletter\/campaigns\/[^/]+$/, { timeout: 20_000 });
@@ -174,7 +178,7 @@ test.describe.serial("M6 content and newsletter", () => {
     await expect(testSection.getByRole("status")).toContainText(/test/i, { timeout: 20_000 });
 
     const testMail = await nextEmailTo(ADMIN_EMAIL, before);
-    expect(testMail).toContain(`subject: ${subject}`);
+    expect(testMail).toContain(`subject: [Test] ${subject}`);
   });
 
   test("d. legal pages render as drafts, unknown URLs show the 404 page, old legal URLs redirect", async ({ page }) => {

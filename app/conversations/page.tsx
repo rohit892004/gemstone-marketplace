@@ -23,7 +23,7 @@ async function List({ searchParams }: { searchParams: Promise<{ q?: string }> })
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <p className="text-sm uppercase tracking-widest text-accent">Messages</p>
+      <p className="text-sm uppercase tracking-widest text-accent-text">Messages</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Conversations</h1>
 
       <form method="get" className="mt-6">

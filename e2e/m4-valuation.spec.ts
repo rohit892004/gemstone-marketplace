@@ -3,6 +3,7 @@ import { VALUATION_DISCLAIMER } from "../lib/valuation/disclaimer";
 import path from "node:path";
 import { type Browser, type BrowserContext, type Locator, type Page, expect, test } from "@playwright/test";
 import { sampleJpeg, tokenSentTo } from "./helpers";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * M4 journey: valuations. Runs after journey.spec.ts and m3-journey.spec.ts on the same database, against a
@@ -64,6 +65,7 @@ async function shot(page: Page, name: string) {
 }
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);

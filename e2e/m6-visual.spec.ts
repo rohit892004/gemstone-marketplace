@@ -4,6 +4,7 @@ import path from "node:path";
 import { type Browser, type Page, expect, test } from "@playwright/test";
 import { Client } from "pg";
 import { hashPassword } from "../lib/auth/password";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * M6 screenshots and overflow check. Saves full-page screenshots at 390px and 1440px to screenshots/m6/ and checks that
@@ -25,6 +26,7 @@ const SELLER_PASSWORD = process.env.DEMO_SELLER_PASSWORD || "Demo-Seller-Pass-1"
 const SELLER_SLUG = "himalaya-gem-house";
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);

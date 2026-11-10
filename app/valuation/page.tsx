@@ -24,7 +24,7 @@ async function Landing() {
   const state = await requesterState();
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Valuation</p>
+      <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Valuation</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">Get an indicative valuation</h1>
       <p className="mt-4 text-ink-soft">
         Tell us about a gemstone and add photos. You get an indicative estimate with a value range and a confidence level, based on reference prices and the details you give.
@@ -61,7 +61,7 @@ async function Landing() {
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
   return (
     <div className="rounded-lg border border-line bg-surface-raised p-4">
-      <p className="text-sm font-medium text-accent">Step {n}</p>
+      <p className="text-sm font-medium text-accent-text">Step {n}</p>
       <h2 className="mt-1 font-semibold text-ink">{title}</h2>
       <p className="mt-1 text-sm text-ink-soft">{text}</p>
     </div>

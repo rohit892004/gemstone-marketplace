@@ -30,7 +30,7 @@ export function ArticleCard({ article, href, headingLevel = 2 }: { article: Arti
   return (
     <article className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface-raised p-5">
       {article.coverKey ? <CoverImage coverKey={article.coverKey} alt={article.coverAlt} className="mb-1" /> : null}
-      <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent">
+      <p className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent-text">
         <span>{TYPE_LABELS[article.type]}</span>
         {article.type === "NEWS" && article.category ? <span className="text-ink-soft">· {article.category}</span> : null}
       </p>

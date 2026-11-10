@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
     // Server actions default to a 1 MB body limit. Seller registration uploads several
     // documents (each up to UPLOAD_MAX_MB, default 10 MB) in one form post.
     serverActions: { bodySizeLimit: "35mb" },
+    // The proxy buffers a copy of each request body (default 10 MB). A logo and a banner at the 15 MB
+    // limit each, plus the form, must reach the action. Without this, a larger upload fails with "Unexpected end of form".
+    proxyClientMaxBodySize: "40mb",
   },
   async redirects() {
     // Legal pages live under /legal. The older short paths stay valid (footer links use them).

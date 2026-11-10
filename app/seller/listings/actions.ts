@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/require-role";
 import { prisma } from "@/lib/db/client";
-import { MEDIA_ERROR_TEXT, processMedia, type ProcessedMedia } from "@/lib/media/pipeline";
+import { IMAGE_TOO_LARGE_TEXT, MEDIA_ERROR_TEXT, processMedia, type ProcessedMedia, VIDEO_TOO_LARGE_TEXT } from "@/lib/media/pipeline";
 import { MEDIA_LIMITS } from "@/lib/listings/schema";
 import { getBooleanSetting } from "@/lib/settings/app-settings";
 import { loadActiveCertificateLabs } from "@/lib/seller/labs";
@@ -357,9 +357,9 @@ function mediaBatchMessage(reason: string): string {
     case "too_many_videos":
       return `A listing can have up to ${MEDIA_LIMITS.maxVideos} videos.`;
     case "image_too_large":
-      return `Images must be ${MEDIA_LIMITS.maxImageBytes / (1024 * 1024)} MB or smaller.`;
+      return IMAGE_TOO_LARGE_TEXT;
     case "video_too_large":
-      return `Videos must be ${MEDIA_LIMITS.maxVideoBytes / (1024 * 1024)} MB or smaller.`;
+      return VIDEO_TOO_LARGE_TEXT;
     default:
       return "Choose at least one image or video.";
   }

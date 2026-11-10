@@ -37,7 +37,7 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 sm:px-6">
       <div>
-        <p className="text-sm uppercase tracking-widest text-accent">Requirements board</p>
+        <p className="text-sm uppercase tracking-widest text-accent-text">Requirements board</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Buyer requirements</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Open requirements in your gemstone categories. Buyer details stay hidden. Respond to start a conversation on the platform.
@@ -126,7 +126,7 @@ async function Board({ searchParams }: { searchParams: SearchParams }) {
             <li key={row.id} className="flex flex-col gap-3 rounded-lg border border-line bg-surface-raised p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-widest text-accent">{row.category?.name ?? "Category"}</p>
+                  <p className="text-xs uppercase tracking-widest text-accent-text">{row.category?.name ?? "Category"}</p>
                   <h2 className="mt-1 text-lg font-semibold text-ink">
                     {row.gemstoneType}
                     {row.shape ? <span className="font-normal text-ink-soft"> · {row.shape}</span> : null}

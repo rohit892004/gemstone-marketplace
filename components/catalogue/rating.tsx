@@ -12,7 +12,7 @@ export function Rating({ average, count, isDemo }: { average: string | null; cou
   return (
     <p className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
       <span aria-label={`Rated ${value.toFixed(1)} out of 5`} className="font-medium text-ink">
-        <span aria-hidden="true" className="text-accent">★</span> {value.toFixed(1)}
+        <span aria-hidden="true" className="text-accent-text">★</span> {value.toFixed(1)}
       </span>
       <span>({count} {count === 1 ? "review" : "reviews"})</span>
       {isDemo ? <DemoBadge /> : null}

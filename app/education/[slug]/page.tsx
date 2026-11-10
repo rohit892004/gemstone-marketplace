@@ -71,7 +71,7 @@ async function EducationArticle({ params }: Props) {
       </nav>
 
       <header className="space-y-4">
-        <p className="text-xs font-medium uppercase tracking-wider text-accent">{TYPE_LABELS[article.type] ?? "Article"}</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-accent-text">{TYPE_LABELS[article.type] ?? "Article"}</p>
         <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{article.title}</h1>
         {article.summary ? <p className="text-lg text-ink-soft">{article.summary}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-soft">

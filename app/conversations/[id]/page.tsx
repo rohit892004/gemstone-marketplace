@@ -84,7 +84,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
       </Link>
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-widest text-accent">
+          <p className="text-sm uppercase tracking-widest text-accent-text">
             {conversation.kind === "ENQUIRY" ? "Enquiry" : conversation.kind === "REQUIREMENT" ? "Requirement" : "Conversation"}
             {conversation.isDemo && " · Demo"}
           </p>

@@ -25,7 +25,7 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-7xl space-y-20 px-4 py-16 sm:px-6 sm:py-20">
       <section>
-        <p className="text-sm font-medium uppercase tracking-widest text-accent">Gemstone marketplace</p>
+        <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Gemstone marketplace</p>
         <Suspense
           fallback={
             <h1 id="hero-heading" className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-ink sm:text-5xl">

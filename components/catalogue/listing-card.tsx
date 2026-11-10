@@ -39,7 +39,7 @@ export function ListingCard({ listing, priority = false }: { listing: ListingCar
             {listing.hasVerifiedDocument ? <VerifiedBadge /> : null}
             {listing.isDemo ? <DemoBadge /> : null}
             {listing.availability === "RESERVED" ? (
-              <span className="text-xs font-medium text-accent">Reserved</span>
+              <span className="text-xs font-medium text-accent-text">Reserved</span>
             ) : null}
             {listing.availability === "SOLD" ? <span className="text-xs font-medium text-ink-soft">Sold</span> : null}
           </div>

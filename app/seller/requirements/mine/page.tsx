@@ -26,7 +26,7 @@ async function OwnRequirements() {
     <section className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <p className="text-sm uppercase tracking-widest text-accent">Buying</p>
+          <p className="text-sm uppercase tracking-widest text-accent-text">Buying</p>
           <h1 className="text-3xl font-semibold tracking-tight text-ink">Your requirements</h1>
           <p className="text-sm text-ink-soft">Requirements you post as a buyer. Sellers who respond open a conversation in your inbox.</p>
         </div>

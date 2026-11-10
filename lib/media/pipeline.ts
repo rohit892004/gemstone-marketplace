@@ -34,13 +34,29 @@ export interface ProcessedVideo {
 
 export type ProcessedMedia = ProcessedImage | ProcessedVideo;
 
-export type MediaError = "empty" | "too_large" | "unsupported_type" | "undecodable";
+export type MediaError = "empty" | "too_large" | "unsupported_type" | "heic" | "undecodable";
+
+const MB = 1024 * 1024;
+const IMAGE_MB = MEDIA_LIMITS.maxImageBytes / MB;
+const VIDEO_MB = MEDIA_LIMITS.maxVideoBytes / MB;
+
+/** Shown for a photo that is too large. Names the limit so the seller knows what to reduce. */
+export const IMAGE_TOO_LARGE_TEXT = `This photo is larger than ${IMAGE_MB} MB. Reduce its size or export it as a smaller JPEG, then try again.`;
+/** Shown for a video that is too large. */
+export const VIDEO_TOO_LARGE_TEXT = `This video is larger than ${VIDEO_MB} MB. Shorten it or reduce its size, then try again.`;
+
+/** Accepted formats and sizes, in one place so every upload form says the same thing. */
+export const PHOTO_FORMATS_TEXT = "JPEG, PNG or WebP";
+export const PHOTO_SIZE_TEXT = `up to ${IMAGE_MB} MB`;
+export const HEIC_TEXT =
+  "iPhone HEIC photos must be converted to JPEG first. Export the photo as JPEG, or set iPhone Settings > Camera > Formats to Most Compatible and take the photo again.";
 
 export const MEDIA_ERROR_TEXT: Record<MediaError, string> = {
-  empty: "The file is empty.",
-  too_large: "The file is too large for this type.",
-  unsupported_type: "Upload a JPEG, PNG, WebP image or an MP4/WebM video.",
-  undecodable: "The image could not be read. Try another file.",
+  empty: "This file is empty. Choose another file.",
+  too_large: `This file is too large. Photos must be ${PHOTO_SIZE_TEXT} and videos up to ${VIDEO_MB} MB.`,
+  unsupported_type: `This file type is not accepted. Photos must be ${PHOTO_FORMATS_TEXT} (${PHOTO_SIZE_TEXT}). Videos must be MP4 or WebM (up to ${VIDEO_MB} MB).`,
+  heic: HEIC_TEXT,
+  undecodable: `This image could not be read. Export it again as ${PHOTO_FORMATS_TEXT} and upload it again.`,
 };
 
 const MAX_PIXELS = 40_000_000;
@@ -48,7 +64,7 @@ const MAX_PIXELS = 40_000_000;
 /** ISO-BMFF major brands used by HEIC/HEIF and AVIF still images. */
 const HEIF_BRANDS = new Set(["heic", "heix", "hevc", "heim", "heis", "hevm", "hevs", "mif1", "msf1", "avif", "avis"]);
 
-function sniff(bytes: Buffer): { kind: MediaKind; ext: string } | null {
+function sniff(bytes: Buffer): { kind: MediaKind | "HEIC"; ext: string } | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return { kind: "IMAGE", ext: "jpg" };
   if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
     return { kind: "IMAGE", ext: "png" };
@@ -60,7 +76,7 @@ function sniff(bytes: Buffer): { kind: MediaKind; ext: string } | null {
     // HEIF/AVIF photos share the ISO-BMFF container. They are refused rather than stored as
     // "video", because they would bypass the EXIF/GPS-stripping re-encode.
     const brand = bytes.subarray(8, 12).toString("ascii");
-    if (HEIF_BRANDS.has(brand)) return null;
+    if (HEIF_BRANDS.has(brand)) return { kind: "HEIC", ext: "heic" };
     return { kind: "VIDEO", ext: "mp4" };
   }
   if (bytes.length >= 4 && bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))) return { kind: "VIDEO", ext: "webm" };
@@ -73,6 +89,7 @@ export async function processMedia(
   if (bytes.length === 0) return { ok: false, reason: "empty" };
   const sniffed = sniff(bytes);
   if (!sniffed) return { ok: false, reason: "unsupported_type" };
+  if (sniffed.kind === "HEIC") return { ok: false, reason: "heic" };
 
   if (sniffed.kind === "VIDEO") {
     if (bytes.length > MEDIA_LIMITS.maxVideoBytes) return { ok: false, reason: "too_large" };

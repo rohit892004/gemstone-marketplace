@@ -33,7 +33,7 @@ async function SellerHome() {
   if (profile.approvalStatus === "APPROVED") {
     return (
       <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        <p className="text-sm font-medium uppercase tracking-widest text-accent">Seller dashboard</p>
+        <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Seller dashboard</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">{profile.businessName}</h1>
         <p className="mt-3 text-ink-soft">Your account is approved. Choose an area above to get started.</p>
       </section>

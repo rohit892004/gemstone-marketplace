@@ -68,7 +68,7 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
 
   return (
     <div className="mt-2 rounded-md border border-line bg-surface-raised p-3 text-ink">
-      <p className="text-xs uppercase tracking-widest text-accent">{offer.counterOfId ? "Counter offer" : "Offer"}</p>
+      <p className="text-xs uppercase tracking-widest text-accent-text">{offer.counterOfId ? "Counter offer" : "Offer"}</p>
       <p className="mt-1 text-base font-semibold">{amount}</p>
       {offer.note && <p className="mt-1 whitespace-pre-wrap break-words text-sm text-ink-soft">{offer.note}</p>}
       <p className="mt-2 text-sm">

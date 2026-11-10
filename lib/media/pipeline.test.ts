@@ -1,6 +1,6 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { processMedia } from "./pipeline";
+import { IMAGE_TOO_LARGE_TEXT, MEDIA_ERROR_TEXT, processMedia, VIDEO_TOO_LARGE_TEXT } from "./pipeline";
 
 async function jpegWithGps(): Promise<Buffer> {
   // Build a JPEG that carries EXIF including a GPS-like tag, using sharp's own metadata writer.
@@ -48,8 +48,18 @@ describe("processMedia", () => {
   it("refuses HEIC and AVIF photos instead of storing them unstripped as video", async () => {
     for (const brand of ["heic", "mif1", "avif"]) {
       const heif = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftyp"), Buffer.from(brand), Buffer.alloc(64)]);
-      expect(await processMedia(heif)).toEqual({ ok: false, reason: "unsupported_type" });
+      expect(await processMedia(heif)).toEqual({ ok: false, reason: "heic" });
     }
+  });
+
+  it("tells the seller which formats and sizes are accepted, and how to convert HEIC", () => {
+    expect(MEDIA_ERROR_TEXT.unsupported_type).toContain("JPEG, PNG or WebP");
+    expect(MEDIA_ERROR_TEXT.unsupported_type).toContain("MP4 or WebM");
+    expect(MEDIA_ERROR_TEXT.too_large).toContain("15 MB");
+    expect(MEDIA_ERROR_TEXT.heic).toContain("HEIC");
+    expect(MEDIA_ERROR_TEXT.heic).toContain("converted to JPEG first");
+    expect(IMAGE_TOO_LARGE_TEXT).toContain("15 MB");
+    expect(VIDEO_TOO_LARGE_TEXT).toContain("60 MB");
   });
 
   it("accepts an MP4 signature as video without re-encoding", async () => {

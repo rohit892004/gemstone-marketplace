@@ -4,7 +4,7 @@ import { WIZARD_STEPS, stepText } from "@/lib/valuation/requester-copy";
 export function WizardSteps({ current }: { current: 1 | 2 | 3 }) {
   return (
     <nav aria-label="Valuation steps" className="space-y-2">
-      <p className="text-sm font-medium text-accent">{stepText(current)}</p>
+      <p className="text-sm font-medium text-accent-text">{stepText(current)}</p>
       <ol className="flex gap-2">
         {WIZARD_STEPS.map((s) => {
           const done = s.step < current;

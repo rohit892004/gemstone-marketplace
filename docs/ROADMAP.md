@@ -13,11 +13,11 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 | M4 Valuation | Three-step valuation, "Request valuation" from a product page, expert review, PDF reports with verification page, saved reports, admin valuation tools | Done (`docs/milestones/m4-status.md`) |
 | M5 Analytics & membership | Privacy-safe event tracking and daily rollups, seller analytics with CSV export (Elite), followers, membership tiers Free / Premium / Elite (placeholder rules, pending client confirmation), referrals with fraud flags, admin memberships, tier rules and referrals queue, platform analytics with CSV export (moved here from M6) | Done (`docs/milestones/m5-status.md`) |
 
+| M6 Content, newsletter, polish, hardening, deployment prep | Education and reference library, market news, admin CMS with scheduling, newsletter with double opt-in and consent records, legal pages, accessibility pass, hardening, Dockerfile and compose, worker, S3-compatible storage, deployment guide | Done (`docs/milestones/m6-status.md`, `docs/PHASE1-REPORT.md`) |
+
 ## Remaining
 
-| Milestone | Scope |
-|---|---|
-| M6 Content & launch | Education, market news, newsletter (double opt-in, campaigns), admin content publishing, accessibility and polish, deployment preparation, hardening (see the M6 hardening list) |
+None. Phase 1 is complete. Go-live items are in `docs/PHASE1-REPORT.md` (open items and handover checklist).
 
 ## Coverage of the client brief
 
@@ -49,7 +49,7 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 
 ## M6 hardening list
 
-(Platform analytics moved from M6 to M5.)
+(Platform analytics moved from M6 to M5.) Status at M6 close: items 2 to 4 are done. Item 1 is done for the mutating admin valuation functions; the read helpers still rely on their page guards (see `docs/PHASE1-REPORT.md`, limitation 6).
 
 Work to do in the M6 pass, found during reviews and not urgent enough for the milestone that found it.
 

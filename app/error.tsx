@@ -16,7 +16,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-24 text-center sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Something went wrong</p>
+      <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Something went wrong</p>
       <h1 className="text-3xl font-semibold tracking-tight text-ink">We hit a problem loading this page</h1>
       <p className="text-ink-soft">Please try again. If it keeps happening, come back later.</p>
       <div className="mt-2 flex flex-wrap justify-center gap-4 text-sm font-medium">

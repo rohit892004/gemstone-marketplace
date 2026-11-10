@@ -75,7 +75,7 @@ async function RequirementDetail({ params }: { params: Promise<{ id: string }> }
       </Link>
 
       <div>
-        <p className="flex flex-wrap items-center gap-2 text-sm uppercase tracking-widest text-accent">
+        <p className="flex flex-wrap items-center gap-2 text-sm uppercase tracking-widest text-accent-text">
           <span>{requirement.category?.name ?? "Requirement"}</span>
           {requirement.isDemo && <span className="rounded bg-accent-soft px-1.5 py-0.5 normal-case tracking-normal text-ink">Demo</span>}
         </p>

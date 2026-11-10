@@ -34,7 +34,7 @@ async function Verify({ params }: Props) {
   const row = isValidReference(ref) ? await findVerificationRow(ref) : null;
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Verification</p>
+      <p className="text-sm font-medium uppercase tracking-widest text-accent-text">Verification</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">Verify a valuation</h1>
 
       <div className="mt-8">

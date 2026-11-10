@@ -79,7 +79,7 @@ async function Inbox({ searchParams }: { searchParams: SearchParams }) {
     <section className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-widest text-accent">Inbox</p>
+          <p className="text-sm uppercase tracking-widest text-accent-text">Inbox</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Conversations</h1>
         </div>
         {unreadTotal > 0 && (
@@ -175,7 +175,7 @@ function InboxRow({ item }: { item: ConversationListItem }) {
   return (
     <Link href={`/conversations/${item.id}`} className="flex items-start justify-between gap-4 px-4 py-4 hover:bg-surface">
       <div className="min-w-0">
-        <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-accent">
+        <p className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-accent-text">
           <span>{kindLabels[item.kind]}</span>
           <span className="text-ink-soft">{item.side === "BUYING" ? "Buying" : "Selling"}</span>
           {item.isDemo && <span className="rounded bg-accent-soft px-1.5 py-0.5 normal-case tracking-normal text-ink">Demo</span>}

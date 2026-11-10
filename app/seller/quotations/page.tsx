@@ -49,7 +49,7 @@ async function SellerQuotations() {
   return (
     <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
       <div>
-        <p className="text-sm uppercase tracking-widest text-accent">Quotations</p>
+        <p className="text-sm uppercase tracking-widest text-accent-text">Quotations</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Quotations you have sent</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Quotations are sent inside a conversation. Open the conversation to withdraw a quotation or download its PDF.

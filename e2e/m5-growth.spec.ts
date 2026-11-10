@@ -6,6 +6,7 @@ import { type Page, expect, test } from "@playwright/test";
 import { Client } from "pg";
 import { hashPassword } from "../lib/auth/password";
 import { samplePdf, tokenSentTo } from "./helpers";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * M5 growth journeys: tracking and followers, referrals, the Free listing limit, and admin tier overrides.
@@ -58,6 +59,7 @@ function runRollup(): void {
 }
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);

@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { type Browser, type BrowserContext, type Page, expect, test } from "@playwright/test";
 import { sampleJpeg, samplePdf, tokenSentTo } from "./helpers";
+import { clearLoginLimits } from "./helpers/rate-limits";
 
 /**
  * One serial journey across M1 and M2 on a production build with the demo seed loaded.
@@ -40,6 +41,7 @@ let demo: Page;
 let listingPath = "";
 
 async function login(page: Page, email: string, password: string) {
+  await clearLoginLimits();
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);

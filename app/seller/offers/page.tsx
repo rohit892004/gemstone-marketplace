@@ -32,7 +32,7 @@ async function SellerOffers() {
   return (
     <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
       <div>
-        <p className="text-sm uppercase tracking-widest text-accent">Offers</p>
+        <p className="text-sm uppercase tracking-widest text-accent-text">Offers</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Offers and counter offers</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Offers are answered inside their conversation. Offers waiting for you are listed first.

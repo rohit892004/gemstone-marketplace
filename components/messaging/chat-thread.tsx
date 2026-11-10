@@ -173,7 +173,7 @@ export function ChatThread(props: ChatThreadProps) {
       </div>
 
       {props.isDemo && (
-        <p className="border-t border-line px-4 py-2 text-xs text-accent">Demo conversation: sample data for demonstration.</p>
+        <p className="border-t border-line px-4 py-2 text-xs text-accent-text">Demo conversation: sample data for demonstration.</p>
       )}
       {warning && <p role="status" className="border-t border-line bg-accent-soft px-4 py-2 text-sm text-ink">{warning}</p>}
 

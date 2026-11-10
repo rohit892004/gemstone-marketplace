@@ -203,7 +203,7 @@ async function SellerPortfolio({ params, searchParams }: Props) {
                     <li key={review.id} className="space-y-1 text-sm">
                       <p className="flex flex-wrap items-center gap-2 text-ink">
                         <span className="font-medium">{review.authorName}</span>
-                        <span aria-label={`${review.rating} out of 5 stars`} className="text-accent">
+                        <span aria-label={`${review.rating} out of 5 stars`} className="text-accent-text">
                           {"★".repeat(review.rating)}
                         </span>
                         {review.isDemo ? <DemoBadge /> : null}
