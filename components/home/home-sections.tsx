@@ -9,6 +9,7 @@ import { publicListingWhere } from "@/lib/listings/visibility";
 import { loadCards } from "@/lib/listings/search";
 import { prisma } from "@/lib/db/client";
 import { loadHomepageBlocks } from "@/lib/homepage/blocks";
+import { listPublicArticles } from "@/lib/content/service";
 
 /**
  * Async homepage sections. Each one reads the database, so each is rendered inside a <Suspense>
@@ -157,12 +158,34 @@ export async function CategoryGrid() {
 }
 
 export async function Teasers() {
-  const blocks = await loadHomepageBlocks();
+  // Request-time: the latest published education and news items change as content is published.
+  await connection();
+  const [blocks, latestEducation, latestNews] = await Promise.all([
+    loadHomepageBlocks(),
+    listPublicArticles({ types: ["EDUCATION", "GUIDE", "RESEARCH"], take: 1 }),
+    listPublicArticles({ type: "NEWS", take: 1 }),
+  ]);
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <TeaserCard id="valuation-teaser" heading={blocks.valuationTeaser.heading} body={blocks.valuationTeaser.body} ctaLabel={blocks.valuationTeaser.ctaLabel} ctaHref={blocks.valuationTeaser.ctaHref} />
-      <TeaserCard id="education-teaser" heading={blocks.educationTeaser.heading} body={blocks.educationTeaser.body} ctaLabel={blocks.educationTeaser.ctaLabel} ctaHref={blocks.educationTeaser.ctaHref} />
-      <TeaserCard id="news-teaser" heading={blocks.newsTeaser.heading} body={blocks.newsTeaser.body} ctaLabel={blocks.newsTeaser.ctaLabel} ctaHref={blocks.newsTeaser.ctaHref} />
+      <TeaserCard
+        id="education-teaser"
+        heading={blocks.educationTeaser.heading}
+        body={blocks.educationTeaser.body}
+        ctaLabel={blocks.educationTeaser.ctaLabel}
+        ctaHref={blocks.educationTeaser.ctaHref}
+        latest={latestEducation.items[0] ? { title: latestEducation.items[0].title, href: `/education/${latestEducation.items[0].slug}` } : null}
+        emptyText="New guides are on the way."
+      />
+      <TeaserCard
+        id="news-teaser"
+        heading={blocks.newsTeaser.heading}
+        body={blocks.newsTeaser.body}
+        ctaLabel={blocks.newsTeaser.ctaLabel}
+        ctaHref={blocks.newsTeaser.ctaHref}
+        latest={latestNews.items[0] ? { title: latestNews.items[0].title, href: `/news/${latestNews.items[0].slug}` } : null}
+        emptyText="No market news has been published yet."
+      />
     </div>
   );
 }
@@ -198,13 +221,36 @@ export async function NewsletterTeaser() {
   );
 }
 
-function TeaserCard({ id, heading, body, ctaLabel, ctaHref }: { id: string; heading: string; body: string; ctaLabel: string; ctaHref: string }) {
+function TeaserCard({
+  id,
+  heading,
+  body,
+  ctaLabel,
+  ctaHref,
+  latest,
+  emptyText,
+}: {
+  id: string;
+  heading: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+  latest?: { title: string; href: string } | null;
+  emptyText?: string;
+}) {
   return (
     <section id={id} aria-labelledby={`${id}-heading`} className="flex flex-col gap-3 rounded-lg border border-line bg-surface-raised p-6">
       <h2 id={`${id}-heading`} className="text-lg font-semibold text-ink">
         {heading}
       </h2>
       <p className="text-sm text-ink-soft">{body}</p>
+      {latest === undefined ? null : latest ? (
+        <p className="text-sm text-ink">
+          Latest: <Link href={latest.href} className="font-medium underline hover:text-brand-strong">{latest.title}</Link>
+        </p>
+      ) : emptyText ? (
+        <p className="text-sm italic text-ink-soft">{emptyText}</p>
+      ) : null}
       <Link href={ctaHref} className="mt-auto text-sm font-medium text-brand-strong underline">
         {ctaLabel}
       </Link>
