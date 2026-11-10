@@ -37,6 +37,7 @@ export async function savePreferences(
     messages: formData.get("messages") === "on",
     offersAndQuotes: formData.get("offersAndQuotes") === "on",
     requirements: formData.get("requirements") === "on",
+    valuations: formData.get("valuations") === "on",
   };
   try {
     await saveNotificationPrefs(user.id, next);

@@ -15,6 +15,10 @@ export const NOTIFICATION_TYPES = {
   REQUIREMENT_MATCH: "requirement.match",
   REQUIREMENT_RESPONSE: "requirement.response",
   ADMIN_ALERT: "admin.alert",
+  VALUATION_STATUS: "valuation.status",
+  VALUATION_INFO_REQUESTED: "valuation.info_requested",
+  VALUATION_INFO_ANSWERED: "valuation.info_answered",
+  VALUATION_ASSIGNED: "valuation.assigned",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -31,6 +35,7 @@ export interface NotificationPrefs {
   messages: boolean;
   offersAndQuotes: boolean;
   requirements: boolean;
+  valuations: boolean;
 }
 
 export const DEFAULT_PREFS: NotificationPrefs = {
@@ -39,6 +44,7 @@ export const DEFAULT_PREFS: NotificationPrefs = {
   messages: true,
   offersAndQuotes: true,
   requirements: true,
+  valuations: true,
 };
 
 export type PrefCategory = Exclude<keyof NotificationPrefs, "emailEnabled">;
@@ -49,6 +55,7 @@ export function categoryFor(type: string): PrefCategory | null {
   if (type.startsWith("message.")) return "messages";
   if (type.startsWith("offer.") || type.startsWith("quotation.")) return "offersAndQuotes";
   if (type.startsWith("requirement.")) return "requirements";
+  if (type.startsWith("valuation.")) return "valuations";
   return null;
 }
 

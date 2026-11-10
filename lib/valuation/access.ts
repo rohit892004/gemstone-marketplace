@@ -34,6 +34,14 @@ export function canActAsValuator(viewer: ValuationViewer, valuation: ValuationAc
   return viewer.role === "VALUATOR" && valuation.assignedValuatorId !== null && viewer.id === valuation.assignedValuatorId;
 }
 
+/**
+ * A result exists: the rule engine valued it (AUTO_VALUED) or a valuator signed it off (COMPLETED).
+ * Only these can be published on a listing, shown as valid on the verification page, or downloaded as a PDF.
+ */
+export function isResultReady(status: string): boolean {
+  return status === "AUTO_VALUED" || status === "COMPLETED";
+}
+
 /** Statuses in which a valuator may still work on the request. */
 export const VALUATOR_ACTIONABLE_STATUSES = ["IN_EXPERT_REVIEW", "NEEDS_INFO"] as const;
 
@@ -59,7 +67,7 @@ export function canPublishOnListing(
     viewer.id === valuation.requesterId &&
     valuation.gemstoneId === listing.id &&
     listing.sellerUserId === viewer.id &&
-    valuation.status === "COMPLETED" &&
+    isResultReady(valuation.status) &&
     valuation.withdrawnAt === null
   );
 }
@@ -98,7 +106,7 @@ export function verificationView(valuation: {
   const date = valuation.completedAt ?? valuation.submittedAt;
   let status: VerificationStatus = "NOT_COMPLETE";
   if (valuation.withdrawnAt !== null) status = "WITHDRAWN";
-  else if (valuation.status === "COMPLETED") status = "VALID";
+  else if (isResultReady(valuation.status)) status = "VALID";
   const method: VerificationMethod | null =
     valuation.valuedBy === "EXPERT" ? "EXPERT" : valuation.valuedBy === "AUTO" ? "AUTO" : null;
   return {

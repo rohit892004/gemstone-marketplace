@@ -9,6 +9,7 @@ const ROWS: { name: keyof Omit<NotificationPrefs, "emailEnabled">; label: string
   { name: "messages", label: "New messages", help: "Sent as a digest, at most one email per 10 minutes." },
   { name: "offersAndQuotes", label: "Offers and quotations", help: "Offers, responses, and quotations sent or answered." },
   { name: "requirements", label: "Requirements", help: "Matching buyer requirements, and responses to yours." },
+  { name: "valuations", label: "Valuations", help: "Status changes and questions on your valuation requests." },
 ];
 
 /** Preferences form. Email is the master switch; the category switches only matter when it is on. */

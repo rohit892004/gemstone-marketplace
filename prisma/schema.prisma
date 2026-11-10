@@ -799,6 +799,7 @@ model NotificationPreference {
   messages        Boolean  @default(true)
   offersAndQuotes Boolean  @default(true)
   requirements    Boolean  @default(true)
+  valuations      Boolean  @default(true)
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
