@@ -61,7 +61,7 @@ async function RequirementList() {
                 >
                   <div className="min-w-0 space-y-1.5">
                     <p className="font-heading text-xl text-ink">{row.gemstoneType}</p>
-                    <p className="text-sm text-ink-soft">{facts.join(" · ")}</p>
+                    <p className="text-sm text-ink-soft">{facts.join(" Â· ")}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2 text-xs text-ink-soft">
                     <Badge tone={row.status === "OPEN" ? "success" : "neutral"}>{row.status === "OPEN" ? "Open" : "Closed"}</Badge>

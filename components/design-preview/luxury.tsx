@@ -220,7 +220,7 @@ function StoneCard({ s }: { s: (typeof STONES)[number] }) {
 function FeaturedCarousel() {
   return (
     <Carousel label="gemstones">
-      {STONES.map((s, i) => (
+      {STONES.map((s) => (
         <StoneCard key={s.name} s={s} />
       ))}
     </Carousel>
