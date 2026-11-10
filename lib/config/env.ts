@@ -5,8 +5,8 @@ import { z } from "zod";
  * Validation runs on first use (not on import), so tests and tooling can load
  * modules without a full environment. Throws if required variables are invalid.
  *
- * When NODE_ENV=production the production rule set (productionProblems) also runs. Every
- * problem is listed in one error so an operator can fix them in a single pass.
+ * At server start (instrumentation.ts) parseStartupEnv also applies the production rule set when
+ * NODE_ENV=production, listing every problem in one error. It is not applied during `next build`.
  */
 /** Optional string where an empty value (e.g. copied from .env.example) counts as unset. */
 const optionalText = z.preprocess((value) => (value === "" ? undefined : value), z.string().min(1).optional());
@@ -131,13 +131,25 @@ export function productionProblems(source: Record<string, string | undefined>): 
   return problems;
 }
 
+/** Base validation only. Used by getEnv(), so `next build` (which imports modules with NODE_ENV=production) is not blocked. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
+  const result = schema.safeParse(source);
+  if (!result.success) {
+    const problems = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
+    throw new Error(`Invalid environment configuration:\n${problems.map((line) => `  - ${line}`).join("\n")}`);
+  }
+  return result.data;
+}
+
+/**
+ * Startup validation: base rules plus, when NODE_ENV=production, the production rule set. Every problem is
+ * reported in one error. Called from instrumentation.ts at server start only, never during `next build`.
+ */
+export function parseStartupEnv(source: Record<string, string | undefined>): Env {
   const result = schema.safeParse(source);
   const problems: string[] = [];
   if (!result.success) {
-    for (const issue of result.error.issues) {
-      problems.push(`${issue.path.join(".")}: ${issue.message}`);
-    }
+    problems.push(...result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`));
   }
   if (source.NODE_ENV === "production") {
     problems.push(...productionProblems(source));
