@@ -1,5 +1,7 @@
 import { Suspense } from "react";
-import { ComingSoon } from "../coming-soon";
+import { SavedReportList } from "@/components/valuation/requester-lists";
+import { EmptyReports } from "@/components/valuation/empty-states";
+import { listSavedReports } from "@/lib/valuation/requester-queries";
 import { requireBuyerPage } from "../guard";
 
 export default function ReportsPage() {
@@ -11,6 +13,12 @@ export default function ReportsPage() {
 }
 
 async function Reports() {
-  await requireBuyerPage();
-  return <ComingSoon title="Saved reports" empty="No saved reports yet" />;
+  const user = await requireBuyerPage();
+  const rows = await listSavedReports(user.id);
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-ink-soft">Completed valuation reports, with their PDF. A withdrawn report stays here, marked as withdrawn.</p>
+      <SavedReportList rows={rows} resultsHref="/valuation" empty={<EmptyReports />} />
+    </div>
+  );
 }
