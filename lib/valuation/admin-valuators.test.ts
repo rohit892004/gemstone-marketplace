@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => {
   const tx = {
-    user: { updateMany: vi.fn() },
+    user: { updateMany: vi.fn(), findUnique: vi.fn(async () => ({ role: "ADMIN", status: "ACTIVE" })) },
     valuation: { updateMany: vi.fn() },
   };
   return {

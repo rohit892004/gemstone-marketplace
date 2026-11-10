@@ -19,20 +19,8 @@ import { auth } from "./auth";
  * approval changes and password resets take effect immediately, not at token expiry.
  */
 
-export type AuthzCode =
-  | "UNAUTHENTICATED"
-  | "EMAIL_NOT_VERIFIED"
-  | "ACCOUNT_SUSPENDED"
-  | "SELLER_SUSPENDED"
-  | "SELLER_NOT_APPROVED"
-  | "FORBIDDEN";
-
-export class AuthzError extends Error {
-  constructor(readonly code: AuthzCode) {
-    super(code);
-    this.name = "AuthzError";
-  }
-}
+import { AuthzError, type AuthzCode } from "./authz-error";
+export { AuthzError, type AuthzCode };
 
 export interface CurrentUser {
   id: string;
