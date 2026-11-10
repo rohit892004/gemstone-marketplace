@@ -34,11 +34,19 @@
   /* Small gold text on light surfaces: keeps contrast above 4.5:1. */
   --color-accent-text: #7a5f35;
   --color-champagne: #d8c39b;
+  /* Dark sections, photo fallbacks and light text on photographs. */
+  --color-night: #0e0d0b;
+  --color-panel: #1a1917;
+  --color-ivory: #f4f0e8;
+  --color-danger: #8c2f2f;
+  --color-success: #3d6b4f;
 
   --font-sans: var(--font-lux-sans);
   --font-heading: var(--font-lux-serif);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius-card: 4px;
+  --shadow-soft: 0 1px 2px rgb(28 26 23 / 0.04), 0 8px 24px -12px rgb(28 26 23 / 0.12);
+  --ease-lux: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @layer base {

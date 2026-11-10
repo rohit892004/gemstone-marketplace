@@ -21,6 +21,9 @@ export interface DemoArticle {
   category?: string;
   sourceName?: string;
   sourceUrl?: string;
+  /** Demo photo file in prisma/demo-photos used as the article cover (JPEG output). */
+  coverFile: string;
+  coverAlt: string;
 }
 
 export const DEMO_NEWS_SOURCE = "Demo source: Gemstone Wire (demo)";
@@ -29,6 +32,8 @@ export const M6_DEMO_ARTICLES: DemoArticle[] = [
   {
     type: "EDUCATION",
     title: "Demo: Reading a gemstone lab report",
+    coverFile: "diamond-01.jpg",
+    coverAlt: "Demo cover image: close-up of a diamond",
     summary: "Demo guide. What the main sections of a laboratory report mean, and which questions to ask the seller.",
     tags: ["grading", "reports", "beginners"],
     status: "PUBLISHED",
@@ -56,6 +61,8 @@ A report cannot say whether a price is fair. For that, compare similar stones in
   {
     type: "EDUCATION",
     title: "Demo: Treatments explained in plain language",
+    coverFile: "emerald-02.jpg",
+    coverAlt: "Demo cover image: close-up of an emerald",
     summary: "Demo primer on heating, filling and other common treatments, and why disclosure matters for price.",
     tags: ["treatments", "disclosure", "beginners"],
     status: "PUBLISHED",
@@ -82,6 +89,8 @@ Two stones with the same size and colour can have very different prices if one i
   {
     type: "EDUCATION",
     title: "Demo: Caring for coloured stones at home",
+    coverFile: "ruby-03.jpg",
+    coverAlt: "Demo cover image: close-up of a ruby",
     summary: "Demo care guide. Simple cleaning, storage and handling habits that protect most coloured stones.",
     tags: ["care", "cleaning", "storage"],
     status: "PUBLISHED",
@@ -110,6 +119,8 @@ Keep each stone in a separate soft pouch. Harder stones can scratch softer ones,
   {
     type: "GUIDE",
     title: "Demo: A buyer's checklist before you pay",
+    coverFile: "diamond-02.jpg",
+    coverAlt: "Demo cover image: close-up of diamonds",
     summary: "Demo checklist for the last ten minutes before paying for a coloured stone or a diamond.",
     tags: ["buying", "checklist"],
     status: "PUBLISHED",
@@ -138,6 +149,8 @@ Check the stone against the report under daylight and note anything that does no
   {
     type: "GUIDE",
     title: "Demo: How to compare two listings fairly",
+    coverFile: "sapphire-01.jpg",
+    coverAlt: "Demo cover image: close-up of a sapphire",
     summary: "Demo guide. Compare like with like by weight, colour, clarity, treatment and documents.",
     tags: ["buying", "comparison", "listings"],
     status: "PUBLISHED",
@@ -160,6 +173,8 @@ Each reference page explains the factors that move the price for that stone. Use
   {
     type: "GUIDE",
     title: "Demo: Preparing a stone for a valuation request",
+    coverFile: "diamond-03.jpg",
+    coverAlt: "Demo cover image: diamond jewellery",
     summary: "Demo guide. What to gather, photograph and write down before you request an indicative valuation.",
     tags: ["valuation", "preparation"],
     status: "PUBLISHED",
@@ -184,6 +199,8 @@ An indicative valuation is an estimate based on the details you give and the ref
   {
     type: "RESEARCH",
     title: "Demo: Why carat weight moves prices faster than colour",
+    coverFile: "diamond-04.jpg",
+    coverAlt: "Demo cover image: close-up of a diamond",
     summary: "Demo research note on a simple way to think about price steps. Illustrative, with no market statistics.",
     tags: ["pricing", "research", "carat"],
     status: "PUBLISHED",
@@ -209,6 +226,8 @@ This note describes a method. It does not quote prices, and each market moves fo
   {
     type: "RESEARCH",
     title: "Demo: A simple method for tracking coloured stone prices",
+    coverFile: "ruby-02.jpg",
+    coverAlt: "Demo cover image: close-up of a ruby",
     summary: "Demo research note. A repeatable way to record asking prices so that trends become visible over time.",
     tags: ["pricing", "research", "method"],
     status: "SCHEDULED",
@@ -237,6 +256,8 @@ This is a demo method. A future edition will show how to store the records and c
     type: "NEWS",
     category: "Market",
     title: "Demo: Sapphire parcel prices steady after a quiet quarter",
+    coverFile: "sapphire-03.jpg",
+    coverAlt: "Demo cover image: close-up of a sapphire",
     summary: "Demo news item. Dealers report steady asking prices for mid-sized sapphire parcels.",
     tags: ["sapphire", "prices"],
     status: "PUBLISHED",
@@ -250,6 +271,8 @@ This is a demo method. A future edition will show how to store the records and c
     type: "NEWS",
     category: "Trade",
     title: "Demo: New trade fair dates announced for the coming season",
+    coverFile: "workshop-01.jpg",
+    coverAlt: "Demo cover image: gem workshop",
     summary: "Demo news item. A fictional trade fair publishes dates for exhibitor registration.",
     tags: ["events", "trade"],
     status: "PUBLISHED",
@@ -263,6 +286,8 @@ This is a demo method. A future edition will show how to store the records and c
     type: "NEWS",
     category: "Mining",
     title: "Demo: Small-scale mine reports better recovery at one site",
+    coverFile: "loose-dark-01.jpg",
+    coverAlt: "Demo cover image: loose gemstones on a dark background",
     summary: "Demo news item. A fictional small mine says a new washing step improved recovery.",
     tags: ["mining", "supply"],
     status: "PUBLISHED",
@@ -276,6 +301,8 @@ This is a demo method. A future edition will show how to store the records and c
     type: "NEWS",
     category: "Certification",
     title: "Demo: Lab adds a new report format for coloured stones",
+    coverFile: "workshop-03.jpg",
+    coverAlt: "Demo cover image: gem workshop",
     summary: "Demo news item. A fictional laboratory introduces a report layout with clearer treatment notes.",
     tags: ["reports", "certification"],
     status: "PUBLISHED",
@@ -289,6 +316,8 @@ This is a demo method. A future edition will show how to store the records and c
     type: "NEWS",
     category: "Policy",
     title: "Demo: Draft guidance on disclosing gemstone treatments",
+    coverFile: "loose-dark-02.jpg",
+    coverAlt: "Demo cover image: loose gemstones on a dark background",
     summary: "Demo news item. A fictional trade body consults on wording for treatment disclosure.",
     tags: ["disclosure", "policy"],
     status: "PUBLISHED",

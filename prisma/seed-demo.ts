@@ -6,6 +6,7 @@ import { PrismaClient } from "@/app/generated/prisma/client";
 import { computeSellerRating } from "@/lib/admin-catalogue/rating";
 import { hashPassword } from "@/lib/auth/password";
 import { assertDemoAllowed } from "@/lib/demo/guard";
+import { listDemoPhotos, readDemoPhoto } from "@/lib/demo/photos";
 import { processMedia } from "@/lib/media/pipeline";
 import { getStorageProvider, type StorageProvider } from "@/lib/storage/storage";
 import { seedM3Demo } from "@/prisma/seed-m3-demo";
@@ -18,6 +19,9 @@ import { seedM3Demo } from "@/prisma/seed-m3-demo";
  *
  * Idempotent: removes earlier demo rows (isDemo true, and demo users by email domain) and their
  * stored files, then recreates everything. Requires the reference categories from `db:seed`.
+ *
+ * Photos are the Pixabay set in prisma/demo-photos (see its README). Listings use only the four stone types
+ * that have photos. Sellers get a text monogram logo and a banner photo.
  *
  * Everything here is labelled demo: sellers, listings, reviews and ratings carry isDemo = true,
  * and the UI shows a Demo badge on each. Demo users have unusable random passwords.
@@ -34,25 +38,26 @@ interface DemoSeller {
   tagline: string;
   yearsInBusiness: number;
   featured: boolean;
+  /** Demo photo file used as the seller banner, taken from the seller's main specialty. */
+  bannerPhoto: string;
 }
 
 const SELLERS: DemoSeller[] = [
-  { slug: "himalaya-gem-house", businessName: "Himalaya Gem House", city: "Jaipur", state: "Rajasthan", specialties: ["Sapphire", "Ruby"], tagline: "Heirloom coloured stones cut in Jaipur.", yearsInBusiness: 22, featured: true },
-  { slug: "deccan-stone-works", businessName: "Deccan Stone Works", city: "Hyderabad", state: "Telangana", specialties: ["Emerald", "Tourmaline"], tagline: "Fine green stones and bi-colour tourmaline.", yearsInBusiness: 11, featured: false },
-  { slug: "coastal-gem-exchange", businessName: "Coastal Gem Exchange", city: "Mumbai", state: "Maharashtra", specialties: ["Diamond", "Spinel"], tagline: "Certified diamonds and vivid spinel.", yearsInBusiness: 18, featured: true },
-  { slug: "surat-colour-co", businessName: "Surat Colour Co", city: "Surat", state: "Gujarat", specialties: ["Spinel", "Tourmaline"], tagline: "Small parcels, consistent colour.", yearsInBusiness: 7, featured: false },
-  { slug: "malabar-precious-gems", businessName: "Malabar Precious Gems", city: "Kochi", state: "Kerala", specialties: ["Diamond", "Emerald"], tagline: "Family-run since the 1990s.", yearsInBusiness: 29, featured: false },
-  { slug: "thar-valley-stones", businessName: "Thar Valley Stones", city: "Udaipur", state: "Rajasthan", specialties: ["Ruby", "Sapphire"], tagline: "Untreated rubies and sapphires from Udaipur.", yearsInBusiness: 9, featured: false },
+  { slug: "himalaya-gem-house", businessName: "Himalaya Gem House", city: "Jaipur", state: "Rajasthan", specialties: ["Sapphire", "Ruby"], tagline: "Heirloom coloured stones cut in Jaipur.", yearsInBusiness: 22, featured: true, bannerPhoto: "sapphire-02.jpg" },
+  { slug: "deccan-stone-works", businessName: "Deccan Stone Works", city: "Hyderabad", state: "Telangana", specialties: ["Emerald", "Diamond"], tagline: "Fine green stones and well-cut diamonds.", yearsInBusiness: 11, featured: false, bannerPhoto: "emerald-02.jpg" },
+  { slug: "coastal-gem-exchange", businessName: "Coastal Gem Exchange", city: "Mumbai", state: "Maharashtra", specialties: ["Diamond", "Sapphire"], tagline: "Certified diamonds and fine sapphires.", yearsInBusiness: 18, featured: true, bannerPhoto: "diamond-02.jpg" },
+  { slug: "surat-colour-co", businessName: "Surat Colour Co", city: "Surat", state: "Gujarat", specialties: ["Ruby", "Emerald"], tagline: "Small parcels, consistent colour.", yearsInBusiness: 7, featured: false, bannerPhoto: "ruby-02.jpg" },
+  { slug: "malabar-precious-gems", businessName: "Malabar Precious Gems", city: "Kochi", state: "Kerala", specialties: ["Diamond", "Emerald"], tagline: "Family-run since the 1990s.", yearsInBusiness: 29, featured: false, bannerPhoto: "diamond-03.jpg" },
+  { slug: "thar-valley-stones", businessName: "Thar Valley Stones", city: "Udaipur", state: "Rajasthan", specialties: ["Ruby", "Sapphire"], tagline: "Untreated rubies and sapphires from Udaipur.", yearsInBusiness: 9, featured: false, bannerPhoto: "ruby-03.jpg" },
 ];
 
+/** Species with demo photos. `photos` is the file prefix in prisma/demo-photos (sapphire-01.jpg and so on). */
 const SPECIES = [
-  { species: "Sapphire", category: "sapphire", colour: "Cornflower blue", origin: "Ceylon", rate: 45000, rgb: [40, 90, 170] },
-  { species: "Ruby", category: "ruby", colour: "Pigeon blood red", origin: "Mozambique", rate: 60000, rgb: [160, 20, 40] },
-  { species: "Emerald", category: "emerald", colour: "Vivid green", origin: "Colombia", rate: 52000, rgb: [20, 120, 70] },
-  { species: "Spinel", category: "spinel", colour: "Hot pink", origin: "Myanmar", rate: 18000, rgb: [210, 90, 150] },
-  { species: "Tourmaline", category: "tourmaline", colour: "Watermelon", origin: "Brazil", rate: 9000, rgb: [200, 110, 120] },
-  { species: "Diamond", category: "diamond", colour: "G colour", origin: "South Africa", rate: 120000, rgb: [200, 200, 210] },
-  { species: "Sapphire", category: "sapphire", colour: "Padparadscha", origin: "Madagascar", rate: 38000, rgb: [220, 130, 80] },
+  { species: "Sapphire", category: "sapphire", photos: "sapphire", colour: "Cornflower blue", origin: "Ceylon", rate: 45000 },
+  { species: "Ruby", category: "ruby", photos: "ruby", colour: "Pigeon blood red", origin: "Mozambique", rate: 60000 },
+  { species: "Emerald", category: "emerald", photos: "emerald", colour: "Vivid green", origin: "Colombia", rate: 52000 },
+  { species: "Diamond", category: "diamond", photos: "diamond", colour: "G colour", origin: "South Africa", rate: 120000 },
+  { species: "Sapphire", category: "sapphire", photos: "sapphire", colour: "Padparadscha", origin: "Madagascar", rate: 38000 },
 ] as const;
 
 const SHAPES = ["Oval", "Cushion", "Round", "Emerald cut", "Pear"] as const;
@@ -86,11 +91,29 @@ function randomKey(prefix: string, ext: string): string {
   return `${prefix}/${randomBytes(16).toString("hex")}.${ext}`;
 }
 
-async function solidJpeg(rgb: readonly number[], width: number, height: number): Promise<Buffer> {
-  return sharp({
-    create: { width, height, channels: 3, background: { r: rgb[0], g: rgb[1], b: rgb[2] } },
-  })
-    .jpeg()
+/** Two capital letters from the first two words of the business name, e.g. "Himalaya Gem House" gives "HG". */
+export function monogramInitials(businessName: string): string {
+  const words = businessName.split(/\s+/).filter((w) => /[A-Za-z]/.test(w));
+  const letters = words.slice(0, 2).map((w) => w.replace(/[^A-Za-z]/g, "")[0] ?? "");
+  return letters.join("").toUpperCase();
+}
+
+/** Text monogram: cream letters on a charcoal disc with a thin gold ring. Georgia, serif. */
+export function monogramSvg(initials: string): string {
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
+    '<circle cx="256" cy="256" r="256" fill="#1c1a17"/>',
+    '<circle cx="256" cy="256" r="232" fill="none" stroke="#8a6d43" stroke-width="5"/>',
+    `<text x="256" y="325" text-anchor="middle" font-family="Georgia, serif" font-size="200" fill="#f4f0e8">${initials}</text>`,
+    "</svg>",
+  ].join("");
+}
+
+/** Renders the monogram as a 512 x 512 WebP. */
+export async function monogramWebp(businessName: string): Promise<Buffer> {
+  return sharp(Buffer.from(monogramSvg(monogramInitials(businessName))), { density: 96 })
+    .resize(512, 512)
+    .webp({ quality: 90 })
     .toBuffer();
 }
 
@@ -104,6 +127,10 @@ async function clearDemoData(prisma: PrismaClient, storage: StorageProvider): Pr
     where: { gemstone: { isDemo: true } },
     select: { fileKey: true },
   });
+  const oldSellers = await prisma.sellerProfile.findMany({
+    where: { isDemo: true },
+    select: { logoKey: true, bannerKey: true },
+  });
 
   await prisma.gemstone.deleteMany({ where: { isDemo: true } });
   await prisma.review.deleteMany({ where: { isDemo: true } });
@@ -115,6 +142,10 @@ async function clearDemoData(prisma: PrismaClient, storage: StorageProvider): Pr
     if (m.thumbKey) await storage.delete(m.thumbKey);
   }
   for (const d of oldDocs) await storage.delete(d.fileKey);
+  for (const s of oldSellers) {
+    if (s.logoKey) await storage.delete(s.logoKey);
+    if (s.bannerKey) await storage.delete(s.bannerKey);
+  }
 }
 
 /**
@@ -134,9 +165,24 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
 
   await clearDemoData(prisma, storage);
 
+  // Photo sets, listed once. Each image takes the next photo in its set, so pictures change from listing to listing.
+  const photoSets = new Map<string, string[]>();
+  for (const s of SPECIES) {
+    if (!photoSets.has(s.photos)) photoSets.set(s.photos, await listDemoPhotos(s.photos));
+  }
+  const nextPhoto = new Map<string, number>();
+
   // 1. Sellers: demo users with unusable random passwords, approved, featured on two.
   const sellerIds: string[] = [];
   for (const [index, s] of SELLERS.entries()) {
+    const logoKey = randomKey("demo", "webp");
+    await storage.put(logoKey, await monogramWebp(s.businessName));
+
+    const bannerKey = randomKey("demo", "webp");
+    const banner = await processMedia(await readDemoPhoto(s.bannerPhoto));
+    if (!banner.ok || banner.media.kind !== "IMAGE") throw new Error(`Demo banner failed processing: ${s.bannerPhoto}`);
+    await storage.put(bannerKey, banner.media.main.data);
+
     const user = await prisma.user.create({
       data: {
         email: `${s.slug}@${DEMO_EMAIL_DOMAIN}`,
@@ -160,6 +206,8 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
             // Categories are needed for the requirements board (M3). Connected from the specialties.
             categories: { connect: s.specialties.map((sp) => categoryBySlug.get(sp.toLowerCase())).filter((id): id is string => Boolean(id)).map((id) => ({ id })) },
             tagline: s.tagline,
+            logoKey,
+            bannerKey,
             approvalStatus: "APPROVED",
             approvedAt: new Date(),
             reviewedAt: new Date(),
@@ -189,11 +237,14 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
     const slug = `demo-${String(i + 1).padStart(2, "0")}-${s.species.toLowerCase()}-${shape.toLowerCase().replace(/\s+/g, "-")}`;
 
     const imageCount = i % 3 === 0 ? 2 : 1;
+    const set = photoSets.get(s.photos) ?? [];
     const media = [];
     for (let n = 0; n < imageCount; n++) {
-      const source = await solidJpeg([s.rgb[0] - n * 10, s.rgb[1], s.rgb[2]], 1200, 900);
-      const processed = await processMedia(source);
-      if (!processed.ok || processed.media.kind !== "IMAGE") throw new Error("Demo image failed processing");
+      const used = nextPhoto.get(s.photos) ?? 0;
+      nextPhoto.set(s.photos, used + 1);
+      const fileName = set[used % set.length];
+      const processed = await processMedia(await readDemoPhoto(fileName));
+      if (!processed.ok || processed.media.kind !== "IMAGE") throw new Error(`Demo image failed processing: ${fileName}`);
       const mainKey = randomKey("demo", "webp");
       const thumbKey = randomKey("demo", "webp");
       await storage.put(mainKey, processed.media.main.data);
@@ -206,7 +257,7 @@ export async function seedDemo(prisma: PrismaClient, storage: StorageProvider = 
         sizeBytes: processed.media.sizeBytes,
         width: processed.media.main.width,
         height: processed.media.main.height,
-        alt: `${s.species} placeholder image ${n + 1}`,
+        alt: `${s.colour} ${s.species}, ${carat.toFixed(2)} ct ${shape.toLowerCase()}, detail view ${n + 1}`,
         sortOrder: n,
         isCover: n === 0,
         status: "READY" as const,
