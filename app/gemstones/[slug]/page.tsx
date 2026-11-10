@@ -7,6 +7,8 @@ import { SellerCard } from "@/components/catalogue/seller-card";
 import { EnquireForm } from "@/components/product/enquire-form";
 import { ProductGallery, type GalleryItem } from "@/components/product/gallery";
 import { WishlistButton } from "@/components/product/wishlist-button";
+import { PlatformValuations } from "@/components/valuation/platform-valuations";
+import { RequestValuationSlot } from "@/components/valuation/request-valuation-slot";
 import { checkRole } from "@/lib/auth/require-role";
 import { MESSAGING_ROLES } from "@/lib/messaging/access";
 import { listingDocumentUrl, mediaUrl } from "@/lib/media/urls";
@@ -125,7 +127,9 @@ async function GemstoneDetail({ params }: Props) {
               <WishlistSlot state={wishlist} listingId={listing.id} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <DisabledAction label="Request valuation" />
+              <Suspense fallback={null}>
+                <RequestValuationSlot gemstoneId={listing.id} slug={listing.slug} />
+              </Suspense>
               <EnquireSlot slug={listing.slug} listingId={listing.id} title={listing.title} sellerUserId={listing.seller.userId} />
             </div>
           </div>
@@ -145,6 +149,10 @@ async function GemstoneDetail({ params }: Props) {
                 ))}
             </dl>
           </section>
+
+          <Suspense fallback={null}>
+            <PlatformValuations gemstoneId={listing.id} />
+          </Suspense>
 
           {listing.description ? (
             <section aria-labelledby="desc-heading">
@@ -264,19 +272,4 @@ async function EnquireSlot({
     return <p className="self-center text-xs text-ink-soft">This is your listing, so you cannot enquire about it.</p>;
   }
   return <EnquireForm gemstoneId={listingId} title={title} />;
-}
-
-function DisabledAction({ label }: { label: string }) {
-  return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        disabled
-        className="w-full rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink-soft"
-      >
-        {label}
-      </button>
-      <p className="text-xs text-ink-soft">Coming in the next update</p>
-    </div>
-  );
 }
