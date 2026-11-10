@@ -66,6 +66,7 @@ Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and
 | `npm run notify:flush` | Sends pending message digests. Run every 5 minutes from a scheduler (see below) |
 
 ## Scheduled jobs
+- **Analytics rollup:** `npm run analytics:rollup` once a day, shortly after midnight UTC. It aggregates finished days, deletes raw events older than 90 days, and runs the membership tier and referral passes. Re-running is safe. To run it as of a later day (for example in a test), use `npm run analytics:rollup -- --as-of=YYYY-MM-DD`.
 
 - **Message digests:** `npm run notify:flush` every 5 minutes (cron, Task Scheduler or your host's scheduler). Message emails are batched: the first message in a 10 minute window is emailed at once, and later ones wait for the next flush. Without the schedule, digests after the first message never send. The flush takes a Postgres advisory lock, so overlapping runs are safe.
 
@@ -225,3 +226,18 @@ Indicative valuations: a rule-based engine, expert review, a PDF report with a Q
 - **Privacy rules** (enforced in `lib/valuation/view.ts`, `lib/valuation/documents.ts` and the route handlers): a valuation is visible to its requester, its assigned valuator and admins only. A listing's seller never sees a buyer's valuation of that listing. Media and PDF routes re-check the account in the database, so a suspended account or a deactivated valuer loses access at once.
 - **Known limitations:** video files are not EXIF-stripped (as in M2). The PDF disclaimer wording is shorter than the on-page wording. Browser checks ran in headless Chromium only. The PDF was checked as bytes and text, not visually. The default Turbopack build fails only inside a git worktree that uses a `node_modules` junction; the main repo builds.
 - **Tests:** `npm test` (826 unit tests), `npm run test:e2e` (28 journeys across M1 to M4, including the M4 journeys, the stone-change unpublish and the seller requirement edit). Run against a production build with the demo seed. Screenshots at 390px and 1440px are in `screenshots/m4/`.
+
+## M5 status (Growth: analytics, membership, referrals)
+
+On branch `m5-growth`. Full status: `docs/milestones/m5-status.md`.
+
+- **Tracking:** page events go to `/api/analytics/event` with a first-party, random visitor cookie (`gs_vid`). Raw events hold no personal data: the visitor is a hash that changes every day. Views and impressions are counted once per visitor, per item and per day. Staff, bots and a seller's own pages are never counted. Search terms that look like contact details are never stored. Raw events are kept 90 days.
+- **Seller analytics:** `/seller/analytics`, with 7, 30 or 90 days (capped by tier), KPI tiles with trends, a daily chart, top listings and a Demo tag. CSV export at `/seller/analytics/export` is an Elite benefit. Every query is scoped to the signed-in seller.
+- **Followers:** buyers and sellers can follow a seller from the seller profile. Followers are notified when that seller publishes a new listing (preferences respected).
+- **Membership:** Free, Premium and Elite. Rules are in the `TierRule` table, editable by admins at `/admin/memberships/rules`. The current values are placeholders, pending client confirmation. Upgrades are immediate. Downgrades have a 14-day grace period. Admins can override a tier with a reason (audited). The membership page is at `/seller/membership`, with progress toward the next tier and a referral link.
+- **Limits:** the server refuses a new publish over the active-listing limit (counting published listings), and refuses featured slots beyond the tier's count. Downgrades never remove listings.
+- **Referrals:** `/register/seller?ref=<code>` attributes the new seller. A referral qualifies when the referred seller is approved and has a published listing. Self-referrals are refused. Suspicious sign-ups (same IP or device, or many from one email domain) are flagged for admin review and do not qualify automatically. Admins can clear a flag or void a referral at `/admin/referrals`.
+- **Platform analytics:** `/admin/analytics` (7, 30 or 90 days, CSV export), with totals, charts, top categories and top searches. Demo history is labelled.
+- **Demo data:** `ALLOW_DEMO_SEED=true npm run db:seed:m5` (after the base demo and M4 seeds). It creates 90 days of rollups, followers, referrals, and one demo seller on each tier.
+- **Known limitations:** the referral-link origin comes from `APP_URL`. The limit check and the featured-slot check are check-then-write, so two simultaneous saves could both pass. Pending-review listings do not count toward the limit. The retained worktrees from the build are not removed in this milestone.
+
