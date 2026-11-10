@@ -133,9 +133,14 @@ function bpsOf(value: number | undefined): bigint {
   return BigInt(value);
 }
 
+/** Own-property check. A plain `in` test would also match inherited names such as "constructor". */
+function hasOwn(table: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(table, key);
+}
+
 /** Known values count toward confidence and adjust the estimate. "unknown" and missing values do not. */
 function isKnown(key: string | null, table: Record<string, number>): key is string {
-  return key !== null && key !== "unknown" && key in table;
+  return key !== null && key !== "unknown" && hasOwn(table, key);
 }
 
 /** Points toward confidence. See confidenceFor and the rules on runValuationEngine. */
@@ -227,7 +232,7 @@ export function runValuationEngine(
   const treatmentKnown = isKnown(treatmentKey, multipliers.treatment);
   const originBps = originKnown && originKey !== null ? bpsOf(multipliers.origin[originKey]) : BPS;
   const treatmentBps = treatmentKnown && treatmentKey !== null ? bpsOf(multipliers.treatment[treatmentKey]) : BPS;
-  const labBps = labKey in multipliers.lab ? bpsOf(multipliers.lab[labKey]) : BPS;
+  const labBps = hasOwn(multipliers.lab, labKey) ? bpsOf(multipliers.lab[labKey]) : BPS;
 
   if (originKnown) {
     factors.push(`Origin ${input.origin}: x${ratio(originBps)}.`);
@@ -244,6 +249,12 @@ export function runValuationEngine(
   factors.push(input.labCode !== null ? `Certificate lab ${labKey}: x${ratio(labBps)}.` : `No lab certificate: x${ratio(labBps)}.`);
 
   const estimate = divRound(base * originBps * treatmentBps * labBps, BPS_CUBED);
+  if (estimate <= BigInt(0)) {
+    // Rounding can take a very small base to zero. A zero estimate is not a valuation, so it goes to an expert.
+    factors.push("The calculated value rounds to nothing, so an expert must value this stone.");
+    reasons.push("LOW_CONFIDENCE");
+    return { estimate: null, confidence: "LOW", completenessScore: score, factors, expertReasons: unique(reasons) };
+  }
   const confidence = confidenceFor(score, input.labCode !== null);
   const spread = BigInt(CONFIDENCE_SPREAD_BPS[confidence]);
   const low = divRound(estimate * (BPS - spread), BPS);

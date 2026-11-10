@@ -76,6 +76,22 @@ export function parseValuationDetails(raw: unknown): ValidationResult<ValuationD
   if (data.notes !== null && moderateContactDetails(data.notes).flagged) {
     return { ok: false, error: CONTACT_REFUSAL };
   }
+  // Every free-text field can reach the valuator, the PDF or the public verification page, so each is checked.
+  const freeText: Array<[string, string | null]> = [
+    ["Gemstone type", data.gemstoneType],
+    ["Shape", data.shape],
+    ["Dimensions", data.dimensions],
+    ["Colour", data.colour],
+    ["Clarity", data.clarity],
+    ["Origin", data.origin],
+    ["Treatment", data.treatment],
+    ["Certificate number", data.certificateNumber],
+  ];
+  for (const [label, value] of freeText) {
+    if (value !== null && moderateContactDetails(value).flagged) {
+      return { ok: false, error: `${label} cannot include phone numbers, email addresses or links.` };
+    }
+  }
   return {
     ok: true,
     value: {

@@ -201,6 +201,9 @@ export async function createValuationDraft(input: CreateDraftInput): Promise<{ v
     throw new ValuationError("NOT_FOUND", "This gemstone is not available for valuation.");
   }
 
+  const limit = await consumeRateLimit({ key: `valuation:draft:${input.requesterId}`, limit: 20, windowSeconds: 24 * 60 * 60 });
+  if (!limit.allowed) throw new ValuationError("RATE_LIMITED", "You have started too many valuations today. Try again tomorrow.");
+
   const currency: Currency = gemstone && (gemstone.currency === "INR" || gemstone.currency === "USD") ? gemstone.currency : "INR";
   const reference = await createRowWithUniqueReference({
     requesterId: input.requesterId,
@@ -345,6 +348,9 @@ export function thumbKeyFor(mainKey: string): string {
 export async function addValuationMedia(input: { valuationId: string; actor: Actor; bytes: Buffer }): Promise<{ mediaId: string }> {
   const row = await loadOwnRequest(input.valuationId, input.actor);
   if (!editableBy(row)) throw new ValuationError("NOT_ALLOWED", "Photos can no longer be added to this valuation.");
+
+  const uploads = await consumeRateLimit({ key: `valuation:upload:${input.actor.id}`, limit: 60, windowSeconds: 60 * 60 });
+  if (!uploads.allowed) throw new ValuationError("RATE_LIMITED", "You have uploaded too many files in the last hour. Try again later.");
 
   const processed = await processMedia(input.bytes);
   if (!processed.ok) throw new ValuationError("INVALID", MEDIA_ERROR_TEXT[processed.reason]);
@@ -528,10 +534,18 @@ export async function submitValuation(input: { valuationId: string; actor: Actor
   const automatic = output.estimate !== null && output.expertReasons.length === 0;
   const status = automatic ? "AUTO_VALUED" : "IN_EXPERT_REVIEW";
 
+  // A result is labelled demo when the reference prices or multipliers it used are demo data.
+  const demoReference = await prisma.referencePrice.count({
+    where: { currency: row.currency, gemstoneType: { equals: row.gemstoneType, mode: "insensitive" }, isDemo: true },
+  });
+  const demoMultiplier = demoReference === 0 ? await prisma.valuationMultiplier.count({ where: { isDemo: true } }) : 0;
+  const isDemo = demoReference > 0 || demoMultiplier > 0;
+
   const result = await prisma.valuation.updateMany({
     where: { id: row.id, status: "DRAFT" },
     data: {
       status,
+      isDemo,
       submittedAt: now,
       requestExpert: input.requestExpert,
       autoEstimateMinor: output.estimate?.estimateMinor ?? null,

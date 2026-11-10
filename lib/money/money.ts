@@ -28,15 +28,19 @@ export function parseMajorToMinor(input: string): MoneyParse {
 export function formatMoney(minor: bigint | null | undefined, currency: string): string | null {
   if (minor === null || minor === undefined) return null;
   const locale = currency === "INR" ? "en-IN" : "en-US";
-  const major = Number(minor) / 100;
-  // Whole amounts show no decimals; anything with paise/cents always shows two.
-  const hasFraction = BigInt(minor) % BigInt(100) !== BigInt(0);
-  return new Intl.NumberFormat(locale, {
+  // Formatted with BigInt so amounts above 2^53 minor units are not rounded. The fraction is added afterwards.
+  const value = BigInt(minor);
+  const whole = value / BigInt(100);
+  const cents = value % BigInt(100);
+  const formatted = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    minimumFractionDigits: hasFraction ? 2 : 0,
-    maximumFractionDigits: 2,
-  }).format(major);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(whole);
+  // Whole amounts show no decimals; anything with paise/cents always shows two.
+  if (cents === BigInt(0)) return formatted;
+  return formatted.replace(/(\d)(?![\s\S]*\d)/, `$1.${cents.toString().padStart(2, "0")}`);
 }
 
 export function isCurrency(value: string): value is Currency {
