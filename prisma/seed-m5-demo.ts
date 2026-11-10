@@ -100,7 +100,7 @@ interface RollupRow {
 }
 
 /** Seller series: a base level by tier, a gentle upward trend, a weekly rhythm and some noise. */
-export function sellerRollups(sellerId: string, tier: Tier, days: string[], seed: number): RollupRow[] {
+export function sellerRollups(sellerId: string, tier: Tier, days: string[], seed: number, listingIds: string[] = []): RollupRow[] {
   const rand = prng(seed);
   const base: Record<Tier, number> = { FREE: 6, PREMIUM: 22, ELITE: 48 };
   const rows: RollupRow[] = [];
@@ -121,6 +121,30 @@ export function sellerRollups(sellerId: string, tier: Tier, days: string[], seed
       };
       const noise = 0.6 + rand() * 0.8;
       const count = Math.max(0, Math.round(base[tier] * kindWeight[kind] * trend * rhythm * noise));
+      // Listing views and impressions are kept per listing, as the rollup job writes them from real events. The
+      // day's total is split across the seller's listings, so seller totals (a sum over listings) stay the same.
+      const perListing = (kind === "LISTING_VIEW" || kind === "LISTING_IMPRESSION") && listingIds.length > 0;
+      if (perListing) {
+        const weights = listingIds.map(() => 0.5 + rand());
+        const total = weights.reduce((a, b) => a + b, 0);
+        let assigned = 0;
+        listingIds.forEach((gemstoneId, j) => {
+          const share = j === listingIds.length - 1 ? count - assigned : Math.round((count * weights[j]) / total);
+          assigned += share;
+          if (share <= 0) return;
+          rows.push({
+            key: rollupKey(day, kind, sellerId, gemstoneId),
+            day: new Date(day + "T00:00:00.000Z"),
+            kind,
+            sellerId,
+            gemstoneId,
+            count: share,
+            uniqueVisitors: Math.round(share * (0.55 + rand() * 0.2)),
+            isDemo: true,
+          });
+        });
+        continue;
+      }
       rows.push({
         key: rollupKey(day, kind, sellerId, null),
         day: new Date(day + "T00:00:00.000Z"),
@@ -315,7 +339,20 @@ export async function seedM5Demo(prisma: PrismaClient, now: Date = new Date()): 
   // 6. Analytics rollups for the demo sellers (90 days), then platform rows.
   const days = historyDays(now);
   const categories = await prisma.category.findMany({ orderBy: { slug: "asc" }, take: 10, select: { id: true } });
-  const sellerRows = sellers.flatMap((s, i) => sellerRollups(s.id, tierFor.get(s.id) ?? "FREE", days, 1000 + i));
+  const listings = await prisma.gemstone.findMany({
+    where: { sellerId: { in: sellers.map((s) => s.id) }, status: "PUBLISHED" },
+    select: { id: true, sellerId: true },
+    orderBy: { id: "asc" },
+  });
+  const sellerRows = sellers.flatMap((s, i) =>
+    sellerRollups(
+      s.id,
+      tierFor.get(s.id) ?? "FREE",
+      days,
+      1000 + i,
+      listings.filter((l) => l.sellerId === s.id).map((l) => l.id),
+    ),
+  );
   const platform = platformRollups(days, categories.map((c) => c.id), 4242);
 
   // Platform keys are shared with the real rollup job. Skip any day already written by it (never overwrite real data).
