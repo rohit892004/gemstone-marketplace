@@ -65,7 +65,7 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
     <form action={formAction} className="space-y-3">
       <Summary state={state} />
       <Notice state={state} />
-      <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+      <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Reference prices per carat</caption>
           <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
@@ -134,7 +134,7 @@ export function MultiplierEditTable({ action, rows }: { action: Action; rows: Mu
     <form action={formAction} className="space-y-3">
       <Summary state={state} />
       <Notice state={state} />
-      <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+      <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Multipliers as percentages of the base price</caption>
           <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">

@@ -148,7 +148,7 @@ async function ValuationQueue({ searchParams }: { searchParams: SearchParams }) 
       {rows.length === 0 ? (
         <p className="rounded border border-dashed border-stone-300 p-6 text-sm text-stone-600">No valuations match these filters.</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Valuation requests</caption>
             <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">

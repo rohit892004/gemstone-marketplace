@@ -46,7 +46,8 @@ const BODY_CHARS = 84;
 
 /** Maps the typographic characters used in labels to ASCII. Anything else non-ASCII becomes "?" in escapePdfText. */
 export function toPdfAscii(input: string): string {
-  return input.replace(/[–—]/g, "-").replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+  // The rupee sign is not in the standard PDF font, so it is written as "Rs" instead of a "?".
+  return input.replace(/[–—]/g, "-").replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/₹\s?/g, "Rs ");
 }
 
 /** The module matrix of the QR code for a text. Modules are dark when true. */

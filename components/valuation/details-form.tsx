@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { startTransition, useActionState, useId, useState } from "react";
 import { saveDetailsAction } from "@/app/valuation/actions";
 import { QUALITY_GRADE_LABELS, QUALITY_GRADES } from "@/lib/valuation/engine";
 import { NOTES_LIMIT, notesCountLabel, type FormErrorField } from "@/lib/valuation/requester-form";
@@ -44,8 +44,27 @@ export function DetailsForm(props: DetailsFormProps) {
   const { initial } = props;
   const [state, formAction, pending] = useActionState(saveDetailsAction, null);
   const [notesLength, setNotesLength] = useState(initial.notes.length);
+  // The selects are controlled. Left uncontrolled, a re-render after Save draft re-applied the stored defaults and
+  // the choice the user had just made was lost before Continue.
+  const [gemstoneType, setGemstoneType] = useState(initial.gemstoneType);
+  const [categoryId, setCategoryId] = useState(initial.categoryId);
+  const [qualityGrade, setQualityGrade] = useState(initial.qualityGrade);
+  const [labId, setLabId] = useState(initial.labId);
+  const [currency, setCurrency] = useState(initial.currency);
   const ids = useId();
   const id = (name: string) => `${ids}-${name}`;
+
+  /**
+   * Submits through onSubmit rather than a form action. React resets a form after a successful action, and that reset
+   * put the stored defaults back into the fields the user had just filled in before Continue sent them.
+   */
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const data = new FormData(event.currentTarget);
+    if (submitter?.name) data.set(submitter.name, submitter.value);
+    startTransition(() => formAction(data));
+  }
 
   const fieldError = (name: FormErrorField) => (state && !state.ok && state.field === name ? state.error : undefined);
   const summary = state && !state.ok ? [state.error] : [];
@@ -57,7 +76,7 @@ export function DetailsForm(props: DetailsFormProps) {
     : [initial.gemstoneType, ...props.gemstoneTypeOptions];
 
   return (
-    <form action={formAction} noValidate className="space-y-8" aria-label="Gemstone details">
+    <form onSubmit={onSubmit} noValidate className="space-y-8" aria-label="Gemstone details">
       <input type="hidden" name="valuationId" value={props.valuationId} />
       <input type="hidden" name="continueTo" value={props.continueTo} />
 
@@ -78,7 +97,7 @@ export function DetailsForm(props: DetailsFormProps) {
         <legend className="sr-only">Stone details</legend>
 
         <Field id={id("gemstoneType")} label="Gemstone type" required error={fieldError("gemstoneType")}>
-          <select id={id("gemstoneType")} name="gemstoneType" defaultValue={initial.gemstoneType} required className={inputClass} aria-invalid={fieldError("gemstoneType") ? true : undefined}>
+          <select id={id("gemstoneType")} name="gemstoneType" value={gemstoneType} onChange={(e) => setGemstoneType(e.currentTarget.value)} required className={inputClass} aria-invalid={fieldError("gemstoneType") ? true : undefined}>
             <option value="">Choose a type</option>
             {typeOptions.map((t) => (
               <option key={t} value={t}>
@@ -89,7 +108,7 @@ export function DetailsForm(props: DetailsFormProps) {
         </Field>
 
         <Field id={id("categoryId")} label="Category" error={fieldError("categoryId")}>
-          <select id={id("categoryId")} name="categoryId" defaultValue={initial.categoryId} className={inputClass} aria-invalid={fieldError("categoryId") ? true : undefined}>
+          <select id={id("categoryId")} name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.currentTarget.value)} className={inputClass} aria-invalid={fieldError("categoryId") ? true : undefined}>
             <option value="">Not sure</option>
             {props.categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -120,7 +139,7 @@ export function DetailsForm(props: DetailsFormProps) {
         </Field>
 
         <Field id={id("qualityGrade")} label="Overall quality" error={fieldError("qualityGrade")} hint="Choose the closest match, or leave blank if you do not know.">
-          <select id={id("qualityGrade")} name="qualityGrade" defaultValue={initial.qualityGrade} className={inputClass} aria-invalid={fieldError("qualityGrade") ? true : undefined}>
+          <select id={id("qualityGrade")} name="qualityGrade" value={qualityGrade} onChange={(e) => setQualityGrade(e.currentTarget.value)} className={inputClass} aria-invalid={fieldError("qualityGrade") ? true : undefined}>
             <option value="">Not sure</option>
             {gradeOptions.map((g) => (
               <option key={g} value={g}>
@@ -139,7 +158,7 @@ export function DetailsForm(props: DetailsFormProps) {
         </Field>
 
         <Field id={id("labId")} label="Certificate lab" error={fieldError("labId")}>
-          <select id={id("labId")} name="labId" defaultValue={initial.labId} className={inputClass} aria-invalid={fieldError("labId") ? true : undefined}>
+          <select id={id("labId")} name="labId" value={labId} onChange={(e) => setLabId(e.currentTarget.value)} className={inputClass} aria-invalid={fieldError("labId") ? true : undefined}>
             <option value="">No certificate</option>
             {props.labs.map((l) => (
               <option key={l.id} value={l.id}>
@@ -154,7 +173,7 @@ export function DetailsForm(props: DetailsFormProps) {
         </Field>
 
         <Field id={id("currency")} label="Currency" required error={fieldError("currency")} hint="The estimate is shown in this currency.">
-          <select id={id("currency")} name="currency" defaultValue={initial.currency} required className={inputClass} aria-invalid={fieldError("currency") ? true : undefined}>
+          <select id={id("currency")} name="currency" value={currency} onChange={(e) => setCurrency(e.currentTarget.value)} required className={inputClass} aria-invalid={fieldError("currency") ? true : undefined}>
             <option value="INR">INR (Indian rupee)</option>
             <option value="USD">USD (US dollar)</option>
           </select>

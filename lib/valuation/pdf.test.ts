@@ -89,5 +89,6 @@ describe("buildValuationPdf", () => {
 
   it("maps typographic characters to ASCII", () => {
     expect(toPdfAscii("Demo — indicative – ‘x’")).toBe("Demo - indicative - 'x'");
+    expect(toPdfAscii("₹1,22,850")).toBe("Rs 1,22,850");
   });
 });

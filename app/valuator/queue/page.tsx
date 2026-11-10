@@ -33,7 +33,7 @@ async function QueueList() {
           Nothing is waiting for you right now.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded border border-stone-300 bg-white">
+        <div className="relative overflow-x-auto rounded border border-stone-300 bg-white">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Requests assigned to you</caption>
             <thead className="bg-stone-100 text-xs uppercase tracking-wide text-stone-600">
@@ -42,8 +42,8 @@ async function QueueList() {
                 <th scope="col" className="px-3 py-2">Gemstone</th>
                 <th scope="col" className="px-3 py-2">Carat</th>
                 <th scope="col" className="px-3 py-2">Status</th>
-                <th scope="col" className="px-3 py-2">Submitted</th>
-                <th scope="col" className="px-3 py-2">Why it is here</th>
+                <th scope="col" className="hidden px-3 py-2 md:table-cell">Submitted</th>
+                <th scope="col" className="hidden px-3 py-2 md:table-cell">Why it is here</th>
                 <th scope="col" className="px-3 py-2">
                   <span className="sr-only">Open</span>
                 </th>
@@ -56,8 +56,8 @@ async function QueueList() {
                   <td className="px-3 py-2">{row.gemstoneType}</td>
                   <td className="px-3 py-2">{formatCarat(row.caratMilli)}</td>
                   <td className="px-3 py-2">{statusLabel(row.status)}</td>
-                  <td className="px-3 py-2">{formatDate(row.submittedAt)}</td>
-                  <td className="px-3 py-2">
+                  <td className="hidden px-3 py-2 md:table-cell">{formatDate(row.submittedAt)}</td>
+                  <td className="hidden px-3 py-2 md:table-cell">
                     {row.expertReasons.length === 0 ? "-" : row.expertReasons.map((r) => expertReasonLabel(r)).join("; ")}
                   </td>
                   <td className="px-3 py-2 text-right">

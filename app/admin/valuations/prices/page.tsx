@@ -96,7 +96,7 @@ async function PricesEditor() {
       <section aria-labelledby="import-heading" className="space-y-3">
         <h2 id="import-heading" className="text-lg font-medium">Import a CSV</h2>
         <p className="text-sm text-stone-600">
-          Header row, exactly: <code className="font-mono">gemstone_type,currency,quality_grade,carat_band,price_per_carat</code>. The import is
+          Header row, exactly: <code className="break-all font-mono">gemstone_type,currency,quality_grade,carat_band,price_per_carat</code>. The import is
           all or nothing: if any row is wrong, nothing is written and every problem is listed with its line number.
         </p>
         <ValuationForm
