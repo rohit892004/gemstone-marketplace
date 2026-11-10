@@ -63,10 +63,16 @@ Production must set `AUTH_URL` (or `trustHost` handling) for the real domain and
 | `npm run db:migrate` | Create and apply a dev migration |
 | `npm run db:deploy` | Apply committed migrations (CI, production) |
 | `npm run db:seed` | Reference data and admin seed |
+| `npm run db:seed:demo` | Base demo data (run before the M4 and M5 seeds) |
+| `npm run db:seed:m4` | M4 valuation demo data (requires `ALLOW_DEMO_SEED=true`) |
+| `npm run db:seed:m5` | M5 demo data: 90 days of rollups, followers, referrals, one demo seller per tier (requires `ALLOW_DEMO_SEED=true`) |
+| `npm run analytics:rollup` | Daily analytics rollup, tier and referral passes, 90-day retention (see below) |
 | `npm run notify:flush` | Sends pending message digests. Run every 5 minutes from a scheduler (see below) |
+| `npm run test:e2e` | Playwright journeys (run against a production build with the demo seed) |
+| `npm run db:start` / `db:stop` / `db:status` | Local development PostgreSQL on port 54330 (`scripts/db.mjs`, data in `.data/pg`) |
 
 ## Scheduled jobs
-- **Analytics rollup:** `npm run analytics:rollup` once a day, shortly after midnight UTC. It aggregates finished days, deletes raw events older than 90 days, and runs the membership tier and referral passes. Re-running is safe. To run it as of a later day (for example in a test), use `npm run analytics:rollup -- --as-of=YYYY-MM-DD`.
+- **Analytics rollup:** `npm run analytics:rollup` once a day, shortly after midnight UTC. It aggregates finished days, deletes raw events older than 90 days, and runs the membership tier and referral passes. Re-running is safe. To run it as of a later day (for example in a test), use `npm run analytics:rollup -- --as-of=YYYY-MM-DD`. Example cron entry (server clock set to UTC): `10 0 * * * cd /path/to/gemstone-marketplace && npm run analytics:rollup`. On Windows, use a Task Scheduler daily task at 00:10 UTC with the same command. The job is not scheduled by the repo; set it up on the host.
 
 - **Message digests:** `npm run notify:flush` every 5 minutes (cron, Task Scheduler or your host's scheduler). Message emails are batched: the first message in a 10 minute window is emailed at once, and later ones wait for the next flush. Without the schedule, digests after the first message never send. The flush takes a Postgres advisory lock, so overlapping runs are safe.
 
@@ -239,5 +245,6 @@ On branch `m5-growth`. Full status: `docs/milestones/m5-status.md`.
 - **Referrals:** `/register/seller?ref=<code>` attributes the new seller. A referral qualifies when the referred seller is approved and has a published listing. Self-referrals are refused. Suspicious sign-ups (same IP or device, or many from one email domain) are flagged for admin review and do not qualify automatically. Admins can clear a flag or void a referral at `/admin/referrals`.
 - **Platform analytics:** `/admin/analytics` (7, 30 or 90 days, CSV export), with totals, charts, top categories and top searches. Demo history is labelled.
 - **Demo data:** `ALLOW_DEMO_SEED=true npm run db:seed:m5` (after the base demo and M4 seeds). It creates 90 days of rollups, followers, referrals, and one demo seller on each tier.
-- **Known limitations:** the referral-link origin comes from `APP_URL`. The limit check and the featured-slot check are check-then-write, so two simultaneous saves could both pass. Pending-review listings do not count toward the limit. The retained worktrees from the build are not removed in this milestone.
+- **Known limitations:** the referral-link origin comes from `APP_URL`. The limit check and the featured-slot check are check-then-write, so two simultaneous saves could both pass. Pending-review listings do not count toward the limit. Tier limits and benefits are placeholders until the client confirms them.
+- **Tests:** `npm test` (972 unit tests across 98 files, 2026-11-10 close-out). `npm run test:e2e` has 34 Playwright tests in 5 files, including the four M5 journeys in `e2e/m5-growth.spec.ts` and the 390px no-overflow check on every journey page. The 34-of-34 result is from the Phase E run. Screenshots at 390px and 1440px for the M5 screens are in `screenshots/m5/` (git-ignored, not committed).
 

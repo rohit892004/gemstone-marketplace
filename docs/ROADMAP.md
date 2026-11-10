@@ -9,14 +9,14 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 | M0 Foundation | Next.js 16, Prisma 7, validated env, base layout, CI | Done |
 | M1 Auth & roles | Roles, verification, OTP, password reset, seller onboarding with documents, admin review, audit, rate limits | Done |
 | M2 Catalogue & portfolios | Public catalogue and search, seller portfolios and listings, media and documents, moderation, homepage carousels, wishlist, demo data | Done (end-to-end verified on a production build) |
+| M3 Communication | Enquiries, offers, buyer requirements and requirements board, quotations (with PDF), in-platform chat with attachments, notifications and preferences, contact-detail moderation, admin flagged queue, reports and blocks, Resend and MSG91 providers | Done (`docs/milestones/m3-status.md`) |
+| M4 Valuation | Three-step valuation, "Request valuation" from a product page, expert review, PDF reports with verification page, saved reports, admin valuation tools | Done (`docs/milestones/m4-status.md`) |
+| M5 Analytics & membership | Privacy-safe event tracking and daily rollups, seller analytics with CSV export (Elite), followers, membership tiers Free / Premium / Elite (placeholder rules, pending client confirmation), referrals with fraud flags, admin memberships, tier rules and referrals queue, platform analytics with CSV export (moved here from M6) | Done (`docs/milestones/m5-status.md`) |
 
 ## Remaining
 
 | Milestone | Scope |
 |---|---|
-| **M3 Communication** (current) | Enquiries from product and portfolio pages, offers (accept, decline, counter), buyer requirements with seller responses and a requirements board, quotations (with PDF), in-platform chat with attachments, notifications (bell and email via Resend), notification preferences, contact-detail moderation, admin flagged queue and audited conversation viewing, reports and blocks, Resend and MSG91 providers |
-| M4 Valuation | Three-step valuation (upload, analysis, results), "Request valuation" from a product page, downloadable PDF reports, saved reports |
-| M5 Analytics & membership | Privacy-safe event tracking and daily rollups, seller analytics (visits, views, impressions, enquiries, conversion, response rate, quotations, valuations, followers) with CSV export, followers, membership tiers Free / Premium / Elite with progress (placeholder rules, pending client confirmation; upgrades when criteria are met, downgrades after a 14-day grace), referral programme with fraud flags, admin memberships and tier rules, referrals queue, platform analytics dashboard (signups, approvals, listings, enquiries, conversations, quotations, valuations, active users, top categories and searches, CSV export) |
 | M6 Content & launch | Education, market news, newsletter (double opt-in, campaigns), admin content publishing, accessibility and polish, deployment preparation, hardening (see the M6 hardening list) |
 
 ## Coverage of the client brief
@@ -34,9 +34,9 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 | 2. Seller: certificates, **SSL-related options**, valuation reports, lab documents | Certificates, valuation reports and lab documents: M2 (done). "Other lab document" with a label: M3 (added in M3). SSL-related options: **open**, treated as SSEF until confirmed |
 | 2. Seller: admin reviews listings and documents, manages verification | M2 (done) |
 | 2. Seller: manage buyer enquiries, quotations, conversations | M3 |
-| 2. Seller: analytics (profile visits, product views, enquiries, performance) | M5. Product views and profile visits need tracking added in M5 |
-| 3. Membership: Free live; Premium and Elite upcoming; progress and upcoming benefits in the dashboard; referrals and engagement | M5. Free is live from M1. Progress display is part of M5 |
-| 4. Admin: applications, approvals, products, categories, certificates, reports, document verification, memberships, referrals, buyer enquiries, platform activity | Applications, approvals, products, documents, categories and certificates: done (M1 and M2). Reports and buyer enquiries: M3. Memberships, referrals and platform analytics: M5. Content and platform hardening: M6 |
+| 2. Seller: analytics (profile visits, product views, enquiries, performance) | M5 (done). Tracking, seller analytics and CSV export (Elite) |
+| 3. Membership: Free live; Premium and Elite upcoming; progress and upcoming benefits in the dashboard; referrals and engagement | M5 (done). Free from M1; tiers, progress, referrals and the membership page in M5. Tier limits are placeholders pending client confirmation |
+| 4. Admin: applications, approvals, products, categories, certificates, reports, document verification, memberships, referrals, buyer enquiries, platform activity | Applications, approvals, products, documents, categories and certificates: done (M1 and M2). Reports and buyer enquiries: M3. Memberships, referrals and platform analytics: M5 (done). Content and platform hardening: M6 |
 | 5. Connected journeys (buyer and seller) | Built up across M1–M5; the full journey is covered by the end-to-end tests from M3 onward |
 | Design: preserve the current direction; demo data labelled | Ongoing, every milestone |
 
@@ -44,7 +44,7 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 
 1. **Seller application lacks gemstone categories.** The application form (M1) does not ask which categories a seller deals in. Add to M3 with the requirements board, which filters by category.
 2. **SSL-related options.** Unclear in the brief. Nothing is built beyond SSEF lab certificates. Needs client confirmation.
-3. **Product views and profile visits are not tracked yet.** Needed for seller analytics in M5. Tracking should start before M5 so the numbers exist when the dashboard ships.
+3. **Product views and profile visits were not tracked before M5.** Resolved in M5: tracking is live, with a daily rollup. Views from before M5 do not exist, so seller analytics starts from the M5 release date.
 4. **Valuation report on the product page.** The brief asks for valuation reports on the product detail page. M2 shows verified public documents, which can include a valuation report if the seller uploads one. The "request valuation" flow is M4.
 
 ## M6 hardening list
@@ -54,6 +54,9 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 Work to do in the M6 pass, found during reviews and not urgent enough for the milestone that found it.
 
 1. **Admin service functions check roles themselves (defence in depth).** The M4 valuation admin functions in `lib/valuation/admin-*.ts` (prices, valuators, settings, stats) take an `admin: { id }` and do not check the role. Every current caller goes through `requireRole(["ADMIN"])`, so there is no hole today. Add the role check inside each function so a future caller cannot skip it.
+2. **Listing limit and featured slots are check-then-write (M5).** Two simultaneous saves could both pass the limit. Fix with a transaction or a row lock on the seller's profile.
+3. **Listings awaiting review do not count toward the Free limit (M5).** A seller can queue more than 25. Depends on the open question below.
+4. **Referral origin depends on `APP_URL` (M5).** Check the production value; the local `.env` uses port 3000 while the production build runs on 3200.
 
 ## Order
 
@@ -70,5 +73,6 @@ Work to do in the M6 pass, found during reviews and not urgent enough for the mi
 ## Open questions
 
 1. What do "SSL-related options" mean in the brief? (Currently treated as SSEF.)
-2. Final limits for each membership tier (listing counts, featured slots).
-3. Are expert valuators internal staff or external appraisers? (Needed for M4.)
+2. Final limits for each membership tier (listing counts, featured slots). Placeholders are live in M5 and labelled "pending client confirmation".
+3. Are expert valuators internal staff or external appraisers? (Answered in M4: internal staff.)
+4. Should listings awaiting review count toward the Free listing limit? (Raised in M5.)

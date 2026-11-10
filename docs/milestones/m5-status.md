@@ -14,11 +14,19 @@ Branch: `m5-growth`. The owner's M5 instructions are in `docs/milestones/m5.md`.
 
 ## Not done, and why
 
-- **Worktrees not removed.** `m5-wt-analytics` and `m5-wt-membership` (with their `node_modules` junctions) are still in place. A removal command was denied by the permission classifier, because it included `--force`. Their work is merged, so removal can be done without `--force` once you confirm. The `m5-analytics` and `m5-membership` branches stay until then.
 - **Seller views KPI not checked in the UI.** The rollup marker is already on today's date, so today's views only appear after tomorrow's rollup. The journey checks the raw events instead.
 - **Concurrency.** The listing-limit and featured-slot checks are check-then-write. Two simultaneous saves could both pass. Noted for hardening.
 - **Pending review.** Listings awaiting review do not count toward a Free seller's 25-listing limit, so a seller can queue more than 25. Open decision.
-- **Screenshots** were reviewed as images only, not in a live browser at other widths.
+- **Screenshots** were reviewed as images only, not in a live browser at other widths. The `screenshots/` folder is git-ignored, so the M5 images are on disk only (`screenshots/m5/`, 10 files), not in the repository.
+- **Not re-run in the close-out session:** the production build and the Playwright suite. The 34 of 34 result is from the Phase E run. The close-out session confirmed the count (34 tests in 5 files) by listing them.
+- **Retention is not scheduled.** `npm run analytics:rollup` is documented for a daily run, but no scheduler config exists in the repo (CI does not run it).
+
+## Close-out (worktrees, branches, checks)
+
+- **Worktrees removed.** `m5-wt-analytics` and `m5-wt-membership` were removed with the `node_modules` junctions taken out first (`rmdir`, no `/s`), so the main `node_modules` was untouched. Plain `git worktree remove` (no `--force`), then prune. The three `.claude/worktrees/agent-*` worktrees were also removed (clean, fully merged).
+- **Branches deleted** with `git branch -d`: `m5-analytics`, `m5-membership`, `m1-auth`, `m2-catalogue`, `m3-admin`, `m3-buyer`, `m3-communication`, `m3-notify`, `m3-seller`, and the three `worktree-agent-*` branches. `m4-valuation` was kept: git refuses because `origin/m4-valuation` is behind, and its commits are all in `m5-growth`. Deleting it needs a decision (`-D`, or push first).
+- **Checks on `m5-growth` at `1b61570`:** typecheck clean, lint clean, 972 unit tests in 98 files pass.
+- **Servers and database:** stopped. No Next server was running. The local Postgres was already stopped (`db:status` exit 3).
 
 ## Open questions
 
