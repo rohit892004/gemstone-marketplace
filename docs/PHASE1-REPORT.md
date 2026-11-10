@@ -63,13 +63,23 @@ The plan and the repo number their milestones differently, so this table maps pl
 
 ## Decisions made in M6
 
-- **Newsletter consent:** no topic is pre-ticked. A subscriber must pick at least one topic. The sign-up gives the same answer for every address, so the form cannot be used to find subscribers.
+- **Newsletter consent:** no topic is pre-ticked anywhere. The page sign-up needs at least one topic the person ticks. The footer sign-up has no topic boxes: clicking Subscribe is consent to all topics, and the consent text shown beside the button is stored with the record. Both give the same answer for every address, so the forms cannot be used to find subscribers. The preferences page shows only the saved subscription. See "For legal review" below.
 - **Signed preference and unsubscribe links:** HMAC over the subscriber id, not stored tokens. Rotating `AUTH_SECRET` revokes every outstanding link.
 - **Campaign and digest email:** plain text (markdown source, with each absolute link kept as "text (address)"). No HTML email in Phase 1.
 - **Job runner:** a worker process (`npm run worker`) with Postgres advisory locks, not Redis or a queue service. The plan named BullMQ or Inngest; the worker avoids a new service.
 - **HEIC photos:** refused with a message that explains the conversion step, not accepted. Accepting HEIC would need a decoder and metadata stripping that the current build does not have.
 - **Markdown:** `markdown-it` with raw HTML and images disabled and a strict link allow-list, instead of a full sanitiser on top of raw HTML.
 - **Content visibility:** public pages show only published items whose publish time has passed. Scheduled items are published by the worker.
+
+## For legal review
+
+The owner asked for this design. Legal is asked to confirm the wording and that it meets the consent rules that apply to the target markets.
+
+- Pre-ticking is not used. No newsletter topic is ticked by default, in the footer, on the newsletter page, on article sign-ups or on the account page.
+- Footer Subscribe is consent to all newsletter topics. The text shown beside the button is: "Get our newsletter: gemstone guides, market news and new listings. You can choose topics after confirming, and unsubscribe anytime." The consent record stores this exact text, the scope `ALL_TOPICS`, the source `footer`, the time and a salted IP hash.
+- Every subscriber must confirm the address by a single-use email link (double opt-in) before any newsletter is sent. Each email has a one-click unsubscribe.
+- The preferences page shows the topics from the saved subscription and never ticks a topic by default.
+- Open question for legal: the consent text is a single line and is not a separate tick box. Confirm that this is acceptable as an affirmative action, and that the wording is clear enough for the consent rules in force.
 
 ## Known limitations
 

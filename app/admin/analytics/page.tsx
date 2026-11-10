@@ -137,7 +137,7 @@ function Figures({ data }: { data: PlatformDashboard }) {
         </Card>
       </section>
 
-      <div className="grid gap-12 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <RankTable caption="Top categories" heading="Category" countHeading="Listing views" rows={data.topCategories} />
         <RankTable caption="Top searches" heading="Search" countHeading="Searches" rows={data.topTerms} />
       </div>
@@ -162,7 +162,7 @@ function RankTable({
     { key: "count", header: countHeading, align: "right", cell: (row) => formatCount(row.count) },
   ];
   return (
-    <section className="space-y-6">
+    <section className="min-w-0 space-y-6">
       <SectionHeading title={caption} />
       <DataTable caption={caption} columns={columns} rows={rows} getRowKey={(row) => row.key} empty={<span>Nothing recorded in this range yet.</span>} />
     </section>

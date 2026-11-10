@@ -37,3 +37,30 @@ export function normaliseTopics(values: readonly string[]): NewsletterTopicName[
 export function wantsAnyTopic(subscriberTopics: readonly string[], target: readonly string[]): boolean {
   return target.some((topic) => subscriberTopics.includes(topic));
 }
+
+/** What a sign-up agreed to: every topic (footer Subscribe) or the topics the person ticked. */
+export type ConsentScope = "ALL_TOPICS" | "SELECTED_TOPICS";
+
+export function parseConsentScope(value: unknown): ConsentScope {
+  return value === "ALL_TOPICS" ? "ALL_TOPICS" : "SELECTED_TOPICS";
+}
+
+/**
+ * The state shown on the preferences page, built only from the saved subscription. Nothing is ticked
+ * unless the subscriber's recorded topics include it.
+ */
+export function preferenceState(savedTopics: readonly string[]): {
+  checked: NewsletterTopicName[];
+  allSubscribed: boolean;
+  explanation: string;
+} {
+  const checked = normaliseTopics(savedTopics);
+  const allSubscribed = checked.length === NEWSLETTER_TOPICS.length;
+  return {
+    checked,
+    allSubscribed,
+    explanation: allSubscribed
+      ? "You're subscribed to all topics. Untick any you don't want."
+      : "You receive only the topics ticked below. Tick any topic you want to add.",
+  };
+}

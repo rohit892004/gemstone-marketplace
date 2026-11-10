@@ -45,7 +45,8 @@ export async function saveAccountTopics(
   }
 
   // Not confirmed yet (new, pending or unsubscribed): start the usual double opt-in.
-  const result = await requestSubscription({ email: user.email, topics: wanted, source: "account", ip });
+  // Account settings show no consent text, so none is stored; the topics are the person's own choice.
+  const result = await requestSubscription({ email: user.email, topics: wanted, source: "account", scope: "SELECTED_TOPICS", consentText: null, ip });
   if (!result.ok) {
     return { ok: false, message: result.reason === "rate_limited" ? "Too many attempts. Try again later." : "Check your topics and try again." };
   }

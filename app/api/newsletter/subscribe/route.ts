@@ -1,4 +1,6 @@
+import { consentTextFor } from "@/lib/newsletter/messages";
 import { requestSubscription } from "@/lib/newsletter/service";
+import { parseConsentScope } from "@/lib/newsletter/topics";
 import { getClientIp } from "@/lib/security/client-ip";
 
 /**
@@ -12,19 +14,21 @@ interface SubscribeBody {
   email: unknown;
   topics: unknown;
   source: unknown;
+  scope: unknown;
 }
 
 async function readBody(request: Request): Promise<SubscribeBody> {
   const type = request.headers.get("content-type") ?? "";
   if (type.includes("application/json")) {
     const parsed = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-    return { email: parsed?.email, topics: parsed?.topics, source: parsed?.source };
+    return { email: parsed?.email, topics: parsed?.topics, source: parsed?.source, scope: parsed?.scope };
   }
   const form = await request.formData().catch(() => null);
   return {
     email: form?.get("email"),
     topics: form?.getAll("topics") ?? [],
     source: form?.get("source"),
+    scope: form?.get("scope"),
   };
 }
 
@@ -40,10 +44,14 @@ function toTopicList(value: unknown): string[] {
 
 export async function POST(request: Request): Promise<Response> {
   const body = await readBody(request);
+  // The scope decides what was agreed to, and therefore which consent text is stored (the text shown beside it).
+  const scope = parseConsentScope(body.scope);
   const result = await requestSubscription({
     email: typeof body.email === "string" ? body.email : "",
     topics: toTopicList(body.topics),
     source: cleanSource(body.source),
+    scope,
+    consentText: consentTextFor(scope),
     ip: getClientIp(request.headers),
   });
 

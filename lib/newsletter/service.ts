@@ -6,9 +6,10 @@ import { prisma } from "@/lib/db/client";
 import { getEmailProvider } from "@/lib/notify/email";
 import { consumeRateLimit } from "@/lib/security/rate-limit";
 import { confirmExpiry, confirmOutcome, type ConfirmOutcome, topicChangeProblem } from "./state";
+import { consentTextFor } from "./messages";
 import { alreadySubscribedEmail, confirmationEmail, manageUrl } from "./templates";
 import { generateConfirmToken, hashIp, hashToken, normaliseEmail, signManageToken, verifyManageToken } from "./tokens";
-import { type NewsletterTopicName, normaliseTopics } from "./topics";
+import { type ConsentScope, type NewsletterTopicName, NEWSLETTER_TOPICS, normaliseTopics } from "./topics";
 
 /**
  * Newsletter sign-up, double opt-in, preferences and unsubscribe. Every public entry point gives the same
@@ -42,13 +43,19 @@ export async function requestSubscription(input: {
   email: string;
   topics: string[];
   source: string;
+  /** "ALL_TOPICS" for the footer Subscribe button (every topic); "SELECTED_TOPICS" otherwise. Default: selected. */
+  scope?: ConsentScope;
+  /** The exact consent text the person was shown. Defaults to the text for the scope; null when none was shown. */
+  consentText?: string | null;
   ip: string | null;
   now?: Date;
 }): Promise<SubscribeResult> {
   const now = input.now ?? new Date();
   const email = normaliseEmail(input.email);
   if (!email) return { ok: false, reason: "invalid_email" };
-  const topics = normaliseTopics(input.topics);
+  const scope: ConsentScope = input.scope ?? "SELECTED_TOPICS";
+  const consentText = input.consentText === undefined ? consentTextFor(scope) : input.consentText;
+  const topics = scope === "ALL_TOPICS" ? [...NEWSLETTER_TOPICS] : normaliseTopics(input.topics);
   if (topics.length === 0) return { ok: false, reason: "no_topic" };
 
   const ipLimit = await consumeRateLimit({ key: `newsletter:ip:${input.ip ?? "unknown"}`, limit: SIGNUP_IP_LIMIT, windowSeconds: HOUR });
@@ -93,6 +100,8 @@ export async function requestSubscription(input: {
       action: "REQUESTED",
       topics,
       source: input.source,
+      scope,
+      consentText,
       ipHash: hashIp(input.ip, linkSecret()),
     },
   });
@@ -129,8 +138,22 @@ export async function confirmSubscription(token: string, input: { ip: string | n
     data: { status: "CONFIRMED", confirmedAt: now, confirmTokenHash: null, confirmExpiresAt: null },
   });
   if (result.count === 0) return "ALREADY_CONFIRMED";
+  // The confirmation carries the scope and consent text of the sign-up it confirms.
+  const request = await prisma.newsletterConsent.findFirst({
+    where: { subscriberId: row.id, action: "REQUESTED" },
+    orderBy: { createdAt: "desc" },
+    select: { scope: true, consentText: true },
+  });
   await prisma.newsletterConsent.create({
-    data: { subscriberId: row.id, action: "CONFIRMED", topics: row.topics, source: "double-opt-in", ipHash: hashIp(input.ip, linkSecret()) },
+    data: {
+      subscriberId: row.id,
+      action: "CONFIRMED",
+      topics: row.topics,
+      source: "double-opt-in",
+      scope: request?.scope ?? "SELECTED_TOPICS",
+      consentText: request?.consentText ?? null,
+      ipHash: hashIp(input.ip, linkSecret()),
+    },
   });
   return "CONFIRMED";
 }

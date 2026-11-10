@@ -24,6 +24,20 @@ import { LUXURY_PHOTOS } from "@/components/design-preview/luxury-images";
 const eyebrow = "text-[11px] uppercase tracking-[0.28em] text-accent-text";
 const sectionTitle = "mt-3 font-heading text-4xl font-medium leading-tight text-ink sm:text-5xl";
 const categoryPhotos: Record<string, string> = LUXURY_PHOTOS.categories;
+/** Neutral stone photo for any category slug without its own photo. The gem icon is never shown on the homepage. */
+const categoryFallbackPhoto = LUXURY_PHOTOS.stones[0];
+/** Focal point per category tile. The web files are already cropped on the stone, so this only matters if the tile ratio changes. */
+const categoryFocus: Record<string, string> = {
+  diamond: "object-[50%_50%]",
+  emerald: "object-[50%_50%]",
+  ruby: "object-[50%_50%]",
+  sapphire: "object-[50%_50%]",
+  amethyst: "object-[50%_50%]",
+  opal: "object-[50%_50%]",
+  spinel: "object-[50%_50%]",
+  tourmaline: "object-[50%_50%]",
+  "other-coloured-stones": "object-[50%_50%]",
+};
 
 /** Eyebrow, serif title and an optional action, as used on every homepage section. */
 function SectionTop({ id, label, title, action }: { id?: string; label: string; title: string; action?: ReactNode }) {
@@ -169,14 +183,20 @@ export async function CategoryGrid() {
       {blocks.categoriesHeading.intro ? (
         <p className="-mt-6 max-w-2xl text-[15px] leading-relaxed text-ink-soft">{blocks.categoriesHeading.intro}</p>
       ) : null}
-      <ul className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
+      {/* Flex-wrap with centred rows: any leftover tile in the last row is centred, so the grid is centred at every width. */}
+      <ul className="flex flex-wrap justify-center gap-px">
         {categories.map((category) => (
-          <li key={category.id} className="last:odd:col-span-2 last:odd:sm:col-span-3">
+          <li key={category.id} className="w-[calc((100%-1px)/2)] sm:w-[calc((100%-2px)/3)]">
             <Link
               href={`/categories/${category.slug}`}
               className="group relative block overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             >
-              <Photo src={categoryPhotos[category.slug] ?? ""} alt="" ratio="aspect-[4/5]" />
+              <Photo
+                src={categoryPhotos[category.slug] ?? categoryFallbackPhoto}
+                alt=""
+                ratio="aspect-[4/5]"
+                imgClassName={categoryFocus[category.slug] ?? "object-[50%_50%]"}
+              />
               <span className="absolute inset-0 bg-gradient-to-t from-night/80 via-night/10 to-transparent" aria-hidden />
               <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 sm:p-6">
                 <span className="font-heading text-2xl text-ivory sm:text-3xl">{category.name}</span>

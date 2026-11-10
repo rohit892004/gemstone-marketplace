@@ -17,5 +17,8 @@ export const LUXURY_PHOTOS = {
     sapphire: `${DIR}/category-sapphire.webp`,
     amethyst: `${DIR}/category-amethyst.webp`,
     opal: `${DIR}/category-opal.webp`,
+    spinel: `${DIR}/category-spinel.webp`,
+    tourmaline: `${DIR}/category-tourmaline.webp`,
+    "other-coloured-stones": `${DIR}/category-other-coloured-stones.webp`,
   },
 } as const;

@@ -1,4 +1,5 @@
 import type { ConfirmOutcome } from "./state";
+import type { ConsentScope } from "./topics";
 
 /** Copy shared by the public newsletter pages. Kept neutral: nothing reveals whether an address exists. */
 
@@ -7,6 +8,21 @@ export type NewsletterActionResult = { ok: true; message: string } | { ok: false
 
 export const CONSENT_TEXT =
   "I agree that Gemstone Selections may email me the topics I choose. I understand I must confirm my address from the email I receive first. Every email has a link to change my topics or unsubscribe.";
+
+/**
+ * Shown next to the footer's Subscribe button, and stored verbatim on the consent record when someone
+ * subscribes from the footer. Clicking Subscribe is consent to all topics.
+ */
+export const FOOTER_CONSENT_TEXT =
+  "Get our newsletter: gemstone guides, market news and new listings. You can choose topics after confirming, and unsubscribe anytime.";
+
+/**
+ * The consent text stored for a scope. The server picks it, so a record always holds the text the person
+ * was shown. Null for scopes with no text shown (account settings).
+ */
+export function consentTextFor(scope: ConsentScope): string {
+  return scope === "ALL_TOPICS" ? FOOTER_CONSENT_TEXT : CONSENT_TEXT;
+}
 
 export const SIGNUP_ACCEPTED_MESSAGE =
   "Thank you. If this address can receive our newsletter, we have sent a confirmation link. Check your inbox and spam folder.";

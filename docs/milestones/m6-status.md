@@ -13,6 +13,8 @@ Branch: `m6-launch`. The owner's instructions are in `docs/milestones/m6.md`. Th
 - **Portfolio uploads (bug report):** the logo and banner upload failed for large files. The proxy buffer limit (10 MB) cut off the request, and the form then failed with "Unexpected end of form". Fixed with `proxyClientMaxBodySize: 40mb`. iPhone HEIC photos are refused with a message that explains the conversion, and every upload message now names the accepted formats and sizes.
 - **Review:** the read-only review found 12 issues. Nine were fixed; three were accepted and documented (see the Phase 1 report).
 
+- **Newsletter consent change (owner decision):** the footer has a compact signup with no topic boxes. Subscribe is consent to all topics, and the exact consent text is stored with the record (`NewsletterConsent.scope` and `consentText`, migration `20261110230000_newsletter_consent_text`). Confirmation copies the scope and text onto the confirmed record. The preferences page shows the saved topics only, with the sentence "You're subscribed to all topics. Untick any you don't want." when all are subscribed. Nothing is pre-ticked. The legal review section is in `docs/PHASE1-REPORT.md`.
+
 ## Verification
 
 - Unit tests: 1164 passing (115 files). Typecheck and lint clean. Production build passes.
@@ -20,6 +22,9 @@ Branch: `m6-launch`. The owner's instructions are in `docs/milestones/m6.md`. Th
 - axe: no serious or critical violations on the M6 public pages and the dashboards, after the accent-text contrast fix.
 
 ## Not done or not verified
+
+- Prisma's diff still reports a drift on `Gemstone.searchText` (a generated tsvector column from the M2 migration). The drift line is not in the new migration; a future `migrate dev` will try to create one again and should be trimmed by hand.
+- The footer's Subscribe path is not covered by a Playwright test; the footer's /contact link resolves only once that page exists.
 
 - Docker image not built (Docker is not installed in this environment).
 - CSP not checked in a browser beyond the e2e run; `unsafe-inline` for scripts is a known trade-off.

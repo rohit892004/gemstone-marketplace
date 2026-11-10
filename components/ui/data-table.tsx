@@ -12,7 +12,9 @@ export interface Column<T> {
 
 /**
  * Data table with a caption, sticky header row and thin rules. Wraps itself in a scroll area so a wide table
- * scrolls inside its own box and never widens the page. Empty rows show `empty` instead of an empty grid.
+ * scrolls inside its own box and never widens the page. `relative` makes this box the containing block for
+ * absolutely positioned cell content (sr-only link text), so it is clipped here too. Empty rows show `empty`
+ * instead of an empty grid.
  */
 export function DataTable<T>({
   caption,
@@ -30,7 +32,7 @@ export function DataTable<T>({
   className?: string;
 }) {
   return (
-    <div className={cx("overflow-x-auto border border-line bg-surface-raised", className)}>
+    <div className={cx("relative overflow-x-auto border border-line bg-surface-raised", className)}>
       <table className="w-full min-w-[32rem] border-collapse text-left text-[14px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 bg-surface-raised">

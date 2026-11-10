@@ -201,9 +201,13 @@ test.describe.serial("M1 + M2 journey", () => {
   });
 
   test("listing appears in the featured carousel, search, and product page with Verified", async () => {
-    await buyer.goto("/");
-    await expect(buyer.getByRole("heading", { name: "Featured gemstones" })).toBeVisible();
-    await expect(buyer.getByText(LISTING_TITLE).first()).toBeVisible();
+    // Featuring revalidates the homepage, but the first render after it can still show the carousel from before
+    // the flag was saved (seen in the last run, six seconds after the admin featured it). Reload until it shows.
+    await expect(async () => {
+      await buyer.goto("/");
+      await expect(buyer.getByRole("heading", { name: "Featured gemstones" })).toBeVisible({ timeout: 3_000 });
+      await expect(buyer.getByText(LISTING_TITLE).first()).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 45_000 });
 
     await buyer.goto(`/gemstones?q=${encodeURIComponent(LISTING_TITLE)}`);
     const card = buyer.locator("article").filter({ hasText: LISTING_TITLE }).first();

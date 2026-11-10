@@ -984,6 +984,10 @@ model NewsletterConsent {
   action       ConsentAction
   topics       NewsletterTopic[]
   source       String
+  /// What the person agreed to: "ALL_TOPICS" (footer signup) or "SELECTED_TOPICS" (topics ticked by the person).
+  scope        String              @default("SELECTED_TOPICS")
+  /// The exact consent text shown next to the sign-up control. Null when no consent text was shown (account settings).
+  consentText  String?
   ipHash       String?
   createdAt    DateTime            @default(now())
 

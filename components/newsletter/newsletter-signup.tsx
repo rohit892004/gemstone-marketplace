@@ -42,7 +42,7 @@ export function NewsletterSignup({ source, variant = "page" }: { source: string;
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, topics, source }),
+        body: JSON.stringify({ email, topics, source, scope: "SELECTED_TOPICS" }),
       });
       const body = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (response.status === 202) {
