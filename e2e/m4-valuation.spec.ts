@@ -378,8 +378,40 @@ test.describe.serial("M4 valuation journey", () => {
 
     await seller.goto(sellerListingPath);
     await expect(seller.getByRole("heading", { name: "Platform indicative valuation" })).toBeVisible();
-    await expect(seller.getByText(`Ref. ${sellerRef}`)).toBeVisible();
+    await expect(seller.getByRole("link", { name: `Verify ref. ${sellerRef}` })).toBeVisible();
     await expect(seller.getByText(/^Published \d{1,2} \w+ \d{4}$/).first()).toBeVisible();
+  });
+
+  // ---------- 1c-2. A key stone change takes the published report off the listing ----------
+
+  test("changing the carat on the listing removes the published valuation and tells the seller", async () => {
+    const { Client } = await import("pg");
+    await import("dotenv/config");
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
+    const slug = sellerListingPath.split("/").pop() ?? "";
+    const listing = await client.query('SELECT id FROM "Gemstone" WHERE slug = $1', [slug]);
+    const listingId = listing.rows[0]?.id as string;
+    const publishedFlag = async () =>
+      (await client.query('SELECT "publishedOnListing" FROM "Valuation" WHERE reference = $1', [sellerRef])).rows[0]?.["publishedOnListing"];
+    try {
+      expect(await publishedFlag()).toBe(true);
+
+      await seller.goto(`/seller/listings/${listingId}/edit`);
+      const carat = seller.getByLabel("Carat weight");
+      await carat.fill(String(Number(await carat.inputValue()) + 0.25));
+      await seller.getByRole("button", { name: "Save draft", exact: true }).click();
+
+      await expect.poll(publishedFlag, { timeout: 30_000 }).toBe(false);
+    } finally {
+      await client.end();
+    }
+
+    await seller.goto(sellerListingPath);
+    await expect(seller.getByText(`Verify ref. ${sellerRef}`)).toHaveCount(0);
+
+    await seller.goto("/notifications");
+    await expect(seller.getByText("Valuation removed from your listing").first()).toBeVisible();
   });
 
   // ---------- 1d. Privacy between the listing seller and a buyer's valuation ----------

@@ -19,6 +19,8 @@ import { publicTextBlockedMessage, scanPublicText } from "@/lib/moderation/scan"
 import { findOwnedDocument, findOwnedListing, findOwnedMedia } from "@/lib/seller-catalogue/ownership";
 import { generateListingSlug, listingDocumentKey, listingMediaKey } from "@/lib/seller-catalogue/keys";
 import { resolveSaveStatus } from "@/lib/seller-catalogue/transitions";
+import { changedKeyStoneFields } from "@/lib/valuation/stone-changes";
+import { unpublishValuationsOnStoneChange } from "@/lib/valuation/service";
 import { getStorageProvider } from "@/lib/storage/storage";
 import { uploadErrorMessage, validateUpload } from "@/lib/storage/upload-validation";
 import { getEnv } from "@/lib/config/env";
@@ -158,12 +160,21 @@ export async function saveListingAction(_previous: ListingFormState, formData: F
   };
 
   if (current) {
+    // Read the key stone details first, so a change can take any published valuation off the listing.
+    const before = await prisma.gemstone.findFirst({
+      where: { id: current.id, seller: { userId: user.id } },
+      select: { species: true, caratWeight: true, treatment: true, certificateLabId: true, certificateNo: true },
+    });
     // Ownership is repeated in the where clause so a race cannot write another seller's row.
     const result = await prisma.gemstone.updateMany({
       where: { id: current.id, seller: { userId: user.id } },
       data: fields,
     });
     if (result.count !== 1) return { formError: "Listing not found." };
+    if (before) {
+      const changed = changedKeyStoneFields(before, fields);
+      await unpublishValuationsOnStoneChange({ gemstoneId: current.id, changed, actorId: user.id });
+    }
     revalidateListing(current.id);
     return { saved: intent, values: undefined };
   }

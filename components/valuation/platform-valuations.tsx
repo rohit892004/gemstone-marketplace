@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { publishedValuationsForListing } from "@/lib/valuation/service";
+import { VALUATION_ROUTES } from "@/lib/valuation/routes";
 import { demoReferencesForListing } from "@/lib/valuation/requester-queries";
 import { CONFIDENCE_LABEL, DISCLAIMER_TEXT, METHOD_LABEL } from "@/lib/valuation/requester-copy";
 import { DEMO_LABEL } from "@/lib/valuation/defaults";
@@ -15,7 +17,7 @@ export async function PlatformValuations({ gemstoneId }: { gemstoneId: string })
   return (
     <section aria-labelledby="platform-valuation-heading" className="space-y-3">
       <h2 id="platform-valuation-heading" className="text-lg font-semibold text-ink">
-        Platform indicative valuation
+        Platform indicative valuation – not a certified appraisal
       </h2>
       <ul className="space-y-3">
         {rows.map((row) => (
@@ -28,7 +30,12 @@ export async function PlatformValuations({ gemstoneId }: { gemstoneId: string })
               </p>
               <div className="flex flex-wrap gap-2">
                 {demoRefs.has(row.reference) ? <DemoTag label={DEMO_LABEL} /> : null}
-                <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft">Ref. {row.reference}</span>
+                <Link
+                  href={VALUATION_ROUTES.verify(row.reference)}
+                  className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-brand underline"
+                >
+                  Verify ref. {row.reference}
+                </Link>
               </div>
             </div>
             <dl className="grid grid-cols-3 gap-2">

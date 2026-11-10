@@ -47,6 +47,12 @@ Checked against `docs/client-brief.md` (the second brief, after M2) and the orig
 3. **Product views and profile visits are not tracked yet.** Needed for seller analytics in M5. Tracking should start before M5 so the numbers exist when the dashboard ships.
 4. **Valuation report on the product page.** The brief asks for valuation reports on the product detail page. M2 shows verified public documents, which can include a valuation report if the seller uploads one. The "request valuation" flow is M4.
 
+## M6 hardening list
+
+Work to do in the M6 pass, found during reviews and not urgent enough for the milestone that found it.
+
+1. **Admin service functions check roles themselves (defence in depth).** The M4 valuation admin functions in `lib/valuation/admin-*.ts` (prices, valuators, settings, stats) take an `admin: { id }` and do not check the role. Every current caller goes through `requireRole(["ADMIN"])`, so there is no hole today. Add the role check inside each function so a future caller cannot skip it.
+
 ## Order
 
 - Enquiries and requirements before valuation (M3 before M4). Valuation's expert review needs notifications and the conversation model.

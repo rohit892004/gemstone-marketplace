@@ -792,6 +792,36 @@ export async function setPublishedOnListing(input: { valuationId: string; actor:
 }
 
 /**
+ * Takes published reports off a listing when the seller changes a key stone detail (type, carat, treatment or
+ * certificate). The report no longer describes the stone on the listing. The requester is told, and can publish
+ * the report again from their valuation if it still applies. Returns how many reports were taken off.
+ */
+export async function unpublishValuationsOnStoneChange(input: { gemstoneId: string; changed: readonly string[]; actorId: string }): Promise<number> {
+  if (input.changed.length === 0) return 0;
+  const rows = await prisma.valuation.findMany({
+    where: { gemstoneId: input.gemstoneId, publishedOnListing: true },
+    select: { id: true, requesterId: true },
+  });
+  if (rows.length === 0) return 0;
+
+  await prisma.valuation.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { publishedOnListing: false } });
+  for (const row of rows) {
+    await recordAudit({
+      action: AuditAction.VALUATION_PUBLISHED,
+      actorId: input.actorId,
+      entityType: "Valuation",
+      entityId: row.id,
+      meta: { publish: false, reason: "stone_changed", fields: input.changed.join(",") },
+    });
+    await notifyRequester(row.requesterId, row.id, {
+      title: "Valuation removed from your listing",
+      body: "Your published valuation was removed from your listing because a key stone detail changed. You can publish it again from your valuation if it still applies.",
+    });
+  }
+  return rows.length;
+}
+
+/**
  * Completed reports a listing shows publicly, when the seller chose to publish them. Only the seller's own
  * completed, non-withdrawn report can be here (setPublishedOnListing enforces it). No requester identity.
  */

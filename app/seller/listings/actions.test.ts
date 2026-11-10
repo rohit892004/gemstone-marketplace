@@ -26,6 +26,7 @@ vi.mock("@/lib/auth/require-role", () => ({
   requireRole: vi.fn(async () => ({ id: h.userId, role: "SELLER", sellerApproval: "APPROVED" })),
 }));
 vi.mock("@/lib/db/client", () => ({ prisma: h.prisma }));
+vi.mock("@/lib/valuation/service", () => ({ unpublishValuationsOnStoneChange: vi.fn().mockResolvedValue(0) }));
 vi.mock("@/lib/settings/app-settings", () => ({
   getBooleanSetting: vi.fn(async () => h.autoPublish),
 }));
