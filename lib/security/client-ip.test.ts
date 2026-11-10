@@ -1,20 +1,53 @@
 import { describe, expect, it } from "vitest";
 import { getClientIp } from "./client-ip";
 
-describe("getClientIp", () => {
+const xff = (value: string) => new Headers({ "x-forwarded-for": value });
+
+describe("getClientIp with one trusted proxy (default)", () => {
   it("uses the rightmost X-Forwarded-For entry (the one the trusted proxy appended)", () => {
-    const h = new Headers({ "x-forwarded-for": "6.6.6.6, 10.0.0.9" });
-    expect(getClientIp(h)).toBe("10.0.0.9");
+    expect(getClientIp(xff("6.6.6.6, 10.0.0.9"), 1)).toBe("10.0.0.9");
   });
 
   it("ignores a client-supplied leftmost entry when rotating it", () => {
-    const a = new Headers({ "x-forwarded-for": "1.1.1.1, 10.0.0.9" });
-    const b = new Headers({ "x-forwarded-for": "2.2.2.2, 10.0.0.9" });
-    expect(getClientIp(a)).toBe(getClientIp(b));
+    expect(getClientIp(xff("1.1.1.1, 10.0.0.9"), 1)).toBe(getClientIp(xff("2.2.2.2, 10.0.0.9"), 1));
   });
 
-  it("falls back to X-Real-IP, then 'unknown'", () => {
-    expect(getClientIp(new Headers({ "x-real-ip": " 203.0.113.5 " }))).toBe("203.0.113.5");
-    expect(getClientIp(new Headers())).toBe("unknown");
+  it("returns unknown for an empty X-Forwarded-For header", () => {
+    expect(getClientIp(xff(" , "), 1)).toBe("unknown");
+  });
+});
+
+describe("getClientIp with two trusted proxies", () => {
+  it("takes the second entry from the right", () => {
+    expect(getClientIp(xff("203.0.113.7, 10.0.0.1, 10.0.0.2"), 2)).toBe("10.0.0.1");
+  });
+
+  it("ignores spoofed leading entries", () => {
+    expect(getClientIp(xff("9.9.9.9, 203.0.113.7, 10.0.0.1, 10.0.0.2"), 2)).toBe("10.0.0.1");
+  });
+});
+
+describe("getClientIp with zero trusted proxies", () => {
+  it("ignores X-Forwarded-For entirely and uses X-Real-IP", () => {
+    const h = new Headers({ "x-forwarded-for": "6.6.6.6", "x-real-ip": " 203.0.113.5 " });
+    expect(getClientIp(h, 0)).toBe("203.0.113.5");
+  });
+
+  it("returns unknown when only X-Forwarded-For is present", () => {
+    expect(getClientIp(xff("6.6.6.6"), 0)).toBe("unknown");
+  });
+});
+
+describe("getClientIp with short or absent headers", () => {
+  it("returns unknown when the header has fewer entries than the trusted count", () => {
+    expect(getClientIp(xff("10.0.0.9"), 2)).toBe("unknown");
+  });
+
+  it("falls back to X-Real-IP when X-Forwarded-For is absent", () => {
+    expect(getClientIp(new Headers({ "x-real-ip": "203.0.113.5" }), 1)).toBe("203.0.113.5");
+  });
+
+  it("returns unknown when no IP header is present", () => {
+    expect(getClientIp(new Headers(), 1)).toBe("unknown");
   });
 });
