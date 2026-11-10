@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AuthCard, Notice } from "@/components/auth/fields";
+import { AuthLayout, authLinkClass } from "@/components/auth/auth-layout";
+import { Notice } from "@/components/auth/fields";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { MESSAGES } from "@/lib/auth/flows/messages";
 import { firstParam, type SearchParams } from "@/lib/auth/flows/params";
+
+const PHOTO = "/design-preview/luxury/stone-4.webp";
+const CAPTION = "Passwords are hashed and never stored in plain text.";
 
 export default function ResetPasswordPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
@@ -19,20 +23,20 @@ async function ResetPasswordContent({ searchParams }: { searchParams: Promise<Se
 
   if (!token) {
     return (
-      <AuthCard title="Link not valid">
+      <AuthLayout eyebrow="Account access" title="Link not valid" photo={PHOTO} caption={CAPTION}>
         <Notice tone="error">{MESSAGES.invalidLink}</Notice>
         <p className="text-center text-sm">
-          <Link href="/forgot-password" className="font-medium text-brand hover:text-brand-strong">
+          <Link href="/forgot-password" className={authLinkClass}>
             Request a new reset link
           </Link>
         </p>
-      </AuthCard>
+      </AuthLayout>
     );
   }
 
   return (
-    <AuthCard title="Choose a new password">
+    <AuthLayout eyebrow="Account access" title="Choose a new password" photo={PHOTO} caption={CAPTION}>
       <ResetPasswordForm token={token} />
-    </AuthCard>
+    </AuthLayout>
   );
 }

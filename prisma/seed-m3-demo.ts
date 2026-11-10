@@ -87,7 +87,9 @@ export async function seedM3Demo(prisma: PrismaClient, now = new Date()): Promis
   });
   const categoryId = (slug: string) => categories.find((c) => c.slug === slug)?.id ?? null;
 
-  // 3. Demo buyers. Passwords are random and unusable.
+  // 3. Demo buyers. Passwords are random and unusable unless DEMO_BUYER_PASSWORD is set (dev only; this seed
+  // refuses to run in production, so the variable is never read there).
+  const demoBuyerPassword = process.env.DEMO_BUYER_PASSWORD?.trim();
   const buyerIds: string[] = [];
   for (const [index, email] of DEMO_BUYER_EMAILS.entries()) {
     const name = `Demo buyer ${index + 1}`;
@@ -98,7 +100,7 @@ export async function seedM3Demo(prisma: PrismaClient, now = new Date()): Promis
         role: "BUYER",
         status: "ACTIVE",
         emailVerifiedAt: now,
-        passwordHash: await hashPassword(randomBytes(32).toString("hex")),
+        passwordHash: await hashPassword(demoBuyerPassword || randomBytes(32).toString("hex")),
         // Buyer 1 has one contact-detail strike from the masked message below (a warning, not a restriction).
         contactStrikes: index === 0 ? 1 : 0,
         buyerProfile: { create: { name, country: "India", interests: ["Sapphire", "Emerald"] } },

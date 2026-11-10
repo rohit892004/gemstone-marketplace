@@ -115,7 +115,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
                 />
               </div>
               {canRemove ? (
-                <button type="button" onClick={() => remove(photo.id)} className="text-sm text-brand-strong underline underline-offset-4">
+                <button type="button" onClick={() => remove(photo.id)} className="inline-flex min-h-11 items-center text-sm text-brand-strong underline underline-offset-4">
                   Remove photo {index + 1}
                 </button>
               ) : null}
@@ -132,7 +132,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
             <div key={video.id} className="space-y-2">
               <video controls preload="metadata" src={REQUESTER_PATHS.media(video.id, "full")} className="max-h-64 w-full border border-line bg-night" aria-label="Video of the stone" />
               {canRemove ? (
-                <button type="button" onClick={() => remove(video.id)} className="text-sm text-brand-strong underline underline-offset-4">
+                <button type="button" onClick={() => remove(video.id)} className="inline-flex min-h-11 items-center text-sm text-brand-strong underline underline-offset-4">
                   Remove video
                 </button>
               ) : null}
@@ -142,7 +142,7 @@ export function PhotoUploader({ valuationId, media, canAdd, canRemove, heading =
       ) : null}
 
       {canAdd ? (
-        <form ref={formRef} action={formAction} className="space-y-4 border border-line bg-surface-raised p-4">
+        <form ref={formRef} action={formAction} className="space-y-5 border border-line bg-surface-raised p-5 shadow-soft sm:p-6">
           <input type="hidden" name="valuationId" value={valuationId} />
           <div className="space-y-1">
             <label htmlFor={`${ids}-files`} className="block text-sm font-medium text-ink">

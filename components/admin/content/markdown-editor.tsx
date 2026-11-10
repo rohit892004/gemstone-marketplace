@@ -3,6 +3,9 @@
 import { useEffect, useId, useState } from "react";
 import { previewMarkdown } from "@/app/admin/content/actions";
 import { ProseHtml } from "@/components/content/content-ui";
+import { Textarea } from "@/components/ui/field";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Eye } from "lucide-react";
 
 const DEBOUNCE_MS = 350;
 
@@ -60,7 +63,7 @@ export function MarkdownEditor({ name, label, defaultValue, rows = 12, required,
             {help}
           </p>
         ) : null}
-        <textarea
+        <Textarea
           id={id}
           name={name}
           rows={rows}
@@ -69,7 +72,7 @@ export function MarkdownEditor({ name, label, defaultValue, rows = 12, required,
           onChange={(event) => setValue(event.target.value)}
           aria-describedby={help ? `${id}-help` : undefined}
           spellCheck
-          className="block w-full border border-line bg-surface-raised px-4 py-3 font-mono text-[14px] text-ink transition duration-300 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="font-mono"
         />
         <p className="text-[12px] text-ink-soft">Markdown: ## headings, **bold**, *italic*, [links](https://...), - lists. Raw HTML is shown as text.</p>
       </div>
@@ -77,11 +80,11 @@ export function MarkdownEditor({ name, label, defaultValue, rows = 12, required,
         <h3 id={`${id}-preview`} className="text-[13px] tracking-wide text-ink">
           Live preview
         </h3>
-        <div aria-live="polite" className="min-h-32 border border-dashed border-line bg-surface p-5">
+        <div aria-live="polite" className="min-h-32 border border-line bg-surface p-5">
           {previewError ? <p className="text-sm text-danger">{previewError}</p> : null}
           {!previewError && html !== null ? (
             html.trim() === "" ? (
-              <p className="text-sm text-ink-soft">Nothing to preview yet.</p>
+              <EmptyState icon={Eye} title="Nothing to preview yet" body="The preview appears here as you type." />
             ) : (
               <ProseHtml html={html} label={`Preview of ${label}`} />
             )

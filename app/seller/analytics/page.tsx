@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Eye } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import { DemoTag } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { LineChart } from "@/components/analytics/line-chart";
 import { EmptyAnalytics, formatCount, KpiTile, RangeNav, RollupNote } from "@/components/analytics/ui";
@@ -171,7 +174,7 @@ function Figures({
           Top listings
         </h2>
         {data.listings.length === 0 ? (
-          <p className="border border-dashed border-line p-5 text-sm text-ink-soft">No listing views in this range yet.</p>
+          <EmptyState icon={Eye} title="No listing views in this range yet" body="Views appear here once buyers open your listings." action={<ButtonLink href="/seller/listings" variant="secondary">Review your listings</ButtonLink>} />
         ) : (
           <div className="overflow-x-auto border border-line bg-surface-raised">
             <table className="w-full min-w-[560px] border-collapse text-left text-[14px]">

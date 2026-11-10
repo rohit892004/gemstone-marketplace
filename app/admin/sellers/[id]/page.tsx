@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FileText } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { ArrowLeft, Download } from "lucide-react";
@@ -222,7 +224,7 @@ async function SellerDetail({ params }: { params: Params }) {
       <section className="space-y-6">
         <SectionHeading title="Documents" />
         {seller.documents.length === 0 ? (
-          <p className="text-sm text-ink-soft">No documents uploaded.</p>
+          <EmptyState icon={FileText} title="No documents uploaded" body="Identity, business and certificate documents appear here once the seller uploads them." />
         ) : (
           <DataTable caption="Seller documents" columns={documentColumns} rows={seller.documents} getRowKey={(doc) => doc.id} />
         )}

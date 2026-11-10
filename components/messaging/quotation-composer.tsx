@@ -1,5 +1,6 @@
 "use client";
 
+import { Input, Select, Textarea } from "@/components/ui/field";
 import { useState, useTransition, type FormEvent } from "react";
 import { createQuotationAction } from "@/app/conversations/quote-actions";
 import { QUANTITY_MAX, QUANTITY_MIN, TERMS_MAX, ITEM_TITLE_MAX } from "@/lib/quotations/validate";
@@ -46,21 +47,21 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
           <label htmlFor="quote-item" className="block text-sm text-ink-soft">
             Item
           </label>
-          <input
+          <Input
             id="quote-item"
             name="itemTitle"
             required
             maxLength={ITEM_TITLE_MAX}
             defaultValue={context.gemstone?.title ?? ""}
             placeholder="Gemstone or custom item"
-            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            
           />
         </div>
         <div>
           <label htmlFor="quote-quantity" className="block text-sm text-ink-soft">
             Quantity
           </label>
-          <input
+          <Input
             id="quote-quantity"
             name="quantity"
             type="number"
@@ -70,7 +71,7 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             step={1}
             defaultValue={1}
             required
-            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            
           />
         </div>
         <div>
@@ -78,23 +79,23 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
             Price
           </label>
           <div className="mt-1 flex gap-2">
-            <select
+            <Select
               id="quote-currency"
               name="currency"
               defaultValue="INR"
               aria-label="Currency"
-              className=" border border-line bg-surface-raised px-2 py-2 text-sm text-ink focus:border-accent focus:outline-none"
+              
             >
               <option value="INR">INR</option>
               <option value="USD">USD</option>
-            </select>
-            <input
+            </Select>
+            <Input
               id="quote-amount"
               name="amount"
               inputMode="decimal"
               required
               placeholder="e.g. 125000.00"
-              className="w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+              
             />
           </div>
         </div>
@@ -102,26 +103,26 @@ export function QuotationComposer({ context }: { context: ThreadContext }) {
           <label htmlFor="quote-valid" className="block text-sm text-ink-soft">
             Valid until
           </label>
-          <input
+          <Input
             id="quote-valid"
             name="validUntil"
             type="date"
             min={minDate}
             required
-            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            
           />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="quote-terms" className="block text-sm text-ink-soft">
             Terms (optional)
           </label>
-          <textarea
+          <Textarea
             id="quote-terms"
             name="terms"
             rows={3}
             maxLength={TERMS_MAX}
             placeholder="Payment, delivery, certification or return terms. Contact details are hidden automatically."
-            className="mt-1 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            
           />
         </div>
         <div className="sm:col-span-2 flex flex-wrap items-center gap-3">

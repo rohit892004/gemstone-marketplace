@@ -1,5 +1,6 @@
 "use client";
 
+import { Input, Textarea } from "@/components/ui/field";
 import { useState, useTransition } from "react";
 import {
   acceptOfferAction,
@@ -116,25 +117,25 @@ export function OfferCard({ offer, context }: { offer: OfferPayload; context: Th
           <label className="text-sm text-ink-soft" htmlFor={`counter-amount-${offer.id}`}>
             Your counter amount ({offer.currency})
           </label>
-          <input
+          <Input
             id={`counter-amount-${offer.id}`}
             value={counterAmount}
             onChange={(e) => setCounterAmount(e.target.value)}
             inputMode="decimal"
             placeholder="e.g. 115000"
             required
-            className="w-full border border-line bg-surface px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            className="bg-surface"
           />
           <label className="text-sm text-ink-soft" htmlFor={`counter-note-${offer.id}`}>
             Note (optional)
           </label>
-          <textarea
+          <Textarea
             id={`counter-note-${offer.id}`}
             value={counterNote}
             onChange={(e) => setCounterNote(e.target.value)}
             maxLength={500}
             rows={2}
-            className="w-full border border-line bg-surface px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+            className="bg-surface"
           />
           <div className="flex flex-wrap gap-2">
             <button

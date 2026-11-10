@@ -1,3 +1,5 @@
+import { ImageOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { MediaEntry } from "@/lib/valuation/view";
 
 /**
@@ -6,7 +8,7 @@ import type { MediaEntry } from "@/lib/valuation/view";
  */
 export function MediaGallery({ media }: { media: MediaEntry[] }) {
   if (media.length === 0) {
-    return <p className="border border-dashed border-line p-4 text-sm text-ink-soft">No photos or video were added.</p>;
+    return <EmptyState icon={ImageOff} title="No photos or video were added" body="The requester did not attach any media to this valuation." />;
   }
   const sorted = [...media].sort((a, b) => a.sortOrder - b.sortOrder);
   return (

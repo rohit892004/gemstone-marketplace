@@ -163,7 +163,7 @@ proxy.ts              coarse route gate
 - **Admin:** `/admin/listings` (queue), `/admin/listings/all` (filters, featured), `/admin/documents` (verification), `/admin/reviews`, `/admin/homepage` (block editor), `/admin/settings` (auto-publish, default off).
 - **Buyer:** `/buyer` dashboard with wishlist, enquiries, conversations, valuations and reports tabs. Enquiry, chat and valuation are placeholders until M3/M4.
 - **Homepage:** hero search, top-rated sellers carousel, featured gemstones carousel, category grid, teasers, "Become a Seller".
-- **Demo data:** `npm run db:seed:demo` creates 6 demo sellers, 40 listings and 18 reviews. Every demo row is labelled "Demo" and the seed refuses to run when `NODE_ENV=production`. `DEMO_SELLER_PASSWORD`, when set, gives the demo sellers a known password for testing (unset, passwords are random). The end-to-end journey needs it: run `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before `npm run test:e2e`.
+- **Demo data:** `npm run db:seed:demo` creates 6 demo sellers, 40 listings and 18 reviews. Every demo row is labelled "Demo" and the seed refuses to run when `NODE_ENV=production`. `DEMO_SELLER_PASSWORD`, when set, gives the demo sellers a known password for testing (unset, passwords are random). `DEMO_BUYER_PASSWORD` does the same for the demo buyers (`demo-buyer-1@example.com` to `demo-buyer-3@example.com`). Both are dev-only: the seeds refuse production, so they are never read there. The end-to-end journey needs it: run `DEMO_SELLER_PASSWORD=Demo-Seller-Pass-1 npm run db:seed:demo` before `npm run test:e2e`.
 
 ### Money, media and documents
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/field";
 import { CONSENT_TEXT, SIGNUP_ACCEPTED_MESSAGE } from "@/lib/newsletter/messages";
 import { TopicFieldset } from "./topic-fieldset";
 
@@ -60,42 +62,27 @@ export function NewsletterSignup({ source, variant = "page" }: { source: string;
 
   const sending = state.kind === "sending";
   return (
-    <div className={inline ? "space-y-4" : "space-y-6"}>
-      <form onSubmit={onSubmit} className="space-y-4" noValidate={false}>
-        <div className="space-y-1">
-          <label htmlFor={`${id}-email`} className="block text-sm font-medium text-ink">
-            Email address
-          </label>
-          <input
-            id={`${id}-email`}
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            maxLength={254}
-            className="w-full border border-line bg-surface px-3 py-2 text-ink focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-ink"
-          />
-        </div>
+    <div className={inline ? "space-y-5" : "space-y-6"}>
+      <form onSubmit={onSubmit} className="space-y-6" noValidate={false}>
+        <Field id={`${id}-email`} label="Email address">
+          <Input id={`${id}-email`} name="email" type="email" required autoComplete="email" maxLength={254} />
+        </Field>
 
-        <TopicFieldset legend="Topics (choose at least one)" idPrefix={`${id}-topic`} />
+        <TopicFieldset layout="list" legend="Topics (choose at least one)" idPrefix={`${id}-topic`} />
 
-        <label className="flex items-start gap-3 text-sm text-ink-soft">
+        <label className="flex min-h-11 items-start gap-3 text-sm leading-relaxed text-ink-soft">
           <input
             type="checkbox"
             required
             name="consent"
-            className="mt-1 h-4 w-4 shrink-0 accent-brand-strong focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-brand-strong focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
           <span>{CONSENT_TEXT}</span>
         </label>
 
-        <button
-          type="submit"
-          disabled={sending}
-          className="inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button type="submit" block disabled={sending} className="min-h-11">
           {sending ? "Sending..." : "Sign up"}
-        </button>
+        </Button>
       </form>
 
       <div role="status" aria-live="polite" className={state.kind === "error" ? "text-sm text-danger" : "text-sm text-ink"}>

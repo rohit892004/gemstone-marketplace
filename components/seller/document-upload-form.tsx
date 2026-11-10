@@ -4,11 +4,9 @@ import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { uploadDocumentAction, type DocumentUploadState } from "@/app/seller/listings/actions";
 import { ImageFileField, FieldFrame } from "@/components/seller/catalogue-fields";
+import { Input, Select } from "@/components/ui/field";
 
 const initialState: DocumentUploadState = {};
-
-const inputClass =
-  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const documentTypes = [
   { value: "CERTIFICATE", label: "Certificate" },
@@ -30,7 +28,7 @@ export function DocumentUploadForm({
       <input type="hidden" name="listingId" value={listingId} />
       <div className="grid gap-4 sm:grid-cols-2">
         <FieldFrame name="type" label="Document type" required>
-          <select id="type" name="type" required defaultValue="" className={inputClass}>
+          <Select id="type" name="type" required defaultValue="" >
             <option value="" disabled>
               Choose a type
             </option>
@@ -39,20 +37,20 @@ export function DocumentUploadForm({
                 {t.label}
               </option>
             ))}
-          </select>
+          </Select>
         </FieldFrame>
         <FieldFrame name="title" label="Title" required>
-          <input id="title" name="title" type="text" required maxLength={120} className={inputClass} />
+          <Input id="title" name="title" type="text" required maxLength={120}  />
         </FieldFrame>
         <FieldFrame name="certificateLabId" label="Certificate lab">
-          <select id="certificateLabId" name="certificateLabId" defaultValue="" className={inputClass}>
+          <Select id="certificateLabId" name="certificateLabId" defaultValue="" >
             <option value="">None</option>
             {labs.map((lab) => (
               <option key={lab.id} value={lab.id}>
                 {lab.name}
               </option>
             ))}
-          </select>
+          </Select>
         </FieldFrame>
       </div>
       <ImageFileField

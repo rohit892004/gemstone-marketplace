@@ -1,5 +1,6 @@
 "use client";
 
+import { Input, Textarea } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { TopicFieldset } from "@/components/newsletter/topic-fieldset";
@@ -30,12 +31,12 @@ export function CampaignForm({
 
       <div className="space-y-1">
         <label htmlFor="campaign-subject" className="block text-sm font-medium text-ink">Subject</label>
-        <input id="campaign-subject" name="subject" required maxLength={150} defaultValue={defaults.subject ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink" />
+        <Input id="campaign-subject" name="subject" required maxLength={150} defaultValue={defaults.subject ?? ""}  />
       </div>
 
       <div className="space-y-1">
         <label htmlFor="campaign-preheader" className="block text-sm font-medium text-ink">Preheader (optional)</label>
-        <input id="campaign-preheader" name="preheader" maxLength={200} defaultValue={defaults.preheader ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink" />
+        <Input id="campaign-preheader" name="preheader" maxLength={200} defaultValue={defaults.preheader ?? ""}  />
         <p className="text-[12px] text-ink-soft">Short preview line shown by some mail apps.</p>
       </div>
 
@@ -43,7 +44,7 @@ export function CampaignForm({
 
       <div className="space-y-1">
         <label htmlFor="campaign-body" className="block text-sm font-medium text-ink">Body (Markdown)</label>
-        <textarea id="campaign-body" name="body" required rows={16} defaultValue={defaults.body ?? ""} className="block w-full border border-line bg-surface-raised px-4 py-3 font-mono text-[14px] text-ink" />
+        <Textarea id="campaign-body" name="body" required rows={16} defaultValue={defaults.body ?? ""} className="font-mono text-[14px]" />
         <p className="text-[12px] text-ink-soft">Raw HTML is not allowed. Links must be https, http, mailto or site paths. The footer with the unsubscribe link is added automatically.</p>
       </div>
 

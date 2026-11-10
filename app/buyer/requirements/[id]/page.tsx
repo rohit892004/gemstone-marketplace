@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +89,7 @@ async function RequirementDetail({ params }: Props) {
           Seller responses ({requirement._count.responses})
         </h3>
         {threads.length === 0 ? (
-          <p className="text-sm text-ink-soft">No seller has responded yet. Sellers who reply open a conversation with you here.</p>
+          <EmptyState icon={MessageSquare} title="No seller has responded yet" body="Sellers who reply open a conversation with you here." />
         ) : (
           <ul className="divide-y divide-line border border-line bg-surface-raised">
             {threads.map((thread) => (

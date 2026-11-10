@@ -1,4 +1,6 @@
+import { MessageSquare } from "lucide-react";
 import { formatDate } from "@/components/admin/admin-ui";
+import { EmptyState } from "@/components/ui/empty-state";
 import { THREAD_FROM_LABELS, THREAD_KIND_LABELS } from "@/lib/valuation/display";
 import type { ThreadEntry } from "@/lib/valuation/view";
 
@@ -7,7 +9,7 @@ import type { ThreadEntry } from "@/lib/valuation/view";
  */
 export function ThreadList({ thread }: { thread: ThreadEntry[] }) {
   if (thread.length === 0) {
-    return <p className="border border-dashed border-line p-4 text-sm text-ink-soft">No messages yet.</p>;
+    return <EmptyState icon={MessageSquare} title="No messages yet" body="Messages on this valuation appear here in order." />;
   }
   return (
     <ol className="space-y-3">

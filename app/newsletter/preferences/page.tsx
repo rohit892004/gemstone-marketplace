@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
 import { INVALID_PREFERENCES_LINK } from "@/lib/newsletter/messages";
 import { subscriberForManageToken } from "@/lib/newsletter/service";
 import { PreferencesForm } from "./preferences-form";
@@ -25,18 +27,20 @@ async function PreferencesView({ searchParams }: { searchParams: Promise<{ token
   const subscriber = token ? await subscriberForManageToken(token) : null;
 
   return (
-    <section className="mx-auto max-w-2xl space-y-6 px-4 py-16 sm:px-6">
-      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Newsletter preferences</h1>
-      {!token || !subscriber ? (
-        <p role="status" className="text-ink-soft">{INVALID_PREFERENCES_LINK}</p>
-      ) : subscriber.status !== "CONFIRMED" ? (
-        <p className="text-ink-soft">
-          You are not receiving the newsletter at the moment.{" "}
-          <Link href="/newsletter" className="underline underline-offset-4 hover:text-ink">Sign up again</Link> to restart it.
-        </p>
-      ) : (
-        <PreferencesForm token={token} topics={subscriber.topics} />
-      )}
+    <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-20">
+      <PageHeader eyebrow="Newsletter" title="Newsletter preferences" />
+      <Card className="p-6 sm:p-8">
+        {!token || !subscriber ? (
+          <p role="status" className="text-ink-soft">{INVALID_PREFERENCES_LINK}</p>
+        ) : subscriber.status !== "CONFIRMED" ? (
+          <p className="text-ink-soft">
+            You are not receiving the newsletter at the moment.{" "}
+            <Link href="/newsletter" className="underline underline-offset-4 hover:text-ink">Sign up again</Link> to restart it.
+          </p>
+        ) : (
+          <PreferencesForm token={token} topics={subscriber.topics} />
+        )}
+      </Card>
     </section>
   );
 }

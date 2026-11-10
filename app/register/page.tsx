@@ -1,41 +1,43 @@
 import Link from "next/link";
+import { AuthLayout } from "@/components/auth/auth-layout";
+
+const choiceClass =
+  "group block border border-line bg-surface-raised p-6 shadow-soft transition duration-300 ease-[var(--ease-lux)] " +
+  "hover:border-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:p-8";
 
 export default function RegisterChooserPage() {
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
-      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Join Gemstone Selections</h1>
-      <p className="mt-3 max-w-2xl text-ink-soft">Choose how you want to use the marketplace.</p>
-
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <Link
-          href="/register/buyer"
-          className="group border border-line bg-surface-raised p-6 shadow-soft hover:border-brand"
-        >
+    <AuthLayout
+      eyebrow="Join"
+      title="Join Gemstone Selections"
+      lead="Choose how you want to use the marketplace."
+      photo="/design-preview/luxury/stone-detail-3.webp"
+      caption="Stones from sellers who are reviewed before they list."
+    >
+      <div className="grid gap-4">
+        <Link href="/register/buyer" className={choiceClass}>
           <h2 className="font-heading text-2xl text-ink group-hover:text-brand-strong">Buy gemstones</h2>
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             Browse certified stones, save favourites and enquire directly with sellers.
           </p>
-          <span className="mt-6 inline-block text-sm font-medium text-brand">Create a buyer account</span>
+          <span className="mt-5 inline-flex min-h-11 items-center text-sm font-medium text-brand">Create a buyer account</span>
         </Link>
 
-        <Link
-          href="/register/seller"
-          className="group border border-line bg-surface-raised p-6 shadow-soft hover:border-brand"
-        >
+        <Link href="/register/seller" className={choiceClass}>
           <h2 className="font-heading text-2xl text-ink group-hover:text-brand-strong">Sell gemstones</h2>
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             List your inventory and reach buyers. Sellers are reviewed before they can publish listings.
           </p>
-          <span className="mt-6 inline-block text-sm font-medium text-brand">Apply as a seller</span>
+          <span className="mt-5 inline-flex min-h-11 items-center text-sm font-medium text-brand">Apply as a seller</span>
         </Link>
       </div>
 
-      <p className="mt-10 text-sm text-ink-soft">
+      <p className="text-center text-sm text-ink-soft">
         Already registered?{" "}
-        <Link href="/login" className="font-medium text-brand hover:text-brand-strong">
+        <Link href="/login" className="font-medium text-brand underline-offset-4 hover:text-brand-strong hover:underline">
           Log in
         </Link>
       </p>
-    </section>
+    </AuthLayout>
   );
 }

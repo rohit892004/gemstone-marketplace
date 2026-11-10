@@ -8,6 +8,8 @@ import { statusLabel } from "@/lib/valuation/display";
 import { VALUATION_ROUTES } from "@/lib/valuation/routes";
 import { createValuatorAction, resendSetPasswordAction, setActiveAction } from "./actions";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { UserRound } from "lucide-react";
 
 export const metadata = { title: "Valuers" };
 
@@ -49,7 +51,7 @@ async function ValuatorAccounts() {
       />
 
       {valuators.length === 0 ? (
-        <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No valuers yet.</p>
+        <EmptyState icon={UserRound} title="No valuers yet" body="Add a valuer with the form above." />
       ) : (
         <ul className="space-y-4">
           {valuators.map((valuator) => {

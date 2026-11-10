@@ -1,5 +1,7 @@
 "use client";
 
+import { ImageOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useActionState, useId } from "react";
 import type { ContentActionState } from "@/app/admin/content/actions";
 import { DANGER_BUTTON } from "@/components/admin/button-classes";
@@ -26,7 +28,7 @@ export function CoverForm({ id, coverKey, coverAlt, action }: { id: string; cove
           </p>
         </div>
       ) : (
-        <p className="text-[15px] text-ink-soft">No cover image. Covers are optional.</p>
+        <EmptyState icon={ImageOff} title="No cover image" body="Covers are optional." />
       )}
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="id" value={id} />

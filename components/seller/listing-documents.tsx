@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FileText } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { deleteDocumentAction, toggleDocumentPublicAction } from "@/app/seller/listings/actions";
 import { DocumentUploadForm } from "@/components/seller/document-upload-form";
 import { canAddDocument, canSellerDeleteDocument, MAX_LISTING_DOCUMENTS } from "@/lib/seller-catalogue/documents";
@@ -51,7 +53,7 @@ export function ListingDocuments({
         Up to {MAX_LISTING_DOCUMENTS} documents per listing. Verified documents cannot be deleted; contact an administrator to replace them.
       </p>
 
-      {documents.length === 0 ? <p className="text-sm text-ink-soft">No documents yet.</p> : null}
+      {documents.length === 0 ? <EmptyState icon={FileText} title="No documents yet" body="Upload certificates and business documents with the form below." /> : null}
 
       <ul className="divide-y divide-line border border-line bg-surface-raised">
         {documents.map((doc) => (

@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import Link from "next/link";
 import { logout } from "@/app/logout/actions";
 import { auth } from "@/lib/auth/auth";
@@ -6,8 +7,13 @@ import { SignedOutLinks } from "./signed-out-links";
 /**
  * Header account controls. Reads the session, so it must render inside a <Suspense> boundary
  * (see SiteHeader). Uses the cheap JWT session here; access control is still enforced by requireRole.
+ *
+ * `connection()` marks the read as request-time. Without it, Cache Components prerenders the header's
+ * session lookup, and Auth.js generates random values there, which Next rejects during prerendering
+ * (`crypto.getRandomValues()` error). The static shell still renders the signed-out fallback.
  */
 export async function SessionLinks() {
+  await connection();
   const session = await auth();
   if (!session?.user) return <SignedOutLinks />;
 

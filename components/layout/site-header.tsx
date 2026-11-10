@@ -30,7 +30,8 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-5 xl:gap-7 lg:flex">
+        {/* Desktop nav from xl (1280px): below that the logo, signed-in controls and six links do not fit with clear space. */}
+        <nav aria-label="Primary" className="hidden items-center gap-7 xl:flex xl:px-8">
           {nav.map((item) => (
             <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] uppercase tracking-[0.18em] text-ink-soft transition duration-300 hover:text-ink">
               {item.label}
@@ -45,7 +46,7 @@ export function SiteHeader() {
           <Suspense fallback={<SignedOutLinks />}>
             <SessionLinks />
           </Suspense>
-          <details className="group relative lg:hidden">
+          <details className="group relative xl:hidden">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-2 py-2 text-[12px] uppercase tracking-[0.18em] text-ink hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
               Menu
               <ChevronDown className="h-3.5 w-3.5 transition duration-300 group-open:rotate-180" strokeWidth={1.25} aria-hidden />

@@ -1,5 +1,6 @@
 "use client";
 
+import { Textarea } from "@/components/ui/field";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
@@ -76,13 +77,13 @@ export function StartConversationForm({
         <label htmlFor={`${ids}-body`} className="sr-only">
           Message
         </label>
-        <textarea
+        <Textarea
           id={`${ids}-body`}
           name="body"
           rows={4}
           maxLength={2000}
           placeholder={placeholder}
-          className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+          
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">

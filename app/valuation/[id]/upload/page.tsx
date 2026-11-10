@@ -5,7 +5,9 @@ import { DetailsForm, type DetailsInitial } from "@/components/valuation/details
 import { PhotoUploader } from "@/components/valuation/photo-uploader";
 import { WizardSteps } from "@/components/valuation/wizard-steps";
 import { RequesterAccessMessage } from "@/components/valuation/requester-access";
-import { Panel } from "@/components/valuation/ui";
+import { Disclaimer, EstimateNote, Panel } from "@/components/valuation/ui";
+import { PageHeader } from "@/components/ui/page-header";
+import { DISCLAIMER_TEXT, DISCLAIMER_TITLE } from "@/lib/valuation/requester-copy";
 import { VALUATION_CATEGORIES } from "@/lib/valuation/defaults";
 import { getValuationIds, loadDetailFormOptions } from "@/lib/valuation/requester-queries";
 import { REQUESTER_PATHS } from "@/lib/valuation/requester-paths";
@@ -58,31 +60,51 @@ async function Upload({ params }: Props) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {isDraft ? <WizardSteps current={1} /> : null}
-      {isDraft ? null : (
-        <Panel title="Update your details" id="update-heading">
-          <p className="text-sm text-ink-soft">The valuer asked for more information. Change the details here if they need correcting, then go back to your request.</p>
-        </Panel>
-      )}
-
-      <DetailsForm
-        valuationId={id}
-        initial={initial}
-        gemstoneTypeOptions={gemstoneTypeOptions(view.gemstoneType)}
-        categories={categories}
-        labs={labs}
-        continueTo={isDraft ? REQUESTER_PATHS.review(id) : REQUESTER_PATHS.result(id)}
-        continueLabel={isDraft ? "Continue" : "Save and return"}
-        fromListing={view.source === "LISTING"}
+      <PageHeader
+        className="pb-0"
+        eyebrow="Valuation request"
+        title={isDraft ? "Stone details and photos" : "Update your request"}
+        lead={
+          isDraft
+            ? "Add at least one clear photo and the details you know. Anything you are not sure of can be left blank."
+            : "The valuer has asked for more information. Correct the details or add photos, then go back to your request."
+        }
       />
 
-      <PhotoUploader
-        valuationId={id}
-        media={view.media.map((m) => ({ id: m.id, kind: m.kind, mimeType: m.mimeType }))}
-        canAdd
-        canRemove
-      />
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-14">
+        <div className="min-w-0 space-y-12">
+          {isDraft ? null : (
+            <Panel title="Update your details" id="update-heading">
+              <p className="text-sm text-ink-soft">The valuer asked for more information. Change the details here if they need correcting, then go back to your request.</p>
+            </Panel>
+          )}
+
+          <DetailsForm
+            valuationId={id}
+            initial={initial}
+            gemstoneTypeOptions={gemstoneTypeOptions(view.gemstoneType)}
+            categories={categories}
+            labs={labs}
+            continueTo={isDraft ? REQUESTER_PATHS.review(id) : REQUESTER_PATHS.result(id)}
+            continueLabel={isDraft ? "Continue" : "Save and return"}
+            fromListing={view.source === "LISTING"}
+          />
+
+          <PhotoUploader
+            valuationId={id}
+            media={view.media.map((m) => ({ id: m.id, kind: m.kind, mimeType: m.mimeType }))}
+            canAdd
+            canRemove
+          />
+        </div>
+
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start" aria-label="About this estimate">
+          <EstimateNote title="About this estimate" text="Fill in the certificate and origin fields when you have them. Each one helps the estimate." />
+          <Disclaimer title={DISCLAIMER_TITLE} text={DISCLAIMER_TEXT} />
+        </aside>
+      </div>
     </div>
   );
 }

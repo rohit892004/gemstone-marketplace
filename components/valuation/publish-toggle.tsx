@@ -30,7 +30,7 @@ export function PublishToggle({ valuationId, initiallyPublished }: { valuationId
   }
 
   return (
-    <section aria-labelledby={`${ids}-heading`} className="space-y-3 border border-line bg-surface-raised p-5">
+    <section aria-labelledby={`${ids}-heading`} className="space-y-4 border border-line bg-surface-raised p-6 shadow-soft sm:p-8">
       <h2 id={`${ids}-heading`} className="font-heading text-2xl text-ink">
         Show on your listing
       </h2>

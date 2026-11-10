@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { ImageOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { deleteMediaAction, moveMediaAction, setCoverAction } from "@/app/seller/listings/actions";
 import { MediaUploadForm } from "@/components/seller/media-upload-form";
 import { mediaUrl } from "@/lib/media/urls";
@@ -35,7 +37,7 @@ export function ListingMedia({ listingId, media }: { listingId: string; media: r
         Up to {MEDIA_LIMITS.maxImages} images and {MEDIA_LIMITS.maxVideos} videos. Exactly one image is the cover.
       </p>
 
-      {ordered.length === 0 ? <p className="text-sm text-ink-soft">No media yet.</p> : null}
+      {ordered.length === 0 ? <EmptyState icon={ImageOff} title="No media yet" body="Add photos and a video with the upload form below. The first image becomes the cover." /> : null}
 
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ordered.map((item, index) => {

@@ -1,6 +1,9 @@
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
+import { cx } from "@/components/ui/cx";
+import { Field, Input, Select } from "@/components/ui/field";
 
-/** Labelled text input with an inline error. Server-safe (no hooks), usable inside client forms. */
+/** Labelled text input with an optional hint and an inline error. Server-safe (no hooks), usable inside client forms. */
 export function TextField({
   name,
   label,
@@ -10,6 +13,7 @@ export function TextField({
   autoComplete,
   hint,
   inputMode,
+  placeholder,
   required = true,
 }: {
   name: string;
@@ -20,42 +24,35 @@ export function TextField({
   autoComplete?: string;
   hint?: string;
   inputMode?: "numeric" | "text" | "tel" | "email";
+  placeholder?: string;
   required?: boolean;
 }) {
   const errorId = `${name}-error`;
   const hintId = `${name}-hint`;
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label}
-      </label>
-      <input
+    <Field id={name} label={label} error={error}>
+      <Input
         id={name}
         name={name}
         type={type}
         defaultValue={type === "password" ? undefined : defaultValue}
         autoComplete={autoComplete}
         inputMode={inputMode}
+        placeholder={placeholder}
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={[error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") || undefined}
-        className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
       />
       {hint ? (
-        <p id={hintId} className="text-xs text-ink-soft">
+        <p id={hintId} className="text-[12px] text-ink-soft">
           {hint}
         </p>
       ) : null}
-      {error ? (
-        <p id={errorId} className="text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    </Field>
   );
 }
 
-/** Native select for short, fixed lists (e.g. country). */
+/** Native select for short, fixed lists (e.g. country). Keeps the platform picker on phones. */
 export function SelectField({
   name,
   label,
@@ -71,54 +68,37 @@ export function SelectField({
 }) {
   const errorId = `${name}-error`;
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label}
-      </label>
-      <select
-        id={name}
-        name={name}
-        defaultValue={defaultValue}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      {error ? (
-        <p id={errorId} className="text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    <Field id={name} label={label} error={error}>
+      <div className="relative">
+        <Select
+          id={name}
+          name={name}
+          defaultValue={defaultValue}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </Select>
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" strokeWidth={1.25} aria-hidden />
+      </div>
+    </Field>
   );
 }
 
+/** Status or error message. Errors use role="alert"; other notices use role="status". */
 export function Notice({ tone, children }: { tone: "error" | "success" | "info"; children: ReactNode }) {
   const styles = {
-    error: "border-danger/40 text-danger",
+    error: "border-danger/40 bg-surface-raised text-danger",
     success: "border-success/40 bg-surface-raised text-ink",
     info: "border-line bg-accent-soft text-ink",
   } as const;
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`border px-4 py-3 text-[14px] ${styles[tone]}`}>
+    <div role={tone === "error" ? "alert" : "status"} className={cx("border px-4 py-3 text-[14px] leading-relaxed", styles[tone])}>
       {children}
-    </div>
-  );
-}
-
-/** Page-level card used by all auth pages. */
-export function AuthCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="mx-auto w-full max-w-md px-4 py-12 sm:px-6 sm:py-16">
-      <div className="border border-line bg-surface-raised p-6 shadow-soft sm:p-8">
-        <h1 className="font-heading text-3xl text-ink">{title}</h1>
-        <div className="mt-6 space-y-6">{children}</div>
-      </div>
     </div>
   );
 }

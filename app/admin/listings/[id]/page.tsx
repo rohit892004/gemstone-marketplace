@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { FileText, ImageOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
@@ -178,7 +180,7 @@ async function Preview({ params }: { params: Params }) {
       <section className="space-y-6">
         <SectionHeading title="Media" />
         {listing.media.length === 0 ? (
-          <p className="text-[15px] text-ink-soft">No media uploaded.</p>
+          <EmptyState icon={ImageOff} title="No media uploaded" body="The seller has not added any photos or video to this listing." />
         ) : (
           <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {listing.media.map((m) => (
@@ -239,7 +241,7 @@ async function Preview({ params }: { params: Params }) {
       <section className="space-y-6">
         <SectionHeading title="Documents" />
         {listing.documents.length === 0 ? (
-          <p className="text-[15px] text-ink-soft">No documents attached.</p>
+          <EmptyState icon={FileText} title="No documents attached" body="The seller has not attached any documents to this listing." />
         ) : (
           <ul className="space-y-3">
             {listing.documents.map((doc) => (

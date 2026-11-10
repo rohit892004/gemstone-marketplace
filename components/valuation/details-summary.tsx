@@ -24,9 +24,9 @@ export function DetailsSummary({ view }: { view: ValuationView }) {
       {rows
         .filter((row): row is [string, string] => !!row[1])
         .map(([label, value]) => (
-          <div key={label} className="grid grid-cols-3 gap-3 px-4 py-2.5">
+          <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-3 sm:gap-3">
             <dt className="text-ink-soft">{label}</dt>
-            <dd className="col-span-2 whitespace-pre-line text-ink">{value}</dd>
+            <dd className="whitespace-pre-line break-words text-ink sm:col-span-2">{value}</dd>
           </div>
         ))}
     </dl>

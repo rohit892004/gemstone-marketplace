@@ -1,18 +1,34 @@
-/** Empty states for the valuation lists. Server-safe. */
+import { Gem } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ButtonLink } from "@/components/ui/button";
+
+/** Empty states for the valuation lists. Server-safe. Each one gives the next step. */
 export function EmptyValuations() {
   return (
-    <div className="border border-dashed border-line bg-surface-raised p-8 text-center">
-      <h2 className="font-heading text-2xl text-ink">No valuation requests yet</h2>
-      <p className="mt-2 text-sm text-ink-soft">Start a valuation to get an indicative estimate for a stone. You can also request one from any listing.</p>
-    </div>
+    <EmptyState
+      icon={Gem}
+      title="No valuation requests yet"
+      body="Start a valuation to get an indicative estimate for a stone. You can also request one from any listing."
+      action={
+        <ButtonLink href="/valuation" variant="secondary" className="min-h-11">
+          How valuations work
+        </ButtonLink>
+      }
+    />
   );
 }
 
 export function EmptyReports() {
   return (
-    <div className="border border-dashed border-line bg-surface-raised p-8 text-center">
-      <h2 className="font-heading text-2xl text-ink">No saved reports yet</h2>
-      <p className="mt-2 text-sm text-ink-soft">When a valuation is complete, its report and PDF appear here.</p>
-    </div>
+    <EmptyState
+      icon={Gem}
+      title="No saved reports yet"
+      body="When a valuation is complete, its report and PDF appear here."
+      action={
+        <ButtonLink href="/valuation" variant="secondary" className="min-h-11">
+          Go to valuations
+        </ButtonLink>
+      }
+    />
   );
 }

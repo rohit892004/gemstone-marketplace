@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { Banknote } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { ValuationForm } from "@/components/valuator/valuation-form";
 import { MultiplierEditTable, PriceEditTable, type MultiplierTableRow, type PriceTableRow } from "../_components/price-edit-table";
@@ -70,7 +72,7 @@ async function PricesEditor() {
       <section aria-labelledby="prices-heading" className="space-y-3">
         <h2 id="prices-heading" className="font-heading text-2xl text-ink">Price per carat</h2>
         {priceRows.length === 0 ? (
-          <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No price rows yet. Import a CSV or add one below.</p>
+          <EmptyState icon={Banknote} title="No price rows yet" body="Import a CSV or add one below." action={<a href="#import-heading" className="text-sm text-accent-text underline underline-offset-4">Import a CSV</a>} />
         ) : (
           <PriceEditTable action={savePricesAction} rows={priceRows} />
         )}
@@ -113,7 +115,7 @@ async function PricesEditor() {
           Each multiplier is a percentage of the base price. 100 means no change, 85 means 15% lower. Stored in basis points.
         </p>
         {multiplierRows.length === 0 ? (
-          <p className="border border-dashed border-line p-6 text-sm text-ink-soft">No multipliers yet.</p>
+          <EmptyState icon={Banknote} title="No multipliers yet" body="Add one below." />
         ) : (
           <MultiplierEditTable action={saveMultipliersAction} rows={multiplierRows} />
         )}

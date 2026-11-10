@@ -76,7 +76,7 @@ export function DetailsForm(props: DetailsFormProps) {
     : [initial.gemstoneType, ...props.gemstoneTypeOptions];
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-8" aria-label="Gemstone details">
+    <form onSubmit={onSubmit} noValidate className="space-y-8 border border-line bg-surface-raised p-6 shadow-soft sm:p-8" aria-label="Gemstone details">
       <input type="hidden" name="valuationId" value={props.valuationId} />
       <input type="hidden" name="continueTo" value={props.continueTo} />
 

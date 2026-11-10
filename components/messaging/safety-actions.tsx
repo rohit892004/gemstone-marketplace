@@ -1,5 +1,6 @@
 "use client";
 
+import { Textarea } from "@/components/ui/field";
 import { useState, useTransition } from "react";
 import { blockConversationAction, reportConversationAction } from "@/app/conversations/actions";
 
@@ -69,7 +70,7 @@ export function SafetyActions({ conversationId, blocked }: { conversationId: str
           </fieldset>
           <label className="mt-3 block text-ink">
             <span className="text-ink-soft">Details (optional)</span>
-            <textarea name="details" maxLength={1000} rows={3} className="mt-1 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] focus:border-accent focus:outline-none" />
+            <Textarea name="details" maxLength={1000} rows={3}  />
           </label>
           <button type="submit" disabled={pending} className="mt-3 bg-brand min-h-11 px-4 py-2.5 text-ivory disabled:opacity-50">
             Send report

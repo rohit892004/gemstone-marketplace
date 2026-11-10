@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/field";
 import { useActionState, useId } from "react";
 import type { ValuationActionState } from "@/lib/valuation/form-state";
 
@@ -92,14 +93,14 @@ export function PriceEditTable({ action, rows, submitLabel = "Save changed price
                     <label htmlFor={inputId} className="sr-only">
                       Price per carat for {row.gemstoneType}, {row.currency}, {row.qualityGrade}, {row.band}
                     </label>
-                    <input
+                    <Input
                       id={inputId}
                       name={`price:${row.id}`}
                       defaultValue={row.priceMajor}
                       inputMode="decimal"
                       aria-invalid={error ? true : undefined}
                       aria-describedby={error ? `${inputId}-error` : undefined}
-                      className="block min-h-11 w-32 border border-line bg-surface-raised px-3 py-2"
+                      className="w-32"
                     />
                     {error ? (
                       <p id={`${inputId}-error`} className="mt-1 text-[12px] text-danger">
@@ -158,7 +159,7 @@ export function MultiplierEditTable({ action, rows }: { action: Action; rows: Mu
                     <label htmlFor={inputId} className="sr-only">
                       Percent for {row.label}
                     </label>
-                    <input id={inputId} name={`pct:${row.id}`} defaultValue={row.percent} inputMode="decimal" className="block min-h-11 w-24 border border-line bg-surface-raised px-3 py-2" />
+                    <Input id={inputId} name={`pct:${row.id}`} defaultValue={row.percent} inputMode="decimal" className="w-24" />
                     <span aria-hidden="true"> %</span>
                   </td>
                   <td className="px-3 py-2">

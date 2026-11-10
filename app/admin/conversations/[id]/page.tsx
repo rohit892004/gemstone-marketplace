@@ -1,4 +1,6 @@
 import { cookies, headers } from "next/headers";
+import { MessageSquare } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -210,7 +212,7 @@ function Transcript({
         <SectionHeading title="Messages" />
         <p className="text-[12px] text-ink-soft">Text is shown as stored, with contact details already masked. Attachments are listed by name only.</p>
         {conversation.messages.length === 0 ? (
-          <p className="text-[15px] text-ink-soft">No messages yet.</p>
+          <EmptyState icon={MessageSquare} title="No messages yet" body="Messages appear here as they are sent." />
         ) : (
           <ol className="space-y-4">
             {conversation.messages.map((message) => (

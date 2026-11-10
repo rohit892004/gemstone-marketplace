@@ -1,5 +1,6 @@
 "use client";
 
+import { Textarea } from "@/components/ui/field";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { markReadAction, sendMessageAction } from "@/app/conversations/actions";
 import { Button } from "@/components/ui/button";
@@ -191,7 +192,7 @@ export function ChatThread(props: ChatThreadProps) {
           }}
         >
           <label className="sr-only" htmlFor="chat-body">Message</label>
-          <textarea
+          <Textarea
             id="chat-body"
             value={body}
             onChange={(e) => {
@@ -201,7 +202,6 @@ export function ChatThread(props: ChatThreadProps) {
             maxLength={2000}
             rows={3}
             placeholder="Write a message. Phone numbers, emails and social handles are hidden automatically."
-            className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink placeholder:text-ink-soft/70 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           />
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm text-ink-soft">

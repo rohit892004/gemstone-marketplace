@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
 import { useActionState } from "react";
 import { bulkAvailabilityAction, type InventoryActionState } from "@/app/seller/inventory/actions";
@@ -21,7 +22,7 @@ export function InventoryBulkForm({ formId }: { formId: string }) {
         <label htmlFor="bulk-availability" className="block text-sm font-medium text-ink">
           Set availability for selected listings
         </label>
-        <select id="bulk-availability" name="availability" defaultValue="" className="block border border-line bg-surface-raised px-3 py-2 text-sm text-ink">
+        <Select id="bulk-availability" name="availability" defaultValue="" >
           <option value="" disabled>
             Choose availability
           </option>
@@ -30,7 +31,7 @@ export function InventoryBulkForm({ formId }: { formId: string }) {
               {availabilityLabels[value]}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <button type="submit" disabled={pending} className={buttonClasses({ className: "disabled:opacity-60" })}>
         Apply

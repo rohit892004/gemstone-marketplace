@@ -3,7 +3,7 @@
 import { useActionState, useId } from "react";
 import type { AdminActionState } from "@/lib/admin/action-state";
 import { adminButtonClass } from "@/components/admin/button-classes";
-import { Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 
 export interface ActionField {
   name: string;
@@ -63,17 +63,13 @@ export function ActionForm({ action, title, description, submitLabel, hidden, fi
           );
         }
         return (
-          <div key={field.name} className="space-y-2 text-sm">
-            <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
-              {field.label}
-            </label>
-            {field.help ? <p className="text-[12px] text-ink-soft">{field.help}</p> : null}
+          <Field key={field.name} id={id} label={field.label} hint={field.help} className="text-sm">
             {field.kind === "textarea" ? (
               <Textarea id={id} name={field.name} defaultValue={field.defaultValue ?? ""} required={field.required} maxLength={field.maxLength} rows={4} />
             ) : (
               <Input id={id} type="text" name={field.name} defaultValue={field.defaultValue ?? ""} required={field.required} maxLength={field.maxLength} />
             )}
-          </div>
+          </Field>
         );
       })}
       <button type="submit" disabled={pending} className={adminButtonClass(tone === "danger")}>

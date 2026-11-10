@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/field";
 import { useActionState, useState } from "react";
 import type { ContentActionState } from "@/app/admin/content/actions";
 import type { ContentStatusName } from "@/lib/content/status";
@@ -70,13 +71,12 @@ export function StatusPanel({ id, status, scheduledFor, action, canSchedule }: S
             <p id={`status-help-${id}`} className="text-[12px] text-ink-soft">
               Pick a future time. Times are in your browser&apos;s time zone. Use &quot;Publish now&quot; to publish immediately.
             </p>
-            <input
+            <Input
               id={`when-${id}`}
               type="datetime-local"
               min={minimum}
               value={when}
               onChange={(event) => setWhen(event.target.value)}
-              className="block min-h-11 border border-line bg-surface-raised px-3 py-2 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             />
             <input type="hidden" name="scheduledForIso" value={scheduledIso} />
           </div>

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { BarChart3, ListChecks } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { requirePageRole } from "@/lib/auth/require-role";
 import { loadValuationStats } from "@/lib/valuation/admin-stats";
 import { statusLabel } from "@/lib/valuation/display";
@@ -46,7 +48,7 @@ async function Stats() {
       <section aria-labelledby="status-heading" className="space-y-3">
         <h2 id="status-heading" className="font-heading text-2xl text-ink">By status</h2>
         {stats.statusCounts.length === 0 ? (
-          <p className="text-sm text-ink-soft">No requests yet.</p>
+          <EmptyState icon={BarChart3} title="No requests yet" body="Counts appear here once valuation requests arrive." />
         ) : (
           <div className="relative overflow-x-auto border border-line bg-surface-raised">
             <table className="w-full text-left text-sm">
@@ -81,7 +83,7 @@ async function Stats() {
       <section aria-labelledby="open-heading" className="space-y-3">
         <h2 id="open-heading" className="font-heading text-2xl text-ink">Open requests per valuer</h2>
         {stats.openPerValuator.length === 0 ? (
-          <p className="text-sm text-ink-soft">No open requests.</p>
+          <EmptyState icon={ListChecks} title="No open requests" body="Every valuer is clear for now." />
         ) : (
           <ul className="divide-y divide-line border border-line bg-surface-raised text-sm">
             {stats.openPerValuator.map((row) => (

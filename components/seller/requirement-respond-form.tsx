@@ -1,5 +1,6 @@
 "use client";
 
+import { Textarea } from "@/components/ui/field";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
@@ -38,7 +39,7 @@ export function RequirementRespondForm({ requirementId }: { requirementId: strin
       <label htmlFor="requirement-response" className="text-sm text-ink-soft">
         Your opening message
       </label>
-      <textarea
+      <Textarea
         id="requirement-response"
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -46,7 +47,7 @@ export function RequirementRespondForm({ requirementId }: { requirementId: strin
         rows={5}
         maxLength={2000}
         placeholder="Introduce your stock and what you can offer. Phone numbers, emails and social handles are hidden automatically."
-        className="w-full border border-line bg-surface px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+        className="bg-surface"
       />
       <div className="flex flex-wrap items-center gap-3">
         <button

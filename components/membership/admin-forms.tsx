@@ -5,12 +5,10 @@ import { clearTierOverrideAction, saveTierRulesAction, setTierOverrideAction } f
 import { clearReferralFlagAction, voidReferralAction } from "@/app/admin/referrals/actions";
 import type { AdminActionState } from "@/lib/admin/action-state";
 import { Button } from "@/components/ui/button";
+import { Field, Input, Select } from "@/components/ui/field";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { TIERS, type Tier, type TierRule } from "@/lib/membership/tiers";
 
-const inputClass =
-  "block min-h-11 border border-line bg-surface-raised px-3 py-2 text-[15px] text-ink transition duration-300 focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const labelClass = "block text-[13px] tracking-wide text-ink";
 
 function Result({ state }: { state: AdminActionState }) {
   if (!state) return null;
@@ -34,24 +32,18 @@ export function TierOverrideForm({ sellerId, currentTier }: { sellerId: string; 
     <form action={action} className="space-y-4">
       <input type="hidden" name="sellerId" value={sellerId} />
       <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
-        <div className="space-y-2">
-          <label htmlFor={`tier-${sellerId}`} className={labelClass}>
-            Set tier
-          </label>
-          <select id={`tier-${sellerId}`} name="tier" defaultValue={currentTier} className={`${inputClass} w-full appearance-none pr-8`}>
+        <Field id={`tier-${sellerId}`} label="Set tier">
+          <Select id={`tier-${sellerId}`} name="tier" defaultValue={currentTier}>
             {TIERS.map((t) => (
               <option key={t} value={t}>
                 {TIER_LABEL[t]}
               </option>
             ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <label htmlFor={`reason-${sellerId}`} className={labelClass}>
-            Reason (required, at least 5 characters)
-          </label>
-          <input id={`reason-${sellerId}`} name="reason" type="text" maxLength={500} required className={`${inputClass} w-full`} />
-        </div>
+          </Select>
+        </Field>
+        <Field id={`reason-${sellerId}`} label="Reason (required, at least 5 characters)">
+          <Input id={`reason-${sellerId}`} name="reason" type="text" maxLength={500} required />
+        </Field>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>
@@ -87,16 +79,17 @@ export function RulesForm({ rules }: { rules: readonly TierRule[] }) {
       <label htmlFor={`${uid}-${tier}-${name}`} className="sr-only">
         {`${TIER_LABEL[tier]} ${COLUMN_LABEL[name] ?? name}`}
       </label>
-      <input
-        id={`${uid}-${tier}-${name}`}
-        name={`${tier}.${name}`}
-        type="number"
-        inputMode="decimal"
-        step={extra?.step ?? "1"}
-        min={extra?.min ?? 0}
-        defaultValue={value ?? ""}
-        className={`${inputClass} w-24`}
-      />
+      <div className="w-24">
+        <Input
+          id={`${uid}-${tier}-${name}`}
+          name={`${tier}.${name}`}
+          type="number"
+          inputMode="decimal"
+          step={extra?.step ?? "1"}
+          min={extra?.min ?? 0}
+          defaultValue={value ?? ""}
+        />
+      </div>
     </>
   );
 
@@ -161,10 +154,9 @@ export function VoidReferralForm({ referralId }: { referralId: string }) {
     <form action={action} className="space-y-3">
       <input type="hidden" name="referralId" value={referralId} />
       <div className="space-y-2">
-        <label htmlFor={`void-${referralId}`} className={labelClass}>
-          Reason for voiding (required)
-        </label>
-        <input id={`void-${referralId}`} name="reason" type="text" maxLength={500} required className={`${inputClass} w-full`} />
+        <Field id={`void-${referralId}`} label="Reason for voiding (required)">
+          <Input id={`void-${referralId}`} name="reason" type="text" maxLength={500} required />
+        </Field>
       </div>
       <Button type="submit" disabled={pending} variant="secondary">
         Void referral

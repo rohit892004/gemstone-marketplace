@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useId, type ReactNode } from "react";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { buttonClasses } from "@/components/ui/button";
 import type { ValuationActionState } from "@/lib/valuation/form-state";
 
 export interface FormOption {
@@ -35,8 +37,6 @@ interface ValuationFormProps {
   description?: string;
 }
 
-const INPUT_CLASS = "block min-h-11 w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none";
-
 /**
  * Generic form for valuation actions. Errors appear in a summary at the top and beside each field. Every field
  * has a visible label. The form disables itself while the action runs.
@@ -59,7 +59,7 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
   const buttonClass =
     tone === "danger"
       ? "inline-flex min-h-11 items-center justify-center border border-danger px-6 py-3 text-sm tracking-wide text-danger hover:bg-danger/5 disabled:opacity-50"
-      : "inline-flex min-h-11 items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory hover:bg-brand/90 disabled:opacity-50";
+      : buttonClasses({ className: "min-h-11 px-6 py-3" });
 
   return (
     <form action={formAction} aria-labelledby={`${formId}-title`} className="space-y-5 border border-line bg-surface-raised p-5 sm:p-6">
@@ -87,9 +87,8 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
 
       {fields.map((field) => {
         const id = `${formId}-${field.name}`;
-        const errorId = `${id}-error`;
         const error = fieldErrors[field.name];
-        const describedBy = [field.help ? `${id}-help` : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+        const describedBy = [field.help && !error ? `${id}-help` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") || undefined;
         const common = {
           id,
           name: field.name,
@@ -98,44 +97,42 @@ export function ValuationForm({ action, submitLabel, hidden, fields = [], tone =
           defaultValue: echoed[field.name] ?? field.defaultValue,
           "aria-invalid": error ? true : undefined,
           "aria-describedby": describedBy,
-          className: INPUT_CLASS,
         };
+        const label = (
+          <>
+            {field.label}
+            {field.required ? <span className="text-ink-soft"> (required)</span> : null}
+          </>
+        );
+        const hint = field.help ? <span id={`${id}-help`}>{field.help}</span> : undefined;
+        let control: ReactNode;
+        if (field.kind === "textarea") {
+          control = <Textarea rows={field.rows ?? 4} {...common} />;
+        } else if (field.kind === "select") {
+          control = (
+            <Select {...common}>
+              {(field.options ?? []).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          );
+        } else if (field.kind === "file") {
+          control = <input type="file" id={id} name={field.name} accept={field.accept} required={field.required} aria-invalid={error ? true : undefined} aria-describedby={describedBy} className="block w-full min-h-11 text-sm text-ink" />;
+        } else {
+          control = (
+            <Input
+              type={field.kind === "number" ? "text" : field.kind ?? "text"}
+              inputMode={field.inputMode ?? (field.kind === "number" ? "decimal" : undefined)}
+              {...common}
+            />
+          );
+        }
         return (
-          <div key={field.name} className="space-y-2 text-sm">
-            <label htmlFor={id} className="block text-[13px] tracking-wide text-ink">
-              {field.label}
-              {field.required ? <span className="text-ink-soft"> (required)</span> : null}
-            </label>
-            {field.help ? (
-              <p id={`${id}-help`} className="text-ink-soft">
-                {field.help}
-              </p>
-            ) : null}
-            {field.kind === "textarea" ? (
-              <textarea rows={field.rows ?? 4} {...common} />
-            ) : field.kind === "select" ? (
-              <select {...common}>
-                {(field.options ?? []).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            ) : field.kind === "file" ? (
-              <input type="file" id={id} name={field.name} accept={field.accept} required={field.required} aria-invalid={error ? true : undefined} aria-describedby={describedBy} className="mt-1 block w-full text-sm" />
-            ) : (
-              <input
-                type={field.kind === "number" ? "text" : field.kind ?? "text"}
-                inputMode={field.inputMode ?? (field.kind === "number" ? "decimal" : undefined)}
-                {...common}
-              />
-            )}
-            {error ? (
-              <p id={errorId} className="text-danger">
-                {error}
-              </p>
-            ) : null}
-          </div>
+          <Field key={field.name} id={id} label={label} hint={hint} error={error} className="text-sm">
+            {control}
+          </Field>
         );
       })}
 

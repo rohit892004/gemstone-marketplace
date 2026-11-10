@@ -44,7 +44,7 @@ async function WishlistList() {
               <RemoveWishlistButton listingId={row.gemstoneId} />
             </>
           ) : (
-            <div className="flex h-full flex-col justify-between gap-3 border border-dashed border-line bg-surface-raised p-5">
+            <div className="flex h-full flex-col justify-between gap-3 border border-line bg-surface-raised p-5">
               <p className="font-heading text-xl text-ink-soft">No longer available</p>
               <RemoveWishlistButton listingId={row.gemstoneId} />
             </div>

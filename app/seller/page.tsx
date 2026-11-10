@@ -60,7 +60,8 @@ async function SellerHome() {
           <h2 id="workspace-heading" className="text-[11px] uppercase tracking-[0.25em] text-accent-text">
             Your workspace
           </h2>
-          <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+          {/* Ten tiles: two columns from sm up fills every row, so there is never an empty last cell. */}
+          <ul className="grid gap-px border border-line bg-line sm:grid-cols-2">
             {workspace.map((item) => {
               const Icon = item.icon;
               return (

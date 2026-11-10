@@ -24,7 +24,7 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
       <TextField name="password" label="Password" type="password" autoComplete="current-password" />
 
       <div className="flex justify-end text-sm">
-        <Link href="/forgot-password" className="text-brand hover:text-brand-strong">
+        <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-brand underline-offset-4 hover:text-brand-strong hover:underline">
           Forgot password?
         </Link>
       </div>

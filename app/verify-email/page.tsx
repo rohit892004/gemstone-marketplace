@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AuthCard, Notice } from "@/components/auth/fields";
+import { AuthLayout, authLinkClass } from "@/components/auth/auth-layout";
+import { Notice } from "@/components/auth/fields";
+import { ButtonLink, buttonClasses } from "@/components/ui/button";
 import { firstParam, type SearchParams } from "@/lib/auth/flows/params";
 import { MESSAGES } from "@/lib/auth/flows/messages";
 import { confirmEmailAction } from "./actions";
+
+const PHOTO = "/design-preview/luxury/stone-5.webp";
+const CAPTION = "Each verification link works once.";
 
 /**
  * GET never consumes the token. It shows a confirm button; the POST action consumes it.
@@ -24,45 +29,37 @@ async function VerifyEmailResult({ searchParams }: { searchParams: Promise<Searc
 
   if (status === "ok") {
     return (
-      <AuthCard title="Email verified">
+      <AuthLayout eyebrow="Email" title="Email verified" photo={PHOTO} caption={CAPTION}>
         <Notice tone="success">Your email address is verified. You can now log in.</Notice>
-        <p className="text-center">
-          <Link
-            href="/login"
-            className="inline-flex min-h-11 w-full items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Go to log in
-          </Link>
-        </p>
-      </AuthCard>
+        <ButtonLink href="/login" block className="min-h-11">
+          Go to log in
+        </ButtonLink>
+      </AuthLayout>
     );
   }
 
   if (token && status !== "invalid") {
     return (
-      <AuthCard title="Confirm your email">
-        <p className="text-sm text-ink-soft">Press the button below to confirm your email address.</p>
+      <AuthLayout eyebrow="Email" title="Confirm your email" photo={PHOTO} caption={CAPTION}>
+        <p className="text-sm leading-relaxed text-ink-soft">Press the button below to confirm your email address.</p>
         <form action={confirmEmailAction} className="space-y-4">
           <input type="hidden" name="token" value={token} />
-          <button
-            type="submit"
-            className="inline-flex min-h-11 w-full items-center justify-center bg-brand px-6 py-3 text-sm tracking-wide text-ivory transition duration-300 hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <button type="submit" className={buttonClasses({ block: true, size: "lg", className: "min-h-11" })}>
             Confirm email
           </button>
         </form>
-      </AuthCard>
+      </AuthLayout>
     );
   }
 
   return (
-    <AuthCard title="Link not valid">
+    <AuthLayout eyebrow="Email" title="Link not valid" photo={PHOTO} caption={CAPTION}>
       <Notice tone="error">{MESSAGES.invalidLink}</Notice>
       <p className="text-center text-sm">
-        <Link href="/check-email" className="font-medium text-brand hover:text-brand-strong">
+        <Link href="/check-email" className={authLinkClass}>
           Request a new verification link
         </Link>
       </p>
-    </AuthCard>
+    </AuthLayout>
   );
 }

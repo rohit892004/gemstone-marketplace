@@ -61,7 +61,7 @@ export function RollupNote({
 }) {
   if (lastFigureDay === null) {
     return (
-      <p className="border border-dashed border-line p-4 text-sm text-ink-soft">
+      <p className="border border-line bg-surface-raised p-4 text-sm text-ink-soft">
         The daily rollup has not processed a finished day yet, so there are no figures to show.
       </p>
     );

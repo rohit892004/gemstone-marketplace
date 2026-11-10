@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Field, Input, Select } from "@/components/ui/field";
 
 interface BaseProps {
   name: string;
@@ -8,9 +9,6 @@ interface BaseProps {
   required?: boolean;
 }
 
-const inputClass =
-  "mt-2 block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[invalid=true]:border-danger";
-
 function describedBy(name: string, hasHint: boolean, hasError: boolean): string | undefined {
   const ids = [hasHint ? `${name}-hint` : null, hasError ? `${name}-error` : null].filter(Boolean);
   return ids.length > 0 ? ids.join(" ") : undefined;
@@ -18,23 +16,19 @@ function describedBy(name: string, hasHint: boolean, hasError: boolean): string 
 
 function FieldShell({ name, label, error, hint, required, children }: BaseProps & { children: ReactNode }) {
   return (
-    <div className="space-y-1">
-      <label htmlFor={name} className="block text-sm font-medium text-ink">
-        {label}
-        {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
-      </label>
+    <Field
+      id={name}
+      label={
+        <>
+          {label}
+          {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
+        </>
+      }
+      hint={hint ? <span id={`${name}-hint`}>{hint}</span> : undefined}
+      error={error}
+    >
       {children}
-      {hint ? (
-        <p id={`${name}-hint`} className="text-xs text-ink-soft">
-          {hint}
-        </p>
-      ) : null}
-      {error ? (
-        <p id={`${name}-error`} className="text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    </Field>
   );
 }
 
@@ -58,7 +52,7 @@ export function TextField({
 }) {
   return (
     <FieldShell name={name} label={label} error={error} hint={hint} required={required}>
-      <input
+      <Input
         id={name}
         name={name}
         type={type}
@@ -69,7 +63,6 @@ export function TextField({
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(name, Boolean(hint), Boolean(error))}
-        className={inputClass}
       />
     </FieldShell>
   );
@@ -91,14 +84,13 @@ export function SelectField({
 }) {
   return (
     <FieldShell name={name} label={label} error={error} hint={hint} required={required}>
-      <select
+      <Select
         id={name}
         name={name}
         defaultValue={defaultValue ?? ""}
         required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(name, Boolean(hint), Boolean(error))}
-        className={inputClass}
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
@@ -106,7 +98,7 @@ export function SelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
     </FieldShell>
   );
 }

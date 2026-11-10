@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/field";
 import { useActionState } from "react";
 import { updateQuantityAction, type InventoryActionState } from "@/app/seller/inventory/actions";
 
@@ -16,7 +17,7 @@ export function InventoryQuantityForm({ listingId, quantity, title }: { listingI
       <label htmlFor={inputId} className="sr-only">
         Quantity for {title}
       </label>
-      <input
+      <Input
         id={inputId}
         name="quantity"
         type="number"
@@ -25,7 +26,7 @@ export function InventoryQuantityForm({ listingId, quantity, title }: { listingI
         step={1}
         defaultValue={quantity}
         aria-invalid={state.error ? true : undefined}
-        className="w-24 border border-line bg-surface-raised px-2 py-1 text-sm text-ink"
+        className="w-24"
       />
       <button type="submit" disabled={pending} className=" border border-line px-3 py-1 text-xs font-medium text-ink disabled:opacity-60">
         Save

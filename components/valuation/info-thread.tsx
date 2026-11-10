@@ -11,9 +11,9 @@ export function ThreadList({ thread }: { thread: ThreadEntry[] }) {
   const entries = thread.filter((t) => t.kind in THREAD_LABEL);
   if (entries.length === 0) return <p className="text-sm text-ink-soft">No messages yet.</p>;
   return (
-    <ol className="space-y-3">
+    <ol className="divide-y divide-line border-y border-line">
       {entries.map((entry) => (
-        <li key={entry.id} className="border border-line bg-surface px-4 py-3 text-sm">
+        <li key={entry.id} className="py-4 text-sm">
           <p className="font-medium text-ink">{THREAD_LABEL[entry.kind]}</p>
           <p className="mt-1 whitespace-pre-line text-ink">{entry.body}</p>
           <p className="mt-2 text-xs text-ink-soft">

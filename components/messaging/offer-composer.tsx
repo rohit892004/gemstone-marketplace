@@ -1,5 +1,6 @@
 "use client";
 
+import { Input, Select, Textarea } from "@/components/ui/field";
 import { useId, useRef, useState, useTransition } from "react";
 import { sendOfferAction } from "@/app/conversations/offer-actions";
 
@@ -59,41 +60,41 @@ export function OfferComposer({ conversationId }: { conversationId: string }) {
               <label htmlFor={`${ids}-amount`} className="block text-sm font-medium text-ink">
                 Offer amount
               </label>
-              <input
+              <Input
                 id={`${ids}-amount`}
                 name="amount"
                 inputMode="decimal"
                 placeholder="For example 12,500"
                 required
-                className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+                
               />
             </div>
             <div className="space-y-1">
               <label htmlFor={`${ids}-currency`} className="block text-sm font-medium text-ink">
                 Currency
               </label>
-              <select
+              <Select
                 id={`${ids}-currency`}
                 name="currency"
                 defaultValue="INR"
-                className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+                
               >
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
-              </select>
+              </Select>
             </div>
           </div>
           <div className="space-y-1">
             <label htmlFor={`${ids}-note`} className="block text-sm font-medium text-ink">
               Note <span className="font-normal text-ink-soft">(optional)</span>
             </label>
-            <textarea
+            <Textarea
               id={`${ids}-note`}
               name="note"
               rows={2}
               maxLength={500}
               placeholder="Terms or conditions for this offer"
-              className="block w-full border border-line bg-surface-raised px-4 py-3 text-[15px] text-ink focus:border-accent focus:outline-none"
+              
             />
           </div>
           <p className="text-xs text-ink-soft">

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TokenActionForm } from "@/components/newsletter/token-action-form";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
 import { INVALID_PREFERENCES_LINK } from "@/lib/newsletter/messages";
 import { subscriberForManageToken } from "@/lib/newsletter/service";
 import { unsubscribeAction } from "./actions";
@@ -24,23 +26,29 @@ export default function UnsubscribePage({ searchParams }: { searchParams: Promis
 async function UnsubscribeView({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   const subscriber = token ? await subscriberForManageToken(token) : null;
+  const canUnsubscribe = Boolean(token && subscriber && subscriber.status !== "UNSUBSCRIBED");
 
   return (
-    <section className="mx-auto max-w-xl space-y-6 px-4 py-16 sm:px-6">
-      <h1 className="font-heading text-4xl font-medium leading-[1.1] text-ink sm:text-5xl">Unsubscribe</h1>
-      {!token || !subscriber ? (
-        <p role="status" className="text-ink-soft">{INVALID_PREFERENCES_LINK}</p>
-      ) : subscriber.status === "UNSUBSCRIBED" ? (
-        <p className="text-ink-soft">You are already unsubscribed from the Gemstone Selections newsletter.</p>
-      ) : (
-        <>
-          <p className="text-ink-soft">
-            Select the button below to stop receiving the Gemstone Selections newsletter. You can sign up again at any time.
-          </p>
+    <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-20">
+      <PageHeader
+        eyebrow="Newsletter"
+        title="Unsubscribe"
+        lead={
+          canUnsubscribe
+            ? "Select the button below to stop receiving the Gemstone Selections newsletter. You can sign up again at any time."
+            : undefined
+        }
+      />
+      <Card className="space-y-6 p-6 sm:p-8">
+        {!token || !subscriber ? (
+          <p role="status" className="text-ink-soft">{INVALID_PREFERENCES_LINK}</p>
+        ) : subscriber.status === "UNSUBSCRIBED" ? (
+          <p className="text-ink-soft">You are already unsubscribed from the Gemstone Selections newsletter.</p>
+        ) : (
           <TokenActionForm action={unsubscribeAction} token={token} label="Unsubscribe from the newsletter" tone="danger" />
-        </>
-      )}
-      <p className="text-sm text-ink-soft">
+        )}
+      </Card>
+      <p className="mt-8 text-sm text-ink-soft">
         <Link href="/newsletter" className="underline underline-offset-4 hover:text-ink">
           Newsletter sign-up
         </Link>
